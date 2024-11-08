@@ -331,7 +331,7 @@ namespace FamiStudio
             }
             if (machine == MachineType.PAL || machine == MachineType.Dual)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTablePAL, "famistudio_note_table", "PAL version"));
+                lines.AddRange(GetNoteTableText(tableSet.NoteTablePAL, "famistudio_note_table_pal", "PAL version"));
             }
             if ((expansionMask & ExpansionType.Vrc6Mask) != 0)
             {
@@ -341,7 +341,7 @@ namespace FamiStudio
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6SawPAL, "famistudio_saw_note_table", "VRC6 Saw PAL"));
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6SawPAL, "famistudio_saw_note_table_pal", "VRC6 Saw PAL"));
                 }
             }
             if ((expansionMask & ExpansionType.Vrc7Mask) != 0)
@@ -356,18 +356,18 @@ namespace FamiStudio
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFdsPAL, "famistudio_fds_note_table", "FDS PAL"));
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFdsPAL, "famistudio_fds_note_table_pal", "FDS PAL"));
                 }
             }
             if ((expansionMask & ExpansionType.N163Mask) != 0)
             {
                 if (machine == MachineType.NTSC || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163[numN163Channels - 1], "famistudio_n163_note_table", $"N163 ({numN163Channels} channel)"));
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163[numN163Channels - 1], $"famistudio_n163_note_table_{numN163Channels}ch", $"N163 ({numN163Channels} channel)"));
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163PAL[numN163Channels - 1], "famistudio_n163_note_table", $"N163 ({numN163Channels} channel) PAL"));
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163PAL[numN163Channels - 1], $"famistudio_n163_note_table_{numN163Channels}ch_pal", $"N163 ({numN163Channels} channel) PAL"));
                 }
             }
             if ((expansionMask & ExpansionType.EPSMMask) != 0)
@@ -379,41 +379,31 @@ namespace FamiStudio
             return lines;
         }
 
-        private static Dictionary<string, byte[]> GetNoteTableBinaryData(List<string> tables, int numN163Channels = 8)
+        private static Dictionary<string, byte[]> GetNoteTableBinaryData(List<string> tables)
         {
             var binData = new Dictionary<string, byte[]>();
             var byteList = new List<byte>();
             var name = string.Empty;
-            var pal = false;
 
             foreach (var line in tables)
             {
                 var trimLine = line.Trim();
-
-                if (trimLine.StartsWith(';'))
-                {
-                    pal = trimLine.Contains("PAL");
+                if (string.IsNullOrEmpty(trimLine) || trimLine.StartsWith(';'))
                     continue;
-                }
 
                 if (trimLine.Contains("famistudio_"))
                 {
                     name = trimLine.Split(":")[0];
-
-                    if (name.Contains("n163"))
-                        name += $"_{numN163Channels}ch";
-                    if (pal)
-                        name += "_pal";
-
                     continue;
                 }
 
-                var stripLine = trimLine.Split(';')[0].Replace(".byte", "").Replace("$", "").Trim();
-                if (string.IsNullOrEmpty(stripLine)) continue;
-
-                var bytes = stripLine.Split(",", StringSplitOptions.RemoveEmptyEntries)
-                                    .Select(s => byte.Parse(s.Trim(), NumberStyles.HexNumber))
-                                    .ToArray();
+                var bytes = trimLine
+                        .Replace(".byte", "")
+                        .Replace("$", "")
+                        .Split(';')[0]
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => byte.Parse(s.Trim(), NumberStyles.HexNumber))
+                        .ToArray();
 
                 byteList.AddRange(bytes);
 
@@ -430,7 +420,7 @@ namespace FamiStudio
         public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8, string path = ".")
         {
             var noteTablesText = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels);
-            var binData = GetNoteTableBinaryData(noteTablesText, numN163Channels);
+            var binData = GetNoteTableBinaryData(noteTablesText);
 
             foreach (var kv in binData)
             {
@@ -516,20 +506,17 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(comment))
                 lines.Add($"; {comment}");
 
-            lines.Add($"{name}_lsb:");
-            lines.Add($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 0):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            foreach (var (type, shift) in new[] { ("lsb", 0), ("msb", 8) })
+            {
+                lines.Add($"{name}_{type}:");
+                lines.Add("\t.byte $00");
 
-            lines.Add($"{name}_msb:");
-            lines.Add($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 8):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+                for (int j = 0; j < 8; j++)
+                    lines.Add($"\t.byte {string.Join(",", noteTable.Select(i => $"${(byte)(i >> shift):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            }
 
             return lines;
         }
-
-        static bool done;
 
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
         {
@@ -574,11 +561,6 @@ namespace FamiStudio
                 #if FALSE // For debugging
                     DumpNoteTableSetToFile(noteTableSet, $"NoteTables{tuning}.txt");
                 #endif
-
-                if (!done){
-                    done = true;
-                    //DumpNoteTableBinSet(453);
-                }
 
                 NoteTables.Add(tuning, noteTableSet);
                 return noteTableSet;
