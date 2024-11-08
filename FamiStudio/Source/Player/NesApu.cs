@@ -408,10 +408,10 @@ namespace FamiStudio
                     continue;
                 }
 
-                var stripLine = trimLine.Split(';')[0].Replace(",", "").Replace(".byte", "").Trim();
+                var stripLine = trimLine.Split(';')[0].Replace(".byte", "").Replace("$", "").Trim();
                 if (string.IsNullOrEmpty(stripLine)) continue;
 
-                var bytes = stripLine.Split("$", StringSplitOptions.RemoveEmptyEntries)
+                var bytes = stripLine.Split(",", StringSplitOptions.RemoveEmptyEntries)
                                     .Select(s => byte.Parse(s.Trim(), NumberStyles.HexNumber))
                                     .ToArray();
 
