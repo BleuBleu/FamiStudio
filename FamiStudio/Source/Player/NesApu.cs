@@ -379,35 +379,43 @@ namespace FamiStudio
             return lines;
         }
 
-        private static Dictionary<string, byte[]> GetNoteTableBinaryData(List<string> tables, int machine, int numN163Channels = 8)
+        private static Dictionary<string, byte[]> GetNoteTableBinaryData(List<string> tables, int numN163Channels = 8)
         {
             var binData = new Dictionary<string, byte[]>();
-            var name = string.Empty;
             var byteList = new List<byte>();
+            var name = string.Empty;
+            var pal = false;
 
             foreach (var line in tables)
             {
-                if (line.Contains("famistudio_"))
+                var trimLine = line.Trim();
+
+                if (trimLine.StartsWith(';'))
                 {
-                    name = line.Split(":")[0].Trim();
+                    if (trimLine.Contains("PAL"))
+                        pal = true;
+                    
+                    continue;
+                }
+
+                if (trimLine.Contains("famistudio_"))
+                {
+                    name = trimLine.Split(":")[0].Trim();
 
                     if (name.Contains("n163"))
                         name += $"_{numN163Channels}ch";
-
-                    if (!name.Contains("vrc7") && !name.Contains("epsm") && machine == MachineType.PAL)
+                    if (pal)
                         name += "_pal";
 
                     continue;
                 }
 
-                var trimLine = line.Split(';')[0].Replace(",", "").Replace(".byte", "").Trim();
+                var stripLine = trimLine.Split(';')[0].Replace(",", "").Replace(".byte", "").Trim();
+                if (string.IsNullOrEmpty(stripLine)) continue;
 
-                if (string.IsNullOrWhiteSpace(trimLine))
-                    continue;
-
-                var bytes = trimLine.Split("$", StringSplitOptions.RemoveEmptyEntries)
-                    .Select(s => byte.Parse(s.Trim(), NumberStyles.HexNumber))
-                    .ToArray();
+                var bytes = stripLine.Split("$", StringSplitOptions.RemoveEmptyEntries)
+                                    .Select(s => byte.Parse(s.Trim(), NumberStyles.HexNumber))
+                                    .ToArray();
 
                 byteList.AddRange(bytes);
 
@@ -415,6 +423,7 @@ namespace FamiStudio
                 {
                     binData[name] = byteList.ToArray();
                     byteList.Clear();
+                    pal = false;
                 }
             }
 
@@ -424,7 +433,7 @@ namespace FamiStudio
         public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8, string path = ".")
         {
             var noteTablesText = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels);
-            var binData = GetNoteTableBinaryData(noteTablesText, machine, numN163Channels);
+            var binData = GetNoteTableBinaryData(noteTablesText, numN163Channels);
 
             foreach (var kv in binData)
             {
@@ -523,6 +532,8 @@ namespace FamiStudio
             return lines;
         }
 
+        static bool done;
+
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
         {
             // MATTT : Use TLS to avoid blocking?
@@ -566,6 +577,11 @@ namespace FamiStudio
                 #if FALSE // For debugging
                     DumpNoteTableSetToFile(noteTableSet, $"NoteTables{tuning}.txt");
                 #endif
+
+                if (!done){
+                    done = true;
+                    //DumpNoteTableBinSet(453);
+                }
 
                 NoteTables.Add(tuning, noteTableSet);
                 return noteTableSet;
