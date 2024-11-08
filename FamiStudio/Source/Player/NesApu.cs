@@ -392,15 +392,13 @@ namespace FamiStudio
 
                 if (trimLine.StartsWith(';'))
                 {
-                    if (trimLine.Contains("PAL"))
-                        pal = true;
-                    
+                    pal = trimLine.Contains("PAL");
                     continue;
                 }
 
                 if (trimLine.Contains("famistudio_"))
                 {
-                    name = trimLine.Split(":")[0].Trim();
+                    name = trimLine.Split(":")[0];
 
                     if (name.Contains("n163"))
                         name += $"_{numN163Channels}ch";
@@ -423,7 +421,6 @@ namespace FamiStudio
                 {
                     binData[name] = byteList.ToArray();
                     byteList.Clear();
-                    pal = false;
                 }
             }
 
