@@ -262,7 +262,7 @@ namespace FamiStudio
             buttonQwerty = CreateToolbarButton("QwertyPiano", "Qwerty");
             buttonQwerty.Visible = Platform.IsDesktop;
             buttonQwerty.Click += ButtonQwerty_Click;
-            buttonQwerty.EnabledEvent += ButtonQwerty_EnabledEvent;
+            buttonQwerty.DimmedEvent += ButtonQwerty_DimmedEvent;
 
             buttonMetronome = CreateToolbarButton("Metronome", "Metronome");
             buttonMetronome.Click += ButtonMetronome_Click;
@@ -580,9 +580,9 @@ namespace FamiStudio
             App.ToggleQwertyPiano();
         }
 
-        private bool ButtonQwerty_EnabledEvent(Control sender)
+        private bool ButtonQwerty_DimmedEvent(Control sender, ref int dimming)
         {
-            return App.IsQwertyPianoEnabled;
+            return !App.IsQwertyPianoEnabled;
         }
 
         private void ButtonMetronome_Click(Control sender)
