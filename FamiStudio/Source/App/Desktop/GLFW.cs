@@ -3810,8 +3810,26 @@ namespace GLFWDotNet
 			return _glfwGetCocoaWindow(window);
 		}
 
-
-        public static IntPtr glfwGetPlatform()
+		/*! @brief Returns the currently selected platform.
+		*
+		*  This function returns the platform that was selected during initialization.  The
+		*  returned value will be one of `GLFW_PLATFORM_WIN32`, `GLFW_PLATFORM_COCOA`,
+		*  `GLFW_PLATFORM_WAYLAND`, `GLFW_PLATFORM_X11` or `GLFW_PLATFORM_NULL`.
+		*
+		*  @return The currently selected platform, or zero if an error occurred.
+		*
+		*  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
+		*
+		*  @thread_safety This function may be called from any thread.
+		*
+		*  @sa @ref platform
+		*  @sa @ref glfwPlatformSupported
+		*
+		*  @since Added in version 3.4.
+		*
+		*  @ingroup init
+		*/
+		public static IntPtr glfwGetPlatform()
 		{
 			return _glfwGetPlatform();
 		}
