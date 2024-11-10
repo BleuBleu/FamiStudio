@@ -399,7 +399,7 @@ namespace FamiStudio
                         .Replace("$", "")
                         .Split(';')[0]
                         .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(s => byte.Parse(s.Trim(), NumberStyles.HexNumber))
+                        .Select(hex => Convert.ToByte(hex.Trim(), 16))
                         .ToArray();
 
                 byteList.AddRange(bytes);
