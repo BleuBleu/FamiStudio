@@ -69,6 +69,11 @@ namespace FamiStudio
             {
                 debugCallback = new GL.DebugCallback(GLDebugMessageCallback);
                 GL.DebugMessageCallback(debugCallback, IntPtr.Zero);
+
+                // Steo: Linux seems to be crashing with async callback for some reason.
+                // Doing this for now so stuff can still be tested until it's solved.
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    GL.Enable(0x8242); // GL_DEBUG_OUTPUT_SYNCHRONOUS
             }
 #endif
 
