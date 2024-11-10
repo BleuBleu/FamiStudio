@@ -476,6 +476,8 @@ namespace FamiStudio
                 //   3) Anything else that is not an empty note.
                 //   4) Empty note.
 
+                var conflictingNotes = new HashSet<int>();
+
                 // TODO: Merge notes/slide + fx seperately.
                 for (int i = 0; i < oldPatternLength; i++)
                 {
@@ -502,6 +504,58 @@ namespace FamiStudio
                         }
 
                         pattern.SetNoteAt(newIdx, oldNote);
+                    }
+                    else
+                    {
+                        conflictingNotes.Add(oldIdx);
+                    }
+                }
+
+                // For conflicting notes, try to place them at the first free slot after.
+                foreach (var oldIdx in conflictingNotes)
+                {
+                    var newIdx = GetNewNoteIndex(oldIdx);
+
+                    var oldNote = oldNotes[oldIdx];
+                    var newNote = pattern.Notes[newIdx];
+
+                    // If the old note only had effects, see if we can simply merge them.
+                    // This works fine, but disabling for now was it could change the volume of notes at the
+                    // wrong time for example, not sure desirable.
+                    /*
+                    if (!oldNote.IsMusical && !oldNote.IsRelease && !oldNote.IsStop && oldNote.HasAnyEffect)
+                    {
+                        var effectsConflict = false;
+                        for (var i = 0; i < Note.EffectCount; i++)
+                        {
+                            if (oldNote.HasValidEffectValue(i) && newNote.HasValidEffectValue(i))
+                            {
+                                effectsConflict = true;
+                                break;
+                            }
+                        }
+
+                        if (!effectsConflict)
+                        {
+                            for (var i = 0; i < Note.EffectCount; i++)
+                            {
+                                if (oldNote.HasValidEffectValue(i))
+                                {
+                                    newNote.SetEffectValue(i, oldNote.GetEffectValue(i));
+                                }
+                            }
+
+                            continue;
+                        }
+                    }
+                    */
+
+                    // Try to place on the very next frame.
+                    var newPatternLen = GetNewNoteIndex(oldPatternLength);
+                    newIdx++;
+                    if (newIdx < newPatternLen && !pattern.Notes.ContainsKey(newIdx))
+                    {
+                        pattern.Notes.Add(newIdx, oldNote);
                     }
                 }
 

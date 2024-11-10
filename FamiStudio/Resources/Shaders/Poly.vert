@@ -7,7 +7,7 @@ uniform vec4  screenScaleBias;
 uniform float dashScale;
 
 INTERP_OUT vec4 colorInterp; 
-#if FAMISTUDIO_ANDROID
+#if FAMISTUDIO_MOBILE
 INTERP_OUT float dashInterp;
 #endif
 
@@ -16,7 +16,7 @@ void main()
     gl_Position = vec4(inPosition.xy * screenScaleBias.xy + screenScaleBias.zw, inDepth, 1);
     colorInterp = inColor;
 
-#if FAMISTUDIO_ANDROID
+#if FAMISTUDIO_MOBILE
     if (inDash != 0.0)
     {
         float dash = inDash * 0.25;

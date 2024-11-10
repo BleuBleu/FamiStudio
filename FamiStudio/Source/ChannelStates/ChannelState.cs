@@ -547,7 +547,7 @@ namespace FamiStudio
         {
             var instrument = note.Instrument;
             registerValues.InstrumentIds[channelType] = instrument != null ? instrument.Id : 0;
-            registerValues.InstrumentColors[channelType] = instrument != null ? instrument.Color : Color.Transparent;
+            registerValues.InstrumentColors[channelType] = instrument != null ? instrument.Color : Color.Invisible;
         }
 
         // TODO : We should not reference settings from here.

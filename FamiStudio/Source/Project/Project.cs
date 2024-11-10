@@ -259,6 +259,11 @@ namespace FamiStudio
             return instruments.Contains(inst);
         }
 
+        public bool SampleExists(DPCMSample sample)
+        {
+            return samples.Contains(sample);
+        }
+
         public bool ArpeggioExists(Arpeggio arp)
         {
             return arpeggios.Contains(arp);
@@ -789,6 +794,9 @@ namespace FamiStudio
 
         public void MoveInstrument(Instrument inst, Instrument instBefore)
         {
+            if (inst == instBefore)
+                return;
+
             Debug.Assert(instruments.Contains(inst));
             instruments.Remove(inst);
 
@@ -832,6 +840,9 @@ namespace FamiStudio
 
         public void MoveArpeggio(Arpeggio arp, Arpeggio arpBefore)
         {
+            if (arp == arpBefore)
+                return;
+
             Debug.Assert(arpeggios.Contains(arp));
             arpeggios.Remove(arp);
 
@@ -875,6 +886,9 @@ namespace FamiStudio
 
         public void MoveSample(DPCMSample sample, DPCMSample sampleBefore)
         {
+            if (sample == sampleBefore)
+                return;
+
             Debug.Assert(samples.Contains(sample));
             samples.Remove(sample);
 
@@ -917,6 +931,9 @@ namespace FamiStudio
 
         public void MoveSong(Song song, Song songBefore)
         {
+            if (song == songBefore)
+                return;
+
             Debug.Assert(songs.Contains(song));
             songs.Remove(song);
 
@@ -1980,15 +1997,6 @@ namespace FamiStudio
 
                 // Buld a huge bitmask that tells us which frame each instrument is used.
                 // This is a bit overkill, but is very simple.
-                for (var i = 0; i < instruments.Count; i++)
-                {
-                    var inst = instruments[i];
-                    if (inst.IsN163)
-                    {
-                        instrumentMasks.Add(inst, new N163Mask(numLongs));
-                    }
-                }
-
                 for (var i = 0; i < expansionNumN163Channels; i++)
                 {
                     var channel = song.GetChannelByType(ChannelType.N163Wave1 + i);
@@ -2000,8 +2008,12 @@ namespace FamiStudio
 
                         if (note.Instrument != null)
                         {
-                            var mask = instrumentMasks[note.Instrument];
-                            
+                            if (!instrumentMasks.TryGetValue(note.Instrument, out var mask))
+                            {
+                                mask = new N163Mask(numLongs);
+                                instrumentMasks.Add(note.Instrument, mask);
+                            }
+
                             // Start + end of this note, in frame.
                             var idx1 = it.Location.ToAbsoluteNoteIndex(song);
                             var idx2 = Math.Min(idx1 + Math.Min(note.Duration, it.DistanceToNextNote), numFrames - 1);
@@ -2088,7 +2100,7 @@ namespace FamiStudio
             // TODO : Sort instrument by descending wav size + how much they are used maybe?
             wavePositions = new Dictionary<int, int>(numN163AutoPos);
 
-            var maxPosByte = N163WaveRAMSize * 2;
+            var maxPos = N163WaveRAMSize * 2;
             var overlapDetected = false;
 
             foreach (var kv in instrumentOverlaps)
@@ -2114,9 +2126,9 @@ namespace FamiStudio
                         pos1 = pos2 + inst2.N163WaveSize;
 
                         // Was not able to allocate.
-                        if (pos1 + inst1.N163WaveSize > maxPosByte)
+                        if (pos1 + inst1.N163WaveSize > maxPos)
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size of overlap with other instruments. Setting to 0.");
+                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size or minimize overlap with other instruments. Setting to 0.");
                             pos1 = 0;
                             overlapDetected = true;
                             break;

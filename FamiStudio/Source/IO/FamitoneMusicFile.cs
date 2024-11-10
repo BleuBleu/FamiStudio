@@ -28,6 +28,7 @@ namespace FamiStudio
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
         private Dictionary<DPCMSampleMapping, int> sampleMappingIndices = new Dictionary<DPCMSampleMapping, int>();
+        private Dictionary<DPCMSample, int> sampleOffsetsPreCleanup = new Dictionary<DPCMSample, int>();
         private string noArpeggioEnvelopeName;
 
         private int kernel = FamiToneKernel.FamiStudio;
@@ -129,6 +130,17 @@ namespace FamiStudio
                     env.Release = -1;
                     env.Values[0] = 15;
                 }
+            }
+        }
+
+        private void GatherDPCMSampleOffsets()
+        {
+            // Since we will be deleting instruments that are unused for this song, that will mess up
+            // the offset of the samples in the big binary sample data. We store the real offsets before
+            // the cleanup and well reuse those when building the DPCM sample table.
+            foreach (var sample in project.Samples)
+            {
+                sampleOffsetsPreCleanup.Add(sample, project.GetSampleBankOffset(sample));
             }
         }
 
@@ -822,9 +834,8 @@ namespace FamiStudio
                 for (int i = 0; i < sortedUniqueMappings.Length; i++)
                 {
                     var mapping = sortedUniqueMappings[i];
+                    var offset = sampleOffsetsPreCleanup[mapping.Sample];
 
-                    var offset = project.GetSampleBankOffset(mapping.Sample);
-                    Debug.Assert(offset >= 0);
                     var sampleOffset = Math.Max(0, offset) >> 6;
                     var sampleSize = mapping.Sample.ProcessedData.Length >> 4;
                     var sampleInitialDmcValue = mapping.OverrideDmcInitialValue ? mapping.DmcInitialValueDiv2 * 2 : mapping.Sample.DmcInitialValueDiv2 * 2;
@@ -2038,6 +2049,7 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
+            GatherDPCMSampleOffsets();
             project.DeleteAllSongsBut(songIds);
             RemoveUnsupportedFeatures();
             project.Cleanup();
@@ -2096,10 +2108,71 @@ namespace FamiStudio
             File.WriteAllLines(includeFilename, includeLines.ToArray());
         }
 
+        private List<string> GetRequiredFlags()
+        {
+            var flags = new List<string>();
+
+            // Expansion defines
+            if (project.UsesVrc6Expansion)
+                flags.Add("Project uses VRC6 expansion, you must set FAMISTUDIO_EXP_VRC6 = 1.");
+            if (project.UsesVrc7Expansion)
+                flags.Add("Project uses VRC7 expansion, you must set FAMISTUDIO_EXP_VRC7 = 1.");
+            if (project.UsesMmc5Expansion)
+                flags.Add("Project uses MMC5 expansion, you must set FAMISTUDIO_EXP_MMC5 = 1.");
+            if (project.UsesS5BExpansion)
+                flags.Add("Project uses S5B expansion, you must set FAMISTUDIO_EXP_S5B = 1.");
+            if (project.UsesFdsExpansion)
+                flags.Add("Project uses FDS expansion, you must set FAMISTUDIO_EXP_FDS = 1.");
+            if (project.UsesN163Expansion)
+                flags.Add($"Project uses N163 expansion, you must set FAMISTUDIO_EXP_N163 = 1 and FAMISTUDIO_EXP_N163_CHN_CNT = {project.ExpansionNumN163Channels}.");
+            if (project.UsesEPSMExpansion)
+                flags.Add("Project uses EPSM expansion, you must set FAMISTUDIO_EXP_EPSM = 1.");
+                    
+            // Feature usage defines.
+            if (usesFamiTrackerTempo)
+                flags.Add("Project uses FamiTracker tempo, you must set FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1.");
+            if (usesDelayedNotesOrCuts)
+                flags.Add("Project uses delayed notes or cuts, you must set FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1.");
+            if (usesReleaseNotes)
+                flags.Add("Project uses release notes, you must set FAMISTUDIO_USE_RELEASE_NOTES = 1.");
+            if (usesVolumeTrack)
+                flags.Add("Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.");
+            if (usesVolumeSlide)
+                flags.Add("Volume slides are used, you must set FAMISTUDIO_USE_VOLUME_SLIDES = 1.");
+            if (usesPitchTrack)
+                flags.Add("Fine pitch track is used, you must set FAMISTUDIO_USE_PITCH_TRACK = 1.");
+            if (usesSlideNotes)
+                flags.Add("Slide notes are used, you must set FAMISTUDIO_USE_SLIDE_NOTES = 1.");
+            if (usesNoiseSlideNotes)
+                flags.Add("Slide notes are used on the noise channel, you must set FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1.");
+            if (usesVibrato)
+                flags.Add("Vibrato effect is used, you must set FAMISTUDIO_USE_VIBRATO = 1.");
+            if (usesArpeggio)
+                flags.Add("Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.");
+            if (usesDutyCycleEffect)
+                flags.Add("Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
+            if (usesDeltaCounter)
+                flags.Add("DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
+            if (usesPhaseReset)
+                flags.Add("Phase Reset effect is used, you must set FAMISTUDIO_USE_PHASE_RESET = 1.");
+            if (usesFdsAutoMod)
+                flags.Add("FDS auto-modulation is used on at least 1 instrument, you must set FAMISTUDIO_USE_FDS_AUTOMOD = 1.");
+            if (project.SoundEngineUsesDpcmBankSwitching)
+                flags.Add("Project has DPCM bank-switching enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
+            else if (project.SoundEngineUsesExtendedDpcm)
+                flags.Add($"Project has extended DPCM mode enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
+            if (project.SoundEngineUsesExtendedInstruments)
+                flags.Add($"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
+            if (project.Tuning != 440)
+                flags.Add("Project uses non-standard tuning, the note tables where dumped in the assembly code. You will need to manually patch in the sound engine code to hear the correct tuning.");
+
+            return flags;
+        }
+
         public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
         {
             this.machine = machine;
-            
+
             SetupProject(originalProject, songIds);
             SetupFormat(format);
             
@@ -2128,6 +2201,17 @@ namespace FamiStudio
                 if (log)
                     Log.LogMessage(LogSeverity.Info, $"Song '{project.Songs[i].Name}' size: {songSize} bytes.");
             }
+            
+            var usedFlags = kernel == FamiToneKernel.FamiStudio ? GetRequiredFlags() : new List<string>();
+            var flagComments = usedFlags.Select((s) => $"; {s}").ToList();
+
+            if (project.Tuning != 440)
+            {
+                flagComments.Add("");
+                flagComments.AddRange(NesApu.GetNoteTablesText(project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels).Select((s) => $"; {s}"));
+            }
+
+            lines.InsertRange(1, flagComments);
 
             File.WriteAllLines(filename, lines);
 
@@ -2156,64 +2240,17 @@ namespace FamiStudio
 
                 if (kernel == FamiToneKernel.FamiStudio)
                 {
-                    // Expansion defines
-                    if (project.UsesVrc6Expansion)
-                        Log.LogMessage(LogSeverity.Info, "Project uses VRC6 expansion, you must set FAMISTUDIO_EXP_VRC6 = 1.");
-                    if (project.UsesVrc7Expansion)
-                        Log.LogMessage(LogSeverity.Info, "Project uses VRC7 expansion, you must set FAMISTUDIO_EXP_VRC7 = 1.");
-                    if (project.UsesMmc5Expansion)
-                        Log.LogMessage(LogSeverity.Info, "Project uses MMC5 expansion, you must set FAMISTUDIO_EXP_MMC5 = 1.");
-                    if (project.UsesS5BExpansion)
-                        Log.LogMessage(LogSeverity.Info, "Project uses S5B expansion, you must set FAMISTUDIO_EXP_S5B = 1.");
-                    if (project.UsesFdsExpansion)
-                        Log.LogMessage(LogSeverity.Info, "Project uses FDS expansion, you must set FAMISTUDIO_EXP_FDS = 1.");
-                    if (project.UsesN163Expansion)
-                        Log.LogMessage(LogSeverity.Info, $"Project uses N163 expansion, you must set FAMISTUDIO_EXP_N163 = 1 and FAMISTUDIO_EXP_N163_CHN_CNT = {project.ExpansionNumN163Channels}.");
-                    if (project.UsesEPSMExpansion)
-                        Log.LogMessage(LogSeverity.Info, "Project uses EPSM expansion, you must set FAMISTUDIO_EXP_EPSM = 1.");
-                    
-                    // Feature usage defines.
-                    if (usesFamiTrackerTempo)
-                        Log.LogMessage(LogSeverity.Info, "Project uses FamiTracker tempo, you must set FAMISTUDIO_USE_FAMITRACKER_TEMPO = 1.");
-                    if (usesDelayedNotesOrCuts)
-                        Log.LogMessage(LogSeverity.Info, "Project uses delayed notes or cuts, you must set FAMISTUDIO_USE_FAMITRACKER_DELAYED_NOTES_OR_CUTS = 1.");
-                    if (usesReleaseNotes)
-                        Log.LogMessage(LogSeverity.Info, "Project uses release notes, you must set FAMISTUDIO_USE_RELEASE_NOTES = 1.");
-                    if (usesVolumeTrack)
-                        Log.LogMessage(LogSeverity.Info, "Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.");
-                    if (usesVolumeSlide)
-                        Log.LogMessage(LogSeverity.Info, "Volume slides are used, you must set FAMISTUDIO_USE_VOLUME_SLIDES = 1.");
-                    if (usesPitchTrack)
-                        Log.LogMessage(LogSeverity.Info, "Fine pitch track is used, you must set FAMISTUDIO_USE_PITCH_TRACK = 1.");
-                    if (usesSlideNotes)
-                        Log.LogMessage(LogSeverity.Info, "Slide notes are used, you must set FAMISTUDIO_USE_SLIDE_NOTES = 1.");
-                    if (usesNoiseSlideNotes)
-                        Log.LogMessage(LogSeverity.Info, "Slide notes are used on the noise channel, you must set FAMISTUDIO_USE_NOISE_SLIDE_NOTES = 1.");
-                    if (usesVibrato)
-                        Log.LogMessage(LogSeverity.Info, "Vibrato effect is used, you must set FAMISTUDIO_USE_VIBRATO = 1.");
-                    if (usesArpeggio)
-                        Log.LogMessage(LogSeverity.Info, "Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.");
-                    if (usesDutyCycleEffect)
-                        Log.LogMessage(LogSeverity.Info, "Duty Cycle effect is used, you must set FAMISTUDIO_USE_DUTYCYCLE_EFFECT = 1.");
-                    if (usesDeltaCounter)
-                        Log.LogMessage(LogSeverity.Info, "DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.");
-                    if (usesPhaseReset)
-                        Log.LogMessage(LogSeverity.Info, "Phase Reset effect is used, you must set FAMISTUDIO_USE_PHASE_RESET = 1.");
-                    if (usesFdsAutoMod)
-                        Log.LogMessage(LogSeverity.Info, "FDS auto-modulation is used on at least 1 instrument, you must set FAMISTUDIO_USE_FDS_AUTOMOD = 1.");
-                    if (project.SoundEngineUsesDpcmBankSwitching)
-                        Log.LogMessage(LogSeverity.Info, "Project has DPCM bank-switching enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_BANKSWITCHING = 1 and implement bank switching.");
-                    else if (project.SoundEngineUsesExtendedDpcm)
-                        Log.LogMessage(LogSeverity.Info, $"Project has extended DPCM mode enabled in the project settings, you must set FAMISTUDIO_USE_DPCM_EXTENDED_RANGE = 1.");
-                    if (project.SoundEngineUsesExtendedInstruments)
-                        Log.LogMessage(LogSeverity.Info, $"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
-
-                    if (project.Tuning != 440)
+                    foreach (var flagMessage in usedFlags)
                     {
-                        var noteTableFilename = Path.ChangeExtension(filename, ".notetable.txt"); ;
-                        Log.LogMessage(LogSeverity.Info, $"Project uses non-standard tuning, the note tables where dumped in '{noteTableFilename}'. You will need to manually patch in the sound engine code to hear the correct tuning.");
-                        NesApu.DumpNoteTableSetToFile(project.Tuning, noteTableFilename);
+                        Log.LogMessage(LogSeverity.Info, flagMessage);
                     }
+
+                    //if (project.Tuning != 440)
+                    //{
+                    //    var noteTableFilename = Path.ChangeExtension(filename, ".notetable.txt"); ;
+                    //    Log.LogMessage(LogSeverity.Info, $"Project uses non-standard tuning, the note tables where dumped in '{noteTableFilename}'. You will need to manually patch in the sound engine code to hear the correct tuning.");
+                    //    NesApu.DumpNoteTableSetToFile(project.Tuning, noteTableFilename);
+                    //}
                 }
             }
 

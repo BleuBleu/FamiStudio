@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -677,9 +677,10 @@ namespace FamiStudio
         public int GetN163AutoWavePosition(Instrument instrument)
         {
             Debug.Assert(instrument != null && instrument.IsN163 && instrument.N163WaveAutoPos);
-            Debug.Assert(n163AutoWavPosMap != null);
 
-            n163AutoWavPosMap.TryGetValue(instrument.Id, out var pos);
+            // Cant be NULL on instrument player thread, its fine, lets all put them at 0.
+            var pos = 0;
+            n163AutoWavPosMap?.TryGetValue(instrument.Id, out pos);
 
             return pos;
         }

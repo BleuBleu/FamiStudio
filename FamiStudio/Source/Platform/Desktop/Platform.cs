@@ -53,7 +53,7 @@ namespace FamiStudio
             return true;
         }
 
-        public static IVideoEncoder CreateVideoEncoder()
+        public static IVideoEncoder CreateVideoEncoder(bool preview = false)
         {
             if (VideoEncoderFFmpeg.DetectFFmpeg())
             {
@@ -223,11 +223,11 @@ namespace FamiStudio
             glfwSetClipboardString(IntPtr.Zero, "");
         }
 
-        public static void StartMobileLoadFileOperationAsync(string mimeType, Action<string> callback)
+        public static void StartMobileLoadFileOperationAsync(string[] extensions, Action<string> callback)
         {
         }
 
-        public static void StartMobileSaveFileOperationAsync(string mimeType, string filename, Action<string> callback)
+        public static void StartMobileSaveFileOperationAsync(string filename, Action<string> callback)
         {
         }
 
@@ -257,6 +257,10 @@ namespace FamiStudio
         }
         
         public static void AcquireGLContext()
+        {
+        }
+
+        public static void EditTextAsync(string prompt, string text, Action<string> callback)
         {
         }
 

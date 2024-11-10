@@ -1,4 +1,3 @@
-using SharpDX.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,7 +11,7 @@ namespace FamiStudio
 {
     public static class NesApu
     {
-        private const string NesSndEmuDll = Platform.DllPrefix + "NesSndEmu" + Platform.DllExtension;
+        private const string NesSndEmuDll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "NesSndEmu" + Platform.DllExtension;
 
         [DllImport(NesSndEmuDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "NesApuInit")]
         public extern static int Init(int apuIdx, int sampleRate, int bassFreq, int pal, int seperateTnd, int expansion, [MarshalAs(UnmanagedType.FunctionPtr)] DmcReadDelegate dmcCallback);
@@ -180,7 +179,7 @@ namespace FamiStudio
         public const int N163_REG_VOLUME    = 0x7f;
         
         public const int S5B_ADDR           = 0xc000;
-        public const int S5B_DATA           = 0xe000;
+        public const int S5B_DATA           = 0xe001; // E001 to prevent conflict with VRC7.
                                             
         public const int S5B_REG_LO_A          = 0x00;
         public const int S5B_REG_HI_A          = 0x01;
@@ -305,47 +304,90 @@ namespace FamiStudio
             return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
         }
 
-        private static void DumpNoteTableSetToFile(NoteTableSet tableSet, string filename)
+        public static List<string> GetNoteTablesText(int tuning, int expansionMask = ExpansionType.AllMask, int machine = MachineType.NTSC, int numN163Channels = 8)
         {
-            using (var stream = new StreamWriter(filename))
+            var tableSet = GetOrCreateNoteTableSet(tuning);
+            var lines = new List<string>();
+            
+            if (machine == MachineType.NTSC || machine == MachineType.Dual)
             {
-                DumpNoteTable(stream, tableSet.NoteTableNTSC, "famistudio_note_table", "NTSC version");
-                DumpNoteTable(stream, tableSet.NoteTablePAL, "famistudio_note_table", "PAL version");
-                DumpNoteTable(stream, tableSet.NoteTableVrc6Saw, "famistudio_saw_note_table", "VRC6 Saw");
-                DumpNoteTable(stream, tableSet.NoteTableVrc7, "famistudio_vrc7_note_table", "VRC7");
-                DumpNoteTable(stream, tableSet.NoteTableFds, "famistudio_fds_note_table", "FDS");
-                DumpNoteTable(stream, tableSet.NoteTableN163[0], "famistudio_n163_note_table", "N163 (1 channel)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[1], "famistudio_n163_note_table", "N163 (2 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[2], "famistudio_n163_note_table", "N163 (3 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[3], "famistudio_n163_note_table", "N163 (4 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[4], "famistudio_n163_note_table", "N163 (5 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[5], "famistudio_n163_note_table", "N163 (6 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[6], "famistudio_n163_note_table", "N163 (7 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableN163[7], "famistudio_n163_note_table", "N163 (8 channels)");
-                DumpNoteTable(stream, tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table_lsb", "EPSM FM");
-                DumpNoteTable(stream, tableSet.NoteTableEPSM, "famistudio_epsm_s_note_table", "EPSM Square");
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableNTSC, "famistudio_note_table", "NTSC version"));
             }
+            if (machine == MachineType.PAL || machine == MachineType.Dual)
+            {
+                lines.AddRange(GetNoteTableText(tableSet.NoteTablePAL, "famistudio_note_table", "PAL version"));
+            }
+            if ((expansionMask & ExpansionType.Vrc6Mask) != 0)
+            {
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6Saw, "famistudio_saw_note_table", "VRC6 Saw"));
+            }
+            if ((expansionMask & ExpansionType.Vrc7Mask) != 0)
+            {
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc7, "famistudio_vrc7_note_table", "VRC7"));
+            }
+            if ((expansionMask & ExpansionType.FdsMask) != 0)
+            {
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableFds, "famistudio_fds_note_table", "FDS"));
+            }
+            if ((expansionMask & ExpansionType.N163Mask) != 0)
+            {
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableN163[numN163Channels - 1], "famistudio_n163_note_table", $"N163 ({numN163Channels} channel)"));
+            }
+            if ((expansionMask & ExpansionType.EPSMMask) != 0)
+            {
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table_lsb", "EPSM FM"));
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSM, "famistudio_epsm_s_note_table", "EPSM Square"));
+            }
+
+            return lines;
         }
-        
+
         public static void DumpNoteTableSetToFile(int tuning, string filename)
         {
-            DumpNoteTableSetToFile(GetOrCreateNoteTableSet(tuning), filename);
+            var lines = new List<string>();
+
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.NoneMask, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.NoneMask, MachineType.PAL));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc6Mask, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc7Mask, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.FdsMask, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 1));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 2));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 3));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 4));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 5));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 6));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 7));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 8));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.EPSM, MachineType.NTSC));
+
+            using (var stream = new StreamWriter(filename))
+            {
+                foreach (var line in lines)
+                {
+                    stream.WriteLine(line);
+                }
+            }
         }
 
-        private static void DumpNoteTable(StreamWriter stream, ushort[] noteTable, string name, string comment = null)
+        private static List<string> GetNoteTableText(ushort[] noteTable, string name, string comment = null)
         {
+            var lines = new List<string>();
+
             if (!string.IsNullOrEmpty(comment))
-                stream.WriteLine($"; {comment}");
+                lines.Add($"; {comment}");
 
-            stream.WriteLine($"{name}_lsb:");
-            stream.WriteLine($"\t.byte $00");
+            lines.Add($"{name}_lsb:");
+            lines.Add($"\t.byte $00");
             for (int j = 0; j < 8; j++)
-                stream.WriteLine($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 0):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 0):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
 
-            stream.WriteLine($"{name}_msb:");
-            stream.WriteLine($"\t.byte $00");
+            lines.Add($"{name}_msb:");
+            lines.Add($"\t.byte $00");
             for (int j = 0; j < 8; j++)
-                stream.WriteLine($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 8):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 8):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+
+            return lines;
         }
 
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
@@ -883,11 +925,6 @@ namespace FamiStudio
                                 WriteRegister(apuIdx, MMC5_SND_CHN, 0x03); // Enable both square channels.
                                 break;
                             case APU_EXPANSION_VRC7:
-                                // HACK : There is a conflict between the VRC7 silence register and S5B data register, a write to
-                                // the silence register (E000) will be interpreted as a S5B data write. To prevent this, we
-                                // select a dummy register for S5B so that the write is discarded.
-                                if ((expansions & APU_EXPANSION_MASK_SUNSOFT) != 0)
-                                    WriteRegister(apuIdx, S5B_ADDR, S5B_REG_IO_A);
                                 WriteRegister(apuIdx, VRC7_SILENCE, 0x00); // Enable VRC7 audio.
                                 break;
                             case APU_EXPANSION_NAMCO:

@@ -1,12 +1,12 @@
-﻿using Android.App;
-using Android.Content;
-using Android.Media;
-using Android.Renderscripts;
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Android.App;
+using Android.Content;
+using Android.Media;
+using Android.Renderscripts;
 
 namespace FamiStudio
 {
@@ -145,7 +145,7 @@ namespace FamiStudio
                         return;
                     }
 
-                    Debug.WriteLine("Starvation!");
+                    //Debug.WriteLine("Starvation!");
                     System.Threading.Thread.Sleep(4);
                 }
             }
