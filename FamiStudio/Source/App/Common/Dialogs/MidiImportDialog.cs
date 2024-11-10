@@ -111,11 +111,6 @@ namespace FamiStudio
                 }
 
                 UpdateChannelList();
-
-                bool allowPal = expansionMask == ExpansionType.NoneMask;
-                dialog.Properties.SetPropertyEnabled(3, allowPal);
-                if (!allowPal)
-                    dialog.Properties.SetPropertyValue(3, false);
             }
             else if (propIdx == 5)
             {
