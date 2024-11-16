@@ -1,8 +1,11 @@
 4.3.0
 =====
+- NicoBros, corruption file full of zeroes. 
+  https://discord.com/channels/@me/808456248127127624/1305781728132071434
+- Are osc/timecode switched?
 - Dump .bin note table (code is commented out right now)
 - Can we use "UserLandscape" on Android to allow both sides?
-- We still embed quicksand.ttf in package???
+- We still embed quicksand.ttf in package??? Look at our system dialogs to use Noto on there too.
 - Missing virtual/override on VideoEncoderAndroidBase.BeginEncoding, AddFrame, EndEncoding
 - Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
 - We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
@@ -19,7 +22,6 @@
 - Review the copy/paste name matching. Maybe add a rename option.
 - Raw FDS modulation table envelope. 
 - Set multiple colums/rows by default for videos with TONS of channels. 
-- Import arpeggios.
 - "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
@@ -164,6 +166,7 @@ Discord
 
 Backlog: 
 =========
+- Import arpeggios.
 - FDS mod depth envelopes?
 	https://discord.com/channels/747649221879922840/747649222354010173/1289675252850360351
 - Unify mobile/desktop file operations. Remove all if {} there.
