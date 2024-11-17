@@ -363,7 +363,7 @@ void Simple_Apu::end_frame()
 		buf_fds.end_frame(frame_length);
 	}
 
-	if (expansions & expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft)
+	if (expansions & (expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft))
 	{
 		buf_exp.end_frame(frame_length);
 	}
@@ -653,16 +653,16 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		}
 	}
 
-	if (expansions & expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft)
+	if (expansions & (expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft))
 	{
 		assert(buf_exp.samples_avail() == count);
 
 		sample_t buf_exp_samples[1024];
 		buf_exp.read_samples(buf_exp_samples, 1024, false);
-
-		for (int i = 0; i < count; i++)
+        
+		if (out)
 		{
-			if (out)
+			for (int i = 0; i < count; i++)
 			{
 				if (expansions & expansion_mask_epsm)
 				{
@@ -696,7 +696,7 @@ void Simple_Apu::remove_samples(long s)
 		buf_fds.remove_samples(s);
 	}
 
-	if (expansions & expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft)
+	if (expansions & (expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft))
 	{
 		buf_exp.remove_samples(s);
 	}
