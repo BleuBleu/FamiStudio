@@ -22,8 +22,8 @@ FAMISTUDIO_CFG_EXTERNAL   = 1
 FAMISTUDIO_ASM6_ZP_ENUM   = $0000
 FAMISTUDIO_ASM6_BSS_ENUM  = $0300
 FAMISTUDIO_ASM6_CODE_BASE = $8100
-.include "test_defs.inc"
-.include "..\famistudio_asm6.asm"
+.include "UnitTests\test_defs.inc"
+.include "famistudio_asm6.asm"
 
 ; VECTORS
 .org $fffA
