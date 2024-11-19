@@ -63,13 +63,13 @@ blargg_err_t Simple_Apu::sample_rate( long sample_rate, bool pal, int tnd_mode )
 		apu.output(&buf, &buf_tnd[0]);
 	}
 
-	vrc6.output(&buf);
-	vrc7.output(&buf);
+	vrc6.output(&buf_exp);
+	vrc7.output(&buf_exp);
 	fds.output(&buf_fds);
 	fds.treble_eq(blip_eq_t(0));
-	mmc5.output(&buf);
-	namco.output(&buf);
-	sunsoft.output(&buf);
+	mmc5.output(&buf_exp);
+	namco.output(&buf_exp);
+	sunsoft.output(&buf_exp);
 	epsm.output(&buf_epsm_left, &buf_epsm_right);
 
 	long clock_rate = pal ? 1662607 : 1789773;
@@ -81,6 +81,9 @@ blargg_err_t Simple_Apu::sample_rate( long sample_rate, bool pal, int tnd_mode )
 
 	buf_fds.sample_rate(sample_rate);
 	buf_fds.clock_rate(clock_rate);
+
+	buf_exp.sample_rate(sample_rate);
+	buf_exp.clock_rate(clock_rate);
 
 	buf_tnd[0].clock_rate(clock_rate);
 	buf_tnd[1].clock_rate(clock_rate);
@@ -117,12 +120,12 @@ void Simple_Apu::enable_channel(int expansion, int idx, bool enable)
 	{
 		switch (expansion)
 		{
-			case expansion_vrc6: vrc6.osc_output(idx, enable ? &buf : NULL); break;
+			case expansion_vrc6: vrc6.osc_output(idx, enable ? &buf_exp : NULL); break;
 			case expansion_vrc7: vrc7.enable_channel(idx, enable); break;
 			case expansion_fds: fds.output(enable ? &buf_fds : NULL); break;
-			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_namco: namco.osc_output(idx, enable ? &buf : NULL); break;
-			case expansion_sunsoft: sunsoft.enable_channel(idx, enable ? &buf : NULL); break;
+			case expansion_mmc5: mmc5.osc_output(idx, enable ? &buf_exp : NULL); break;
+			case expansion_namco: namco.osc_output(idx, enable ? &buf_exp : NULL); break;
+			case expansion_sunsoft: sunsoft.enable_channel(idx, enable ? &buf_exp : NULL); break;
 			case expansion_epsm: epsm.enable_channel(idx, enable); break;
 		}
 	}
@@ -183,6 +186,7 @@ void Simple_Apu::treble_eq(int expansion, double treble_amount, int treble_freq,
 void Simple_Apu::bass_freq(int bass_freq)
 {
 	buf.bass_freq(bass_freq);
+	buf_exp.bass_freq(bass_freq);
 	buf_fds.bass_freq(bass_freq);
 	buf_tnd[0].bass_freq(bass_freq);
 	buf_tnd[1].bass_freq(bass_freq);
@@ -359,6 +363,11 @@ void Simple_Apu::end_frame()
 		buf_fds.end_frame(frame_length);
 	}
 
+	if (expansions & (expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft))
+	{
+		buf_exp.end_frame(frame_length);
+	}
+
 	if ((expansions & expansion_mask_epsm) != 0)
 	{
 		buf_epsm_left.end_frame(frame_length);
@@ -377,6 +386,9 @@ void Simple_Apu::reset()
 	apu.enable_nonlinear(1.0);
 	tnd_volume = 1.0;
 	seeking = false;
+	tnd_skip = 12;
+	prev_sq_mix = 0;
+	sq_accum = 0;
 	prev_nonlinear_tnd = 0;
 	tnd_accum[0] = 0;
 	tnd_accum[1] = 0;
@@ -409,8 +421,11 @@ const int    sample_shift     = blip_sample_bits - 16;
 const double sample_scale_inv = (1 << sample_shift) * 65535.0;
 const double sample_scale     = 1.0 / sample_scale_inv;
 
-// Using the 3 * tri (15) + 2 * noise (15) + dmc (127) approximation = maximum value is 202.
-const float tnd_scale = 202.0f;
+// Using approximation of 2.75 * tri (15) + 1.85 * noise (15) + dmc (127) = maximum value is 196.
+const float tnd_scale = 196.0f;
+
+// Max volume squares (15 + 15) = 30
+const float sq_scale = 30.0f;
 
 inline float unpack_sample(long raw_sample)
 {
@@ -429,7 +444,12 @@ inline long pack_sample(float sample_float)
 
 inline float nonlinearize(float sample_float)
 {
-	return 163.67f / (24329.0f / (sample_float * tnd_scale) + 100.0f);
+	return 159.79f / (24329.0f / (sample_float * tnd_scale) + 100.0f);
+}
+
+inline float mix_squares(float sample_float)
+{
+    return 95.52f / (8128.0f / (sample_float * sq_scale) + 100.0f);
 }
 
 long Simple_Apu::read_samples( sample_t* out, long count )
@@ -456,6 +476,17 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 
 	if (count)
 	{
+		// Apply volume mixing to the square buffer
+		Blip_Buffer::buf_t_* p = buf.buffer_;
+
+		for (unsigned n = count; n--; )
+		{
+			sq_accum += (long)*p;
+			long sq_mix = pack_sample(mix_squares(unpack_sample(sq_accum)) * tnd_volume);
+			*p++ = (sq_mix - prev_sq_mix);
+			prev_sq_mix = sq_mix;
+		}
+
 		// Here, even when doing accurate-seek, we still need 
 		// do a bit of work since we need 'prev_nonlinear_tnd' 
 		// to have a valid value after seeking.
@@ -504,11 +535,14 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				long nonlinear_tnd = pack_sample(enabled_channels_non_linear_mix * tnd_volume);
 
 				// Write final result in tnd[0] so that the remaining code can proceed as usual.
-				*p[0]++ = (nonlinear_tnd - prev_nonlinear_tnd);
+				*p[0]++ = (tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd);
 				 p[1]++;
 				 p[2]++;
 
 				prev_nonlinear_tnd = nonlinear_tnd;
+
+				if (tnd_skip > 0)
+					tnd_skip--;
 			}
 		}
 		else
@@ -519,9 +553,12 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			for (unsigned n = count; n--; )
 			{
 				tnd_accum[0] += (long)*p;
-				long nonlinear_tnd = pack_sample(nonlinearize(unpack_sample(tnd_accum[0])) * tnd_volume);
-				*p++ = (nonlinear_tnd - prev_nonlinear_tnd);
+    			long nonlinear_tnd = pack_sample(nonlinearize(unpack_sample(tnd_accum[0])) * tnd_volume);
+				*p++ = tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd;
 				prev_nonlinear_tnd = nonlinear_tnd;
+
+				if (tnd_skip > 0)
+					tnd_skip--;
 			}
 		}
 
@@ -616,6 +653,30 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 		}
 	}
 
+	if (expansions & (expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft))
+	{
+		assert(buf_exp.samples_avail() == count);
+
+		sample_t buf_exp_samples[1024];
+		buf_exp.read_samples(buf_exp_samples, 1024, false);
+        
+		if (out)
+		{
+			for (int i = 0; i < count; i++)
+			{
+				if (expansions & expansion_mask_epsm)
+				{
+					out[i * 2 + 0] = (blip_sample_t)clamp(out[i * 2 + 0] + (long)buf_exp_samples[i], -32768, 32767);
+					out[i * 2 + 1] = (blip_sample_t)clamp(out[i * 2 + 1] + (long)buf_exp_samples[i], -32768, 32767);
+				}
+				else
+				{
+					out[i] = (blip_sample_t)clamp(out[i] + (long)buf_exp_samples[i], -32768, 32767);
+				}
+			}
+		}
+	}
+
 	return count;
 }
 
@@ -633,6 +694,11 @@ void Simple_Apu::remove_samples(long s)
 	if (expansions & expansion_mask_fds)
 	{
 		buf_fds.remove_samples(s);
+	}
+
+	if (expansions & (expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft))
+	{
+		buf_exp.remove_samples(s);
 	}
 
 	if (expansions & expansion_mask_epsm)
