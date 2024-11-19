@@ -8,11 +8,12 @@ The FamiStudio sound engine is used by the NSF and ROM exporter of FamiStudio an
 
 The engine is essentially a heavily modified version of [FamiTone2 by Shiru](https://shiru.untergrund.net/code.shtml). A lot of his code and comments are still present, so massive thanks to him!! I am not trying to steal his work or anything, i renamed a lot of functions and variables because at some point it was becoming a mess of coding standards and getting hard to maintain.
 
-The engine, as well as a demo project, is available for all 3 major assemblers:
+The engine, as well as a demo project, is available for all 4 major assemblers:
 
 * CA65 (and CC65)
 * NESASM
 * ASM6
+* SDAS
 
 ## Features
 
@@ -82,6 +83,8 @@ The source code for the demo is located in the \DemoSource subfolder.
 * CC65: `DemoSource\demo_cc65.c`
 * NESASM: `DemoSource\demo_nesasm.asm`
 * ASM6: `DemoSource\demo_asm6.asm`
+* SDAS: `DemoSource\demo_sdas.s`
+* GBDK/SDCC: `DemoSource\demo_sdcc.s`
 
 The songs used in the demo are available in the demo songs that are included with FamiStudio:
 
@@ -98,12 +101,13 @@ The sound engine is contained in a single file which can be simply included in o
 * CA65: `famistudio_ca65.s`
 * NESASM: `famistudio_nesasm.asm`
 * ASM6: `famistudio_asm6.asm`
+* SDAS: `famistudio_sdas.s`
 
 Another approach would be to compile the engine as a separate obj file and link it. This might require you to import the famistudio_xxx calls in other parts of your project.
 
 All the instructions to use it in your project are included as comments at the top of these files.
 
-For using the C bindings with CC65, you will need to include the `famistudio_cc65.h` header and also include the `famistudio_ca65.s` into your assembly startup routine. Make sure that `FAMISTUDIO_CFG_C_BINDINGS = 1` is set either as part of your external config or in the file or else the linker will be unable link object files.
+For using the C bindings with CC65 or SDCC, you will need to include the `famistudio_cc65.h` header or `famistudio_sdcc.h` header respectively, and also include the `famistudio_ca65.s` or `famistudio_sdas.s` assembly file into your assembly startup routine. Make sure that `FAMISTUDIO_CFG_C_BINDINGS = 1` is set either as part of your external config or in the file or else the linker will be unable link object files.
 
 ## Interface
 
@@ -181,6 +185,17 @@ For ASM6, you simply need to specify the location at which to allocate the `ZP`/
     FAMISTUDIO_ASM6_ZP_ENUM   = $0000
     FAMISTUDIO_ASM6_BSS_ENUM  = $0200
     FAMISTUDIO_ASM6_CODE_BASE = $8000
+
+#### SDAS (and GBDK/SDCC)
+
+For SDAS, you need to specify the name of your ZEROPAGE, RAM/BSS and CODE/PRG segments as c-style macros (`.define`) like the example below.
+
+    .define FAMISTUDIO_SDAS_ZP_SEGMENT   "_ZP"
+    .define FAMISTUDIO_SDAS_RAM_SEGMENT  "_BSS"
+    .define FAMISTUDIO_SDAS_CODE_SEGMENT "_CODE_0"
+
+Note that "_CODE_0" refers to bank 0 here. You can change this to a different bank of your choice.
+Alternatively you can use "_CODE_255" if you are using GBDK's auto-banking feature which performs the bank assignment for you between the compilation and link stage.
 
 ### 2. Audio Expansions Configuration
 
