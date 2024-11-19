@@ -72,8 +72,8 @@ namespace FamiStudio
 
                 // Steo: Linux seems to be crashing with async callback for some reason.
                 // Doing this for now so stuff can still be tested until it's solved.
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    GL.Enable(0x8242); // GL_DEBUG_OUTPUT_SYNCHRONOUS
+                if (Platform.IsLinux)
+                    GL.Enable(GL.DebugOutputSynchronous); 
             }
 #endif
 
@@ -1039,6 +1039,7 @@ namespace FamiStudio
         public const int MajorVersion              = 0x821B;
         public const int MinorVersion              = 0x821C;
         public const int TextureMaxAnisotropy      = 0x84FE;
+        public const int DebugOutputSynchronous    = 0x8242;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
         public delegate void DebugCallback(int source, int type, int id, int severity, int length, [MarshalAs(UnmanagedType.LPStr)] string message, IntPtr userParam);
