@@ -1,6 +1,7 @@
 @echo off
 
 :: Compile a bunch of permutations and make sure the NES roms are binary identical across all 3 assemblers.
+set NES_INCLUDE=..\
 set count=0
 :Loop
 	set /a count=%count%+1
@@ -186,8 +187,8 @@ type test_defs.inc
 pushd ..
 REM ..\Tools\asm6 UnitTests\test_asm6.asm UnitTests\test_asm6.nes
 ..\Tools\asm6_fixed UnitTests\test_asm6.asm UnitTests\test_asm6.nes
-..\Tools\NESASM3 UnitTests\test_nesasm.asm
 popd
+..\..\Tools\NESASM3 test_nesasm.asm
 
 :: Binary comparison of all 3 ROMs.
 fc /b test_ca65.nes test_asm6.nes > nul
