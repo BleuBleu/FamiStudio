@@ -262,7 +262,7 @@ namespace FamiStudio
             buttonQwerty = CreateToolbarButton("QwertyPiano", "Qwerty");
             buttonQwerty.Visible = Platform.IsDesktop;
             buttonQwerty.Click += ButtonQwerty_Click;
-            buttonQwerty.EnabledEvent += ButtonQwerty_EnabledEvent;
+            buttonQwerty.DimmedEvent += ButtonQwerty_DimmedEvent;
 
             buttonMetronome = CreateToolbarButton("Metronome", "Metronome");
             buttonMetronome.Click += ButtonMetronome_Click;
@@ -580,9 +580,9 @@ namespace FamiStudio
             App.ToggleQwertyPiano();
         }
 
-        private bool ButtonQwerty_EnabledEvent(Control sender)
+        private bool ButtonQwerty_DimmedEvent(Control sender, ref int dimming)
         {
-            return App.IsQwertyPianoEnabled;
+            return !App.IsQwertyPianoEnabled;
         }
 
         private void ButtonMetronome_Click(Control sender)
@@ -602,7 +602,7 @@ namespace FamiStudio
 
         private bool ButtonMachine_EnabledEvent(Control sender)
         {
-            return App.Project != null && !App.Project.UsesAnyExpansionAudio;
+            return App.Project != null;
         }
 
         private string ButtonMachine_ImageEvent(Control sender, ref Color tint)
@@ -734,12 +734,12 @@ namespace FamiStudio
                         if (oscilloscope.Visible)
                         {
                             x += margin;
-                            oscilloscope.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                            timecode.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
                             x += timecodeOscSizeX + margin;
                         }
 
                         x += margin;
-                        timecode.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                        oscilloscope.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
                         x += timecodeOscSizeX + margin;
                     }
                 }

@@ -805,6 +805,10 @@ namespace GLFWDotNet
             [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
 			public delegate IntPtr glfwGetCocoaWindow(IntPtr window);
 
+            [UnmanagedFunctionPointer(CallingConvention.Cdecl), SuppressUnmanagedCodeSecurity]
+			public delegate IntPtr glfwGetPlatform();
+
+
 		}
 
 		private static Delegates.glfwInit _glfwInit;
@@ -1053,6 +1057,8 @@ namespace GLFWDotNet
 
         private static Delegates.glfwGetCocoaWindow _glfwGetCocoaWindow;
 
+        private static Delegates.glfwGetPlatform _glfwGetPlatform;
+
 		/// <summary>
         /// Initializes the GLFW library.
         /// </summary>
@@ -1193,6 +1199,7 @@ namespace GLFWDotNet
 			_glfwGetInstanceProcAddress = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetInstanceProcAddress>(getProcAddress("glfwGetInstanceProcAddress"));
 			_glfwGetPhysicalDevicePresentationSupport = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetPhysicalDevicePresentationSupport>(getProcAddress("glfwGetPhysicalDevicePresentationSupport"));
 			_glfwCreateWindowSurface = Marshal.GetDelegateForFunctionPointer<Delegates.glfwCreateWindowSurface>(getProcAddress("glfwCreateWindowSurface"));
+			_glfwGetPlatform = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetPlatform>(getProcAddress("glfwGetPlatform"));
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) _glfwGetWin32Window = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetWin32Window>(getProcAddress("glfwGetWin32Window"));
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) _glfwGetX11Window = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetX11Window>(getProcAddress("glfwGetX11Window"));
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) _glfwGetX11Display = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetX11Display>(getProcAddress("glfwGetX11Display"));
@@ -3801,6 +3808,30 @@ namespace GLFWDotNet
         public static IntPtr glfwGetCocoaWindow(IntPtr window)
 		{
 			return _glfwGetCocoaWindow(window);
+		}
+
+		/*! @brief Returns the currently selected platform.
+		*
+		*  This function returns the platform that was selected during initialization.  The
+		*  returned value will be one of `GLFW_PLATFORM_WIN32`, `GLFW_PLATFORM_COCOA`,
+		*  `GLFW_PLATFORM_WAYLAND`, `GLFW_PLATFORM_X11` or `GLFW_PLATFORM_NULL`.
+		*
+		*  @return The currently selected platform, or zero if an error occurred.
+		*
+		*  @errors Possible errors include @ref GLFW_NOT_INITIALIZED.
+		*
+		*  @thread_safety This function may be called from any thread.
+		*
+		*  @sa @ref platform
+		*  @sa @ref glfwPlatformSupported
+		*
+		*  @since Added in version 3.4.
+		*
+		*  @ingroup init
+		*/
+		public static IntPtr glfwGetPlatform()
+		{
+			return _glfwGetPlatform();
 		}
 
 	}

@@ -50,7 +50,6 @@ namespace FamiStudio
                 }
 
                 Debug.Assert(!originalProject.UsesMultipleExpansionAudios);
-                Debug.Assert(!originalProject.UsesAnyExpansionAudio || !pal);
 
                 var maxSong = originalProject.UsesEPSMExpansion ? RomMaxSongsEpsm : RomMaxSongs;
 

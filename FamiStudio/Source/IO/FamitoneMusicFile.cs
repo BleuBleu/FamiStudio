@@ -1241,7 +1241,7 @@ namespace FamiStudio
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizeNtsc, out var _);
                                 channel.ComputeVolumeSlideNoteParams(note, location, currentSpeed, false, out var stepSizePal, out var _);
 
-                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
+                                if (machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
@@ -1479,7 +1479,7 @@ namespace FamiStudio
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTableNtsc, false, true, out _, out int stepSizeNtsc, out _);
                                 found &= channel.ComputeSlideNoteParams(note, location, currentSpeed, noteTablePal, true, true, out _, out int stepSizePal, out _);
 
-                                if (song.Project.UsesAnyExpansionAudio || machine == MachineType.NTSC)
+                                if (machine == MachineType.NTSC)
                                     stepSizePal = stepSizeNtsc;
                                 else if (machine == MachineType.PAL)
                                     stepSizeNtsc = stepSizePal;
@@ -2164,7 +2164,7 @@ namespace FamiStudio
             if (project.SoundEngineUsesExtendedInstruments)
                 flags.Add($"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
             if (project.Tuning != 440)
-                flags.Add("Project uses non-standard tuning, the note tables where dumped in the assembly code. You will need to manually patch in the sound engine code to hear the correct tuning.");
+                flags.Add("Project uses non-standard tuning, the note tables were dumped in the assembly code. You will need to manually patch in the sound engine code to hear the correct tuning.");
 
             return flags;
         }
@@ -2245,12 +2245,10 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, flagMessage);
                     }
 
-                    //if (project.Tuning != 440)
-                    //{
-                    //    var noteTableFilename = Path.ChangeExtension(filename, ".notetable.txt"); ;
-                    //    Log.LogMessage(LogSeverity.Info, $"Project uses non-standard tuning, the note tables where dumped in '{noteTableFilename}'. You will need to manually patch in the sound engine code to hear the correct tuning.");
-                    //    NesApu.DumpNoteTableSetToFile(project.Tuning, noteTableFilename);
-                    //}
+                    if (project.Tuning != 440)
+                    {
+                        NesApu.DumpNoteTableBin(project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels, Path.GetDirectoryName(filename));
+                    }
                 }
             }
 
@@ -2413,7 +2411,7 @@ namespace FamiStudio
             using (var noteTableStream = typeof(FamitoneMusicFile).Assembly.GetManifestResourceStream(tblFile))
             using (StreamReader reader = new StreamReader(noteTableStream))
             {
-                var noteTableLines = reader.ReadToEnd().Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
+                var noteTableLines = reader.ReadToEnd().Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in noteTableLines)
                 {
                     var pair = line.Split('=', StringSplitOptions.RemoveEmptyEntries);
@@ -2460,7 +2458,7 @@ namespace FamiStudio
 
         public static bool PatchNoteTable(byte[] data, string tblFile, int tuning, int machine, int numN163Channels)
         {
-            var pal = machine == MachineType.PAL;
+            var pal = machine == MachineType.PAL || machine == MachineType.Dual;
             if (!PatchNoteTableInternal(data, tblFile, 0, tuning, pal, numN163Channels))
             {
                 return false;
@@ -2469,7 +2467,7 @@ namespace FamiStudio
             // For dual, we need to patch the 2 note tables that are back to back.
             if (machine == MachineType.Dual)
             {
-                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, true, numN163Channels))
+                if (!PatchNoteTableInternal(data, tblFile, 97, tuning, false, numN163Channels))
                 {
                     return false;
                 }

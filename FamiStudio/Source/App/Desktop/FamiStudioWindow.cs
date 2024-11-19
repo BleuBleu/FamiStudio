@@ -385,6 +385,11 @@ namespace FamiStudio
 
         private void ErrorCallback(int error, string description)
         {
+            // Under Wayland, the callback spams errors about the window position.
+            // This slows everything to a crawl while debugging, so we mitigate it.
+            if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND && description.Contains("window position"))
+                return;
+
             Debug.WriteLine($"*** GLFW Error code {error}, {description}.");
         }
 

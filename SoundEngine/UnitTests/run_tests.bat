@@ -183,9 +183,11 @@ type test_defs.inc
 :: Compile everything.
 ..\..\Tools\ca65 test_ca65.s -g -o test_ca65.o
 ..\..\Tools\ld65 -C test_ca65.cfg -o test_ca65.nes test_ca65.o --mapfile test_ca65.map --dbgfile test_ca65.dbg
-REM ..\..\Tools\asm6 test_asm6.asm test_asm6.nes
-..\..\Tools\asm6_fixed test_asm6.asm test_asm6.nes
-..\..\Tools\NESASM3 test_nesasm.asm
+pushd ..
+REM ..\Tools\asm6 UnitTests\test_asm6.asm UnitTests\test_asm6.nes
+..\Tools\asm6_fixed UnitTests\test_asm6.asm UnitTests\test_asm6.nes
+..\Tools\NESASM3 UnitTests\test_nesasm.asm
+popd
 
 :: Binary comparison of all 3 ROMs.
 fc /b test_ca65.nes test_asm6.nes > nul

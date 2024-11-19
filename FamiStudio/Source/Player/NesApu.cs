@@ -277,14 +277,27 @@ namespace FamiStudio
 
         private class NoteTableSet
         {
-            public readonly ushort[]   NoteTableNTSC    = new ushort[97];
-            public readonly ushort[]   NoteTablePAL     = new ushort[97];
-            public readonly ushort[]   NoteTableVrc6Saw = new ushort[97];
-            public readonly ushort[]   NoteTableVrc7    = new ushort[97];
-            public readonly ushort[]   NoteTableFds     = new ushort[97];
-            public readonly ushort[]   NoteTableEPSM    = new ushort[97];
-            public readonly ushort[]   NoteTableEPSMFm  = new ushort[97];
-            public readonly ushort[][] NoteTableN163    = new ushort[8][]
+            public readonly ushort[]   NoteTableNTSC       = new ushort[97];
+            public readonly ushort[]   NoteTablePAL        = new ushort[97];
+            public readonly ushort[]   NoteTableVrc6Saw    = new ushort[97];
+            public readonly ushort[]   NoteTableVrc6SawPAL = new ushort[97];
+            public readonly ushort[]   NoteTableVrc7       = new ushort[97];
+            public readonly ushort[]   NoteTableFds        = new ushort[97];
+            public readonly ushort[]   NoteTableFdsPAL     = new ushort[97];
+            public readonly ushort[]   NoteTableEPSM       = new ushort[97];
+            public readonly ushort[]   NoteTableEPSMFm     = new ushort[97];
+            public readonly ushort[][] NoteTableN163       = new ushort[8][]
+            {
+                new ushort[97], 
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97],
+                new ushort[97]
+            };  
+            public readonly ushort[][] NoteTableN163PAL    = new ushort[8][]
             {
                 new ushort[97], 
                 new ushort[97],
@@ -315,11 +328,18 @@ namespace FamiStudio
             }
             if (machine == MachineType.PAL || machine == MachineType.Dual)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTablePAL, "famistudio_note_table", "PAL version"));
+                lines.AddRange(GetNoteTableText(tableSet.NoteTablePAL, "famistudio_note_table_pal", "PAL version"));
             }
             if ((expansionMask & ExpansionType.Vrc6Mask) != 0)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6Saw, "famistudio_saw_note_table", "VRC6 Saw"));
+                if (machine == MachineType.NTSC || machine == MachineType.Dual)
+                {
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6Saw, "famistudio_saw_note_table", "VRC6 Saw"));
+                }
+                if (machine == MachineType.PAL || machine == MachineType.Dual)
+                {
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6SawPAL, "famistudio_saw_note_table_pal", "VRC6 Saw PAL"));
+                }
             }
             if ((expansionMask & ExpansionType.Vrc7Mask) != 0)
             {
@@ -327,19 +347,115 @@ namespace FamiStudio
             }
             if ((expansionMask & ExpansionType.FdsMask) != 0)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableFds, "famistudio_fds_note_table", "FDS"));
+                if (machine == MachineType.NTSC || machine == MachineType.Dual)
+                {
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFds, "famistudio_fds_note_table", "FDS"));
+                }
+                if (machine == MachineType.PAL || machine == MachineType.Dual)
+                {
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFdsPAL, "famistudio_fds_note_table_pal", "FDS PAL"));
+                }
             }
             if ((expansionMask & ExpansionType.N163Mask) != 0)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableN163[numN163Channels - 1], "famistudio_n163_note_table", $"N163 ({numN163Channels} channel)"));
+                if (machine == MachineType.NTSC || machine == MachineType.Dual)
+                {
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163[numN163Channels - 1], $"famistudio_n163_note_table_{numN163Channels}ch", $"N163 ({numN163Channels} channel)"));
+                }
+                if (machine == MachineType.PAL || machine == MachineType.Dual)
+                {
+                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163PAL[numN163Channels - 1], $"famistudio_n163_note_table_{numN163Channels}ch_pal", $"N163 ({numN163Channels} channel) PAL"));
+                }
             }
             if ((expansionMask & ExpansionType.EPSMMask) != 0)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table_lsb", "EPSM FM"));
+                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table", "EPSM FM"));
                 lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSM, "famistudio_epsm_s_note_table", "EPSM Square"));
             }
 
             return lines;
+        }
+
+        private static Dictionary<string, byte[]> GetNoteTableBinaryData(List<string> tables)
+        {
+            var binData = new Dictionary<string, byte[]>();
+            var byteList = new List<byte>();
+            var name = string.Empty;
+
+            foreach (var line in tables)
+            {
+                var trimLine = line.Trim();
+                if (string.IsNullOrEmpty(trimLine) || trimLine.StartsWith(';'))
+                    continue;
+
+                if (trimLine.Contains("famistudio_"))
+                {
+                    name = trimLine.Split(":")[0];
+                    continue;
+                }
+
+                var bytes = trimLine
+                        .Replace(".byte", "")
+                        .Replace("$", "")
+                        .Split(';')[0]
+                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(hex => Convert.ToByte(hex.Trim(), 16))
+                        .ToArray();
+
+                byteList.AddRange(bytes);
+
+                if (byteList.Count == 97)
+                {
+                    binData[name] = byteList.ToArray();
+                    byteList.Clear();
+                }
+            }
+
+            return binData;
+        }
+
+        public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8, string path = ".")
+        {
+            var noteTablesText = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels);
+            var binData = GetNoteTableBinaryData(noteTablesText);
+
+            foreach (var kv in binData)
+            {
+                var outputFileName = Path.Combine(path, $"{kv.Key}.bin");
+
+                using FileStream fs = new(outputFileName, FileMode.Create);
+                using BinaryWriter writer = new(fs);
+
+                writer.Write(kv.Value);
+            }
+        }
+
+        public static void DumpNoteTableBinSet(int tuning = 440)
+        {
+            DumpNoteTableBin(tuning, ExpansionType.NoneMask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.NoneMask, MachineType.PAL);
+            DumpNoteTableBin(tuning, ExpansionType.Vrc6Mask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.Vrc6Mask, MachineType.PAL);
+            DumpNoteTableBin(tuning, ExpansionType.Vrc7Mask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.FdsMask, MachineType.NTSC);
+            DumpNoteTableBin(tuning, ExpansionType.FdsMask, MachineType.PAL);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 1);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 2);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 3);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 4);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 5);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 6);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 7);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 8);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 1);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 2);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 3);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 4);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 5);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 6);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 7);
+            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 8);
+            DumpNoteTableBin(tuning, ExpansionType.EPSMMask, MachineType.NTSC);
         }
 
         public static void DumpNoteTableSetToFile(int tuning, string filename)
@@ -349,8 +465,10 @@ namespace FamiStudio
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.NoneMask, MachineType.NTSC));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.NoneMask, MachineType.PAL));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc6Mask, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc6Mask, MachineType.PAL));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc7Mask, MachineType.NTSC));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.FdsMask, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.FdsMask, MachineType.PAL));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 1));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 2));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 3));
@@ -359,7 +477,15 @@ namespace FamiStudio
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 6));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 7));
             lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 8));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.EPSM, MachineType.NTSC));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 1));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 2));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 3));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 4));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 5));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 6));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 7));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 8));
+            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.EPSMMask, MachineType.NTSC));
 
             using (var stream = new StreamWriter(filename))
             {
@@ -377,15 +503,14 @@ namespace FamiStudio
             if (!string.IsNullOrEmpty(comment))
                 lines.Add($"; {comment}");
 
-            lines.Add($"{name}_lsb:");
-            lines.Add($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 0):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            foreach (var (type, shift) in new[] { ("lsb", 0), ("msb", 8) })
+            {
+                lines.Add($"{name}_{type}:");
+                lines.Add("\t.byte $00");
 
-            lines.Add($"{name}_msb:");
-            lines.Add($"\t.byte $00");
-            for (int j = 0; j < 8; j++)
-                lines.Add($"\t.byte {String.Join(",", noteTable.Select(i => $"${(byte)(i >> 8):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+                for (int j = 0; j < 8; j++)
+                    lines.Add($"\t.byte {string.Join(",", noteTable.Select(i => $"${(byte)(i >> shift):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
+            }
 
             return lines;
         }
@@ -404,6 +529,7 @@ namespace FamiStudio
 
                 double freqC1 = tuning * FreqRatioA4ToC1;
 
+
                 double clockNtsc = FreqNtsc / 16.0;
                 double clockPal  = FreqPal  / 16.0;
                 double clockEPSM = FreqEPSM / 32.0;
@@ -412,16 +538,21 @@ namespace FamiStudio
                 {
                     var octave = (i - 1) / 12;
                     var freq = freqC1 * Math.Pow(2.0, (i - 1) / 12.0);
-                    noteTableSet.NoteTableNTSC[i]    = (ushort)(clockNtsc / freq - 0.5);
-                    noteTableSet.NoteTablePAL[i]     = (ushort)(clockPal  / freq - 0.5);
-                    noteTableSet.NoteTableEPSM[i]    = (ushort)Math.Round(clockEPSM / freq);
-                    noteTableSet.NoteTableEPSMFm[i]  = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((noteTableSet.NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
-                    noteTableSet.NoteTableVrc6Saw[i] = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
-                    noteTableSet.NoteTableFds[i]     = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
-                    noteTableSet.NoteTableVrc7[i]    = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(noteTableSet.NoteTableVrc7[(i - 1) % 12 + 1] << octave);
+                    noteTableSet.NoteTableNTSC[i]       = (ushort)(clockNtsc / freq - 0.5);
+                    noteTableSet.NoteTablePAL[i]        = (ushort)(clockPal  / freq - 0.5);
+                    noteTableSet.NoteTableEPSM[i]       = (ushort)Math.Round(clockEPSM / freq);
+                    noteTableSet.NoteTableEPSMFm[i]     = octave == 0 ? (ushort)((144 * (double)freq * 1048576 / 8000000)/4) : (ushort)((noteTableSet.NoteTableEPSMFm[(i - 1) % 12 + 1]) << octave);
+                    noteTableSet.NoteTableVrc6Saw[i]    = (ushort)((clockNtsc * 16.0) / (freq * 14.0) - 0.5);
+                    noteTableSet.NoteTableVrc6SawPAL[i] = (ushort)((clockPal * 16.0) / (freq * 14.0) - 0.5);
+                    noteTableSet.NoteTableFds[i]        = (ushort)((freq * 65536.0) / (clockNtsc / 1.0) + 0.5);
+                    noteTableSet.NoteTableFdsPAL[i]     = (ushort)((freq * 65536.0) / (clockPal / 1.0) + 0.5);
+                    noteTableSet.NoteTableVrc7[i]       = octave == 0 ? (ushort)(freq * 262144.0 / 49715.0 + 0.5) : (ushort)(noteTableSet.NoteTableVrc7[(i - 1) % 12 + 1] << octave);
 
                     for (int j = 0; j < 8; j++)
-                        noteTableSet.NoteTableN163[j][i] = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockNtsc) / 4);
+                    {
+                        noteTableSet.NoteTableN163[j][i]    = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockNtsc) / 4);
+                        noteTableSet.NoteTableN163PAL[j][i] = (ushort)Math.Min(0xffff, ((freq * (j + 1) * 983040.0) / clockPal) / 4);
+                    }
                 }
 
                 #if FALSE // For debugging
@@ -770,9 +901,9 @@ namespace FamiStudio
             switch (channelType)
             {
                 case ChannelType.Vrc6Saw:
-                    return noteTableSet.NoteTableVrc6Saw;
+                    return pal ? noteTableSet.NoteTableVrc6SawPAL : noteTableSet.NoteTableVrc6Saw;
                 case ChannelType.FdsWave:
-                    return noteTableSet.NoteTableFds;
+                    return pal ? noteTableSet.NoteTableFdsPAL : noteTableSet.NoteTableFds;
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:
@@ -781,7 +912,7 @@ namespace FamiStudio
                 case ChannelType.N163Wave6:
                 case ChannelType.N163Wave7:
                 case ChannelType.N163Wave8:
-                    return noteTableSet.NoteTableN163[numN163Channels - 1];
+                    return pal ? noteTableSet.NoteTableN163PAL[numN163Channels - 1] : noteTableSet.NoteTableN163[numN163Channels - 1];
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
