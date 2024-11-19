@@ -1,25 +1,11 @@
-Steo PAL exp review.
-- Different ASM6?
-- Why comment out the asm6_fixed in unit tests?
-
-Steo TND/square:
-- When mixing the squares, why do we multiply by the TND volume? `pack_sample(mix_squares(unpack_sample(sq_accum)) * tnd_volume);`
-- `if (expansions & expansion_mask_vrc6 | expansion_mask_vrc7 | expansion_mask_mmc5 | expansion_mask_namco | expansion_mask_sunsoft)` will not compile on clang. Add parhentesis
-- Explain TND skip
-- Move `if (out)` outside of for loop in at end of `Simple_Apu::read_samples`. 
-
 Steo TODO after merging PAL exp:
-- LOC : "MachineTooltip" + "ExpansionAudioTooltip" need to be retranslated to remove mention that PAL isnt supported.
 - Add message when dumping FT2 note tables.
-- if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
 - Are toolbar/osc flipped on mobile?
-- AudioStreamInterface.cs is in the project twice???
 
 4.3.0
 =====
 - NicoBros, corruption file full of zeroes. 
   https://discord.com/channels/@me/808456248127127624/1305781728132071434
-- Are osc/timecode switched?
 - Dump .bin note table (code is commented out right now)
 - Can we use "UserLandscape" on Android to allow both sides?
 - We still embed quicksand.ttf in package??? Look at our system dialogs to use Noto on there too.
