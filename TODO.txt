@@ -1,5 +1,15 @@
 4.3.0
 =====
+- Dump .bin note table (code is commented out right now)
+- Can we use "UserLandscape" on Android to allow both sides?
+- We still embed quicksand.ttf in package???
+- Missing virtual/override on VideoEncoderAndroidBase.BeginEncoding, AddFrame, EndEncoding
+- Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
+- We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
+- Look at the toolbar 12 pixel offset. BUtton.ImageScale didnt update the cached image size.
+- A single-click on a slider doesnt change its value
+- Filter settings dont apply to instrument player?
+	https://discord.com/channels/747649221879922840/747649222354010173/1297729099103735828
 - MID import error :
 	https://discord.com/channels/@me/1286493072418672754/1286493156602282035
 - Is register overlay broken on android?
@@ -93,7 +103,7 @@ To take screenshot on android:
 
 Convert PNG to TGA
 ==================
-"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
+"D:\Temp\ImageMagick-7.1.1-39-portable-Q8-x64\magick.exe" mogrify -path D:\Temp\Icons\Out\Tga -compress RLE -format tga *.png
 
 To set beyond compare + sublime as default git editor
 =====================================================

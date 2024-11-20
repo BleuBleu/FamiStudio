@@ -631,7 +631,7 @@ namespace FamiStudio
                     // Mobile
                     Settings.AllowVibration = pageMobile.GetPropertyValue<bool>(0);
                     Settings.ForceLandscape = pageMobile.GetPropertyValue<bool>(1);
-                    Settings.MobilePianoHeight = Utils.ParseIntWithTrailingGarbage(pageMobile.GetPropertyValue<string>(2));
+                    Settings.MobilePianoHeight = Utils.Clamp(Utils.ParseIntWithTrailingGarbage(pageMobile.GetPropertyValue<string>(2)), 25, 50);
 
                     Settings.Save();
                     Settings.NotifyKeyboardShortcutsChanged();

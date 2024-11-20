@@ -146,6 +146,11 @@ namespace FamiStudio
 
         public static int ParseIntWithTrailingGarbage(string s)
         {
+            if (s == null)
+            {
+                return 0;
+            }
+
             int idx = 0;
             int start = 0;
             int sign = 1;
