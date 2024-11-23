@@ -2205,12 +2205,6 @@ namespace FamiStudio
             var usedFlags = kernel == FamiToneKernel.FamiStudio ? GetRequiredFlags() : new List<string>();
             var flagComments = usedFlags.Select((s) => $"; {s}").ToList();
 
-            if (project.Tuning != 440)
-            {
-                flagComments.Add("");
-                flagComments.AddRange(NesApu.GetNoteTablesText(project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels).Select((s) => $"; {s}"));
-            }
-
             lines.InsertRange(1, flagComments);
 
             File.WriteAllLines(filename, lines);
@@ -2247,7 +2241,7 @@ namespace FamiStudio
 
                     if (project.Tuning != 440)
                     {
-                        NesApu.DumpNoteTableBin(project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels, Path.GetDirectoryName(filename));
+                        NesApu.DumpNoteTableBinSet(Path.GetDirectoryName(filename), project.Tuning, project.ExpansionAudioMask, machine, project.ExpansionNumN163Channels);
                     }
                 }
             }

@@ -317,202 +317,102 @@ namespace FamiStudio
             return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
         }
 
-        public static List<string> GetNoteTablesText(int tuning, int expansionMask = ExpansionType.AllMask, int machine = MachineType.NTSC, int numN163Channels = 8)
+        public static void DumpNoteTableBin(string filename, int tuning = 440, int expansion = ExpansionType.None, bool pal = false, int numN163Channels = 8)
         {
+            // Dump a single table, for a single expansion, tuning, machine, n163 channel.
             var tableSet = GetOrCreateNoteTableSet(tuning);
-            var lines = new List<string>();
-            
+            var table = new ushort[97];
+
+            switch (expansion)
+            {
+                case ExpansionType.None:
+                case ExpansionType.Mmc5:
+                case ExpansionType.S5B:
+                    table = pal ? tableSet.NoteTablePAL : tableSet.NoteTableNTSC; break;
+                case ExpansionType.Vrc6:
+                    table = pal ? tableSet.NoteTableVrc6SawPAL : tableSet.NoteTableVrc6Saw; break;
+                case ExpansionType.Vrc7:
+                    table = tableSet.NoteTableVrc7; break;
+                case ExpansionType.Fds:
+                    table = pal ? tableSet.NoteTableFdsPAL : tableSet.NoteTableFds; break;
+                case ExpansionType.N163:
+                    table = pal ? tableSet.NoteTableN163PAL[numN163Channels - 1] : tableSet.NoteTableN163[numN163Channels - 1]; break;
+                case ExpansionType.EPSM:
+                    // Workaround for EPSM having two notetables
+                    table = Path.GetFileName(filename).Contains("_s_") ? tableSet.NoteTableEPSM : tableSet.NoteTableEPSMFm; break;
+            }
+
+            // Separate LSB and MSB
+            foreach (var (type, shift) in new[] { ("lsb", 0), ("msb", 8) })
+            {
+                using FileStream fs = new($"{filename}_{type}.bin", FileMode.Create);
+                using BinaryWriter writer = new(fs);
+
+                var bytes = table.Select(i => (byte)(i >> shift)).ToArray();
+
+                writer.Write(bytes);
+            }
+        }
+
+        public static void DumpNoteTableBinSet(string path, int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8)
+        {
             if (machine == MachineType.NTSC || machine == MachineType.Dual)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableNTSC, "famistudio_note_table", "NTSC version"));
+                DumpNoteTableBin(Path.Combine(path, "famistudio_note_table"), tuning);
             }
             if (machine == MachineType.PAL || machine == MachineType.Dual)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTablePAL, "famistudio_note_table_pal", "PAL version"));
+                DumpNoteTableBin(Path.Combine(path, "famistudio_note_table_pal"), tuning, pal: true);
             }
             if ((expansionMask & ExpansionType.Vrc6Mask) != 0)
             {
                 if (machine == MachineType.NTSC || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6Saw, "famistudio_saw_note_table", "VRC6 Saw"));
+                    DumpNoteTableBin("famistudio_saw_note_table", tuning, ExpansionType.Vrc6);
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc6SawPAL, "famistudio_saw_note_table_pal", "VRC6 Saw PAL"));
+                    DumpNoteTableBin("famistudio_saw_note_table_pal", tuning, ExpansionType.Vrc6, true);
                 }
             }
             if ((expansionMask & ExpansionType.Vrc7Mask) != 0)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableVrc7, "famistudio_vrc7_note_table", "VRC7"));
+                DumpNoteTableBin("famistudio_vrc7_note_table", tuning, ExpansionType.Vrc7);
             }
             if ((expansionMask & ExpansionType.FdsMask) != 0)
             {
                 if (machine == MachineType.NTSC || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFds, "famistudio_fds_note_table", "FDS"));
+                    DumpNoteTableBin("famistudio_fds_note_table", tuning, ExpansionType.Fds);
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableFdsPAL, "famistudio_fds_note_table_pal", "FDS PAL"));
+                    DumpNoteTableBin("famistudio_fds_note_table_pal", tuning, ExpansionType.Fds, true);
                 }
             }
             if ((expansionMask & ExpansionType.N163Mask) != 0)
             {
-                if (machine == MachineType.NTSC || machine == MachineType.Dual)
+                // If we pass -1 for number of n163 channels, we dump all.
+                for (var i = 1; i <= 8; i++)
                 {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163[numN163Channels - 1], $"famistudio_n163_note_table_{numN163Channels}ch", $"N163 ({numN163Channels} channel)"));
-                }
-                if (machine == MachineType.PAL || machine == MachineType.Dual)
-                {
-                    lines.AddRange(GetNoteTableText(tableSet.NoteTableN163PAL[numN163Channels - 1], $"famistudio_n163_note_table_{numN163Channels}ch_pal", $"N163 ({numN163Channels} channel) PAL"));
+                    if (numN163Channels == -1 || numN163Channels == i)
+                    {
+                        if (machine == MachineType.NTSC || machine == MachineType.Dual)
+                        {
+                            DumpNoteTableBin($"famistudio_n163_note_table_{i}ch", tuning, ExpansionType.N163, false, i);
+                        }
+                        if (machine == MachineType.PAL || machine == MachineType.Dual)
+                        {
+                            DumpNoteTableBin($"famistudio_n163_note_table_pal_{i}ch", tuning, ExpansionType.N163, true, i);
+                        }
+                    }
                 }
             }
             if ((expansionMask & ExpansionType.EPSMMask) != 0)
             {
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSMFm, "famistudio_epsm_note_table", "EPSM FM"));
-                lines.AddRange(GetNoteTableText(tableSet.NoteTableEPSM, "famistudio_epsm_s_note_table", "EPSM Square"));
+                DumpNoteTableBin("famistudio_epsm_note_table", tuning, ExpansionType.EPSM);
+                DumpNoteTableBin("famistudio_epsm_s_note_table", tuning, ExpansionType.EPSM);
             }
-
-            return lines;
-        }
-
-        private static Dictionary<string, byte[]> GetNoteTableBinaryData(List<string> tables)
-        {
-            var binData = new Dictionary<string, byte[]>();
-            var byteList = new List<byte>();
-            var name = string.Empty;
-
-            foreach (var line in tables)
-            {
-                var trimLine = line.Trim();
-                if (string.IsNullOrEmpty(trimLine) || trimLine.StartsWith(';'))
-                    continue;
-
-                if (trimLine.Contains("famistudio_"))
-                {
-                    name = trimLine.Split(":")[0];
-                    continue;
-                }
-
-                var bytes = trimLine
-                        .Replace(".byte", "")
-                        .Replace("$", "")
-                        .Split(';')[0]
-                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(hex => Convert.ToByte(hex.Trim(), 16))
-                        .ToArray();
-
-                byteList.AddRange(bytes);
-
-                if (byteList.Count == 97)
-                {
-                    binData[name] = byteList.ToArray();
-                    byteList.Clear();
-                }
-            }
-
-            return binData;
-        }
-
-        public static void DumpNoteTableBin(int tuning = 440, int expansionMask = ExpansionType.NoneMask, int machine = MachineType.NTSC, int numN163Channels = 8, string path = ".")
-        {
-            var noteTablesText = GetNoteTablesText(tuning, expansionMask, machine, numN163Channels);
-            var binData = GetNoteTableBinaryData(noteTablesText);
-
-            foreach (var kv in binData)
-            {
-                var outputFileName = Path.Combine(path, $"{kv.Key}.bin");
-
-                using FileStream fs = new(outputFileName, FileMode.Create);
-                using BinaryWriter writer = new(fs);
-
-                writer.Write(kv.Value);
-            }
-        }
-
-        public static void DumpNoteTableBinSet(int tuning = 440)
-        {
-            DumpNoteTableBin(tuning, ExpansionType.NoneMask, MachineType.NTSC);
-            DumpNoteTableBin(tuning, ExpansionType.NoneMask, MachineType.PAL);
-            DumpNoteTableBin(tuning, ExpansionType.Vrc6Mask, MachineType.NTSC);
-            DumpNoteTableBin(tuning, ExpansionType.Vrc6Mask, MachineType.PAL);
-            DumpNoteTableBin(tuning, ExpansionType.Vrc7Mask, MachineType.NTSC);
-            DumpNoteTableBin(tuning, ExpansionType.FdsMask, MachineType.NTSC);
-            DumpNoteTableBin(tuning, ExpansionType.FdsMask, MachineType.PAL);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 1);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 2);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 3);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 4);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 5);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 6);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 7);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.NTSC, 8);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 1);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 2);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 3);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 4);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 5);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 6);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 7);
-            DumpNoteTableBin(tuning, ExpansionType.N163Mask, MachineType.PAL, 8);
-            DumpNoteTableBin(tuning, ExpansionType.EPSMMask, MachineType.NTSC);
-        }
-
-        public static void DumpNoteTableSetToFile(int tuning, string filename)
-        {
-            var lines = new List<string>();
-
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.NoneMask, MachineType.NTSC));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.NoneMask, MachineType.PAL));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc6Mask, MachineType.NTSC));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc6Mask, MachineType.PAL));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.Vrc7Mask, MachineType.NTSC));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.FdsMask, MachineType.NTSC));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.FdsMask, MachineType.PAL));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 1));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 2));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 3));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 4));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 5));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 6));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 7));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.NTSC, 8));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 1));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 2));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 3));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 4));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 5));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 6));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 7));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.N163Mask, MachineType.PAL, 8));
-            lines.AddRange(GetNoteTablesText(tuning, ExpansionType.EPSMMask, MachineType.NTSC));
-
-            using (var stream = new StreamWriter(filename))
-            {
-                foreach (var line in lines)
-                {
-                    stream.WriteLine(line);
-                }
-            }
-        }
-
-        private static List<string> GetNoteTableText(ushort[] noteTable, string name, string comment = null)
-        {
-            var lines = new List<string>();
-
-            if (!string.IsNullOrEmpty(comment))
-                lines.Add($"; {comment}");
-
-            foreach (var (type, shift) in new[] { ("lsb", 0), ("msb", 8) })
-            {
-                lines.Add($"{name}_{type}:");
-                lines.Add("\t.byte $00");
-
-                for (int j = 0; j < 8; j++)
-                    lines.Add($"\t.byte {string.Join(",", noteTable.Select(i => $"${(byte)(i >> shift):x2}").ToArray(), j * 12 + 1, 12)} ; Octave {j}");
-            }
-
-            return lines;
         }
 
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
