@@ -368,26 +368,26 @@ namespace FamiStudio
             {
                 if (machine == MachineType.NTSC || machine == MachineType.Dual)
                 {
-                    DumpNoteTableBin("famistudio_saw_note_table", tuning, ExpansionType.Vrc6);
+                    DumpNoteTableBin(Path.Combine(path, "famistudio_saw_note_table"), tuning, ExpansionType.Vrc6);
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    DumpNoteTableBin("famistudio_saw_note_table_pal", tuning, ExpansionType.Vrc6, true);
+                    DumpNoteTableBin(Path.Combine(path, "famistudio_saw_note_table_pal"), tuning, ExpansionType.Vrc6, true);
                 }
             }
             if ((expansionMask & ExpansionType.Vrc7Mask) != 0)
             {
-                DumpNoteTableBin("famistudio_vrc7_note_table", tuning, ExpansionType.Vrc7);
+                DumpNoteTableBin(Path.Combine(path, "famistudio_vrc7_note_table"), tuning, ExpansionType.Vrc7);
             }
             if ((expansionMask & ExpansionType.FdsMask) != 0)
             {
                 if (machine == MachineType.NTSC || machine == MachineType.Dual)
                 {
-                    DumpNoteTableBin("famistudio_fds_note_table", tuning, ExpansionType.Fds);
+                    DumpNoteTableBin(Path.Combine(path, "famistudio_fds_note_table"), tuning, ExpansionType.Fds);
                 }
                 if (machine == MachineType.PAL || machine == MachineType.Dual)
                 {
-                    DumpNoteTableBin("famistudio_fds_note_table_pal", tuning, ExpansionType.Fds, true);
+                    DumpNoteTableBin(Path.Combine(path, "famistudio_fds_note_table_pal"), tuning, ExpansionType.Fds, true);
                 }
             }
             if ((expansionMask & ExpansionType.N163Mask) != 0)
@@ -399,19 +399,19 @@ namespace FamiStudio
                     {
                         if (machine == MachineType.NTSC || machine == MachineType.Dual)
                         {
-                            DumpNoteTableBin($"famistudio_n163_note_table_{i}ch", tuning, ExpansionType.N163, false, i);
+                            DumpNoteTableBin(Path.Combine(path, $"famistudio_n163_note_table_{i}ch"), tuning, ExpansionType.N163, false, i);
                         }
                         if (machine == MachineType.PAL || machine == MachineType.Dual)
                         {
-                            DumpNoteTableBin($"famistudio_n163_note_table_pal_{i}ch", tuning, ExpansionType.N163, true, i);
+                            DumpNoteTableBin(Path.Combine(path, $"famistudio_n163_note_table_pal_{i}ch"), tuning, ExpansionType.N163, true, i);
                         }
                     }
                 }
             }
             if ((expansionMask & ExpansionType.EPSMMask) != 0)
             {
-                DumpNoteTableBin("famistudio_epsm_note_table", tuning, ExpansionType.EPSM);
-                DumpNoteTableBin("famistudio_epsm_s_note_table", tuning, ExpansionType.EPSM);
+                DumpNoteTableBin(Path.Combine(path, "famistudio_epsm_note_table"), tuning, ExpansionType.EPSM);
+                DumpNoteTableBin(Path.Combine(path, "famistudio_epsm_s_note_table"), tuning, ExpansionType.EPSM);
             }
         }
 
