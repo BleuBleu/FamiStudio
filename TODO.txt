@@ -5,9 +5,6 @@
 - The note table text parsing code is insane.
 - Is JTS song broken? Too big for demo ROMS + DAC effect at start?
 - Dump .bin note table (code is commented out right now)
-x Can we use "UserLandscape" on Android to allow both sides?
-	=> TEST!
-- We still embed quicksand.ttf in package??? Look at our system dialogs to use Noto on there too.
 x Missing virtual/override on VideoEncoderAndroidBase.BeginEncoding, AddFrame, EndEncoding
 x Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
 	=> TEST!

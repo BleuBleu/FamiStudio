@@ -28,7 +28,6 @@
     </style>
   
     <style name="TextInputDialogStyle" parent="android:Theme.Material.Dialog.Alert">
-        <item name="android:fontFamily">@font/quicksand</item>
         <item name="colorAccent">@color/LightGreyColor2</item>
         <item name="android:textColorPrimary">@color/LightGreyColor2</item>
         <item name="android:background">@color/DarkGreyColor1</item>
@@ -37,7 +36,6 @@
     </style>
 
     <style name="TextBase">
-        <item name="android:fontFamily">@font/quicksand</item>
         <item name="android:textColor">@color/light_grey</item>
         <item name="android:textStyle">normal</item>
         <item name="android:textSize">16dp</item>

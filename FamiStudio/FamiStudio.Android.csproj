@@ -68,15 +68,6 @@
     <AndroidResource Include="Source\App\Droid\Resources\color\light_grey.xml">
       <Generator>MSBuild:UpdateGeneratedFiles</Generator>
     </AndroidResource>
-    <AndroidResource Include="Source\App\Droid\Resources\font\quicksand.xml">
-      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-    </AndroidResource>
-    <AndroidResource Include="Source\App\Droid\Resources\font\quicksand_bold.ttf">
-      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-    </AndroidResource>
-    <AndroidResource Include="Source\App\Droid\Resources\font\quicksand_regular.ttf">
-      <Generator>MSBuild:UpdateGeneratedFiles</Generator>
-    </AndroidResource>
     <AndroidResource Include="Source\App\Droid\Resources\mipmap-anydpi-v26\ic_launcher.xml" />
     <AndroidResource Include="Source\App\Droid\Resources\mipmap-anydpi-v26\ic_launcher_round.xml" />
     <AndroidResource Include="Source\App\Droid\Resources\mipmap-hdpi\ic_launcher.png" />
