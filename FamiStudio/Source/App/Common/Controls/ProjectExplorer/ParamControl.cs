@@ -1,4 +1,3 @@
-using Android.App;
 using System;
 using System.Diagnostics;
 using System.Reflection.Metadata;

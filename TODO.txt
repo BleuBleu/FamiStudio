@@ -16,8 +16,6 @@
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
 
-- Was there a context menu on mobile on PE sliders?
-
 4.3.0 Testing
 =============
 - Make sure not ticking all the time.
@@ -38,16 +36,15 @@
 - N163 auto position assignment
 - New in-app font (Noto Sans) : More readable at low resolution and supports international characters
 - Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
+- PAL expansion audio support (Thanks Steo!)
+- SDAS/GBDK support (Thanks Michel Iwaniec)
 - Making more features available on mobile:
-	- MIDI import
-	- MIDI export
+	- MIDI import/export
 	- Ability to import DPCM samples from other FMS projects
-	- *** Other???
 - Upgrade to .NET 8.0
-
 - Behavior/Breaking changes:
 	- Default bass cutoff and filter frequencies where changes to better match the hardware.
-	- 
+	- Volume of squares
 
 Linux notes 
 =========== 
