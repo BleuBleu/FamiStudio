@@ -48,6 +48,7 @@ namespace FamiStudio
                 else
                 {
                     changing = true;
+                    Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
                     CapturePointer();
                     e.MarkHandled();
                 }

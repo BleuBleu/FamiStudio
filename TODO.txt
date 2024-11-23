@@ -1,6 +1,11 @@
+- Filter settings dont apply to instrument player?
+	https://discord.com/channels/747649221879922840/747649222354010173/1297729099103735828
+- MID import error :
+	https://discord.com/channels/@me/1286493072418672754/1286493156602282035
+- Is register overlay broken on android?
+
 4.3.0
 =====
-- Are toolbar/osc flipped on mobile?
 - Look at that ffmpeg change PR #342
 - The note table text parsing code is insane.
 - Is JTS song broken? Too big for demo ROMS + DAC effect at start?
@@ -9,23 +14,12 @@
 x Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
 	=> TEST!
 - We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
-- Look at the toolbar 12 pixel offset. BUtton.ImageScale didnt update the cached image size.
-- A single-click on a slider doesnt change its value
-- Filter settings dont apply to instrument player?
-	https://discord.com/channels/747649221879922840/747649222354010173/1297729099103735828
-- MID import error :
-	https://discord.com/channels/@me/1286493072418672754/1286493156602282035
-- Is register overlay broken on android?
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Review the copy/paste name matching. Maybe add a rename option.
-- Raw FDS modulation table envelope. 
 - Set multiple colums/rows by default for videos with TONS of channels. 
-- "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
-- Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
-		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
 - Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
 
 4.3.0 Testing
@@ -160,6 +154,10 @@ Discord
 
 Backlog: 
 =========
+- "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
+- Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
+		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
+- Raw FDS modulation table envelope. 
 - Rewrite Sequencer + piano roll.
 - Add + buttons for each folder?
 	https://discord.com/channels/@me/819772561940152321/1282536913525542933
