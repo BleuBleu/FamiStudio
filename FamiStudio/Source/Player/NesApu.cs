@@ -317,7 +317,7 @@ namespace FamiStudio
             return exp == APU_EXPANSION_NONE ? APU_EXPANSION_MASK_NONE : 1 << (exp - 1);
         }
 
-        public static void DumpNoteTableBin(string filename, int tuning = 440, int expansion = ExpansionType.None, bool pal = false, int numN163Channels = 8)
+        public static void DumpNoteTableBin(string filename, int tuning = 440, int expansion = ExpansionType.None, bool pal = false, int numN163Channels = 8, bool fm = false)
         {
             // Dump a single table, for a single expansion, tuning, machine, n163 channel.
             var tableSet = GetOrCreateNoteTableSet(tuning);
@@ -339,7 +339,7 @@ namespace FamiStudio
                     table = pal ? tableSet.NoteTableN163PAL[numN163Channels - 1] : tableSet.NoteTableN163[numN163Channels - 1]; break;
                 case ExpansionType.EPSM:
                     // Workaround for EPSM having two notetables
-                    table = Path.GetFileName(filename).Contains("_s_") ? tableSet.NoteTableEPSM : tableSet.NoteTableEPSMFm; break;
+                    table = fm ? tableSet.NoteTableEPSMFm : tableSet.NoteTableEPSM; break;
             }
 
             // Separate LSB and MSB
@@ -410,7 +410,7 @@ namespace FamiStudio
             }
             if ((expansionMask & ExpansionType.EPSMMask) != 0)
             {
-                DumpNoteTableBin(Path.Combine(path, "famistudio_epsm_note_table"), tuning, ExpansionType.EPSM);
+                DumpNoteTableBin(Path.Combine(path, "famistudio_epsm_note_table"), tuning, ExpansionType.EPSM, fm: true);
                 DumpNoteTableBin(Path.Combine(path, "famistudio_epsm_s_note_table"), tuning, ExpansionType.EPSM);
             }
         }
