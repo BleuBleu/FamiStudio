@@ -582,7 +582,8 @@ namespace FamiStudio
                     if (Settings.AudioAPI          != newAudioApi          || 
                         Settings.AudioBufferSize   != newAudioBufferSize   ||
                         Settings.NumBufferedFrames != newNumBufferedFrames ||
-                        Settings.N163Mix           != newN163Mix)
+                        Settings.N163Mix           != newN163Mix           ||
+                        mixerProperties.Changed)
                     {
                         // Use "Yes" as a special code to mean to recreate audio players.
                         r = DialogResult.Yes;
