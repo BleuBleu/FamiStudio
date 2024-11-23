@@ -355,6 +355,25 @@ namespace FamiStudio
 
             switch (metaType)
             {
+                // Sequence number
+                case 0x00:
+                {
+                    if (bytes[idx] == 0x02)
+                    {
+                        idx += 3;
+                    }
+                    else if (bytes[idx] == 0x00)
+                    {
+                        idx++;
+                    }
+                    else
+                    {
+                        Log.LogMessage(LogSeverity.Error, $"Unexpected value in sequence number meta event. Aborting.");
+                        return false;
+                    }
+                    break;
+                }
+
                 // Various text messages.
                 case 0x01:
                 case 0x02:
