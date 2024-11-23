@@ -1,6 +1,5 @@
 - Is JTS song broken? Too big for demo ROMS + DAC effect at start?
 	=> ON HOLD. Micheal stuff missing tools, Steo batch files needs fixing.
-- Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
 - Scan code for MATTT
 
 4.3.0
@@ -17,8 +16,11 @@
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
 
+- Was there a context menu on mobile on PE sliders?
+
 4.3.0 Testing
 =============
+- Make sure not ticking all the time.
 - Run all NSF/FS unit tests, update refs if needed.
 - Run sound engine unit test
 - Bump all versions everything, ROM, soundengine, app, etc. 

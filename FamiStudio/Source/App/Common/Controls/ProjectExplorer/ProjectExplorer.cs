@@ -2,8 +2,6 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -248,6 +246,7 @@ namespace FamiStudio
         private Point mouseLastPos;
         private Point captureMousePos;
         private Point captureButtonRelPos;
+        private int captureCookie;
         private int captureScrollY = -1;
         private int envelopeDragIdx = -1;
         private TextureAtlasRef envelopeDragTexture = null;
@@ -2184,7 +2183,12 @@ namespace FamiStudio
                 }
                 else if (captureOperation == MobilePan)
                 {
-                    DoScroll(p.Y - mouseLastPos.Y);
+                    // This can happen if a control captures after the initial pointer-down. 
+                    // The slider is an example of this, since it has a bit of slop.
+                    if (CheckPointerCaptureCookie(captureCookie))
+                    {
+                        DoScroll(p.Y - mouseLastPos.Y);
+                    }
                 }
                 else
                 {
@@ -2241,7 +2245,7 @@ namespace FamiStudio
             captureMousePos = ctrlPos;
             captureButtonRelPos = p;
             captureScrollY = mainContainer.ScrollY;
-            control.CapturePointer();
+            captureCookie = control.CapturePointer();
             canFling = false;
             captureOperation = op;
             captureThresholdMet = !op.NeedsThreshold;

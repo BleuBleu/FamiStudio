@@ -1,3 +1,4 @@
+using Android.App;
 using System;
 using System.Diagnostics;
 using System.Reflection.Metadata;
@@ -15,8 +16,14 @@ namespace FamiStudio
         public event ControlDelegate ValueChangeStart;
         public event ControlDelegate ValueChangeEnd;
 
-        public virtual void ShowParamContextMenu() { }
-        
+        public virtual void ShowParamContextMenu()
+        {
+            App.ShowContextMenuAsync(new[]
+            {
+                new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
+            });
+        }
+
         protected ParamControl(ParamInfo p)
         {
             param = p;
@@ -36,17 +43,30 @@ namespace FamiStudio
 
         protected void EnterParamValue()
         {
-            var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), param.Name, param.GetValue(), param.GetMinValue(), param.GetMaxValue(), true);
-            dlg.ShowDialogAsync((r) =>
+            if (Platform.IsMobile)
             {
-                if (r == DialogResult.OK)
+                Platform.EditTextAsync(param.Name, param.GetValue().ToString(), (s) => 
                 {
                     InvokeValueChangeStart();
-                    param.SetValue(dlg.Value);
+                    param.SetValue(Utils.ParseIntWithTrailingGarbage(s));
                     InvokeValueChangeEnd();
                     MarkDirty();
-                }
-            });
+                });
+            }
+            else
+            {
+                var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), param.Name, param.GetValue(), param.GetMinValue(), param.GetMaxValue(), true);
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        InvokeValueChangeStart();
+                        param.SetValue(dlg.Value);
+                        InvokeValueChangeEnd();
+                        MarkDirty();
+                    }
+                });
+            }
         }
 
         protected void ResetParamDefaultValue()

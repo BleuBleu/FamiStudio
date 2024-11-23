@@ -17,14 +17,15 @@ namespace FamiStudio
         private int hoverButtonIndex;
         private bool capture;
         private int captureButton;
-        private double captureTime;
+        private float changeDelay;
 
         public ParamList(ParamInfo p) : base(p)
         {
             height = DpiScaling.ScaleForWindow(16);
             supportsDoubleClick = false;
-            supportsLongPress = true;
         }
+
+        public override bool CanReceiveLongPress => !capture;
 
         protected override void OnAddedToContainer()
         {
@@ -55,7 +56,7 @@ namespace FamiStudio
                 {
                     Debug.Assert(!capture);
                     InvokeValueChangeStart();
-                    captureTime = Platform.TimeSeconds();
+                    changeDelay = 0.35f;
                     capture = true;
                     captureButton = buttonIndex;
                     ChangeValue(buttonIndex);
@@ -92,11 +93,6 @@ namespace FamiStudio
             SetAndMarkDirty(ref hoverButtonIndex, 0);
         }
 
-        public override void ShowParamContextMenu()
-        {
-            base.ShowParamContextMenu();
-        }
-
         private void ChangeValue(int delta)
         {
             var oldVal = param.GetValue();
@@ -111,9 +107,12 @@ namespace FamiStudio
 
             if (capture)
             {
-                var captureDuration = Platform.TimeSeconds() - captureTime;
-                if (captureDuration > 0.35)
+                changeDelay -= delta;
+                if (changeDelay <= 0)
+                {
                     ChangeValue(captureButton);
+                    changeDelay = 0.1f;
+                }
             }
         }
 

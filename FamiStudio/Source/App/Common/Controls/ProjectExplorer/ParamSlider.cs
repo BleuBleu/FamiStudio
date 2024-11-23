@@ -8,6 +8,7 @@ namespace FamiStudio
     public class ParamSlider : ParamControl
     {
         private float bmpScale = Platform.IsMobile ? DpiScaling.Window * 0.25f : 1.0f;
+        private int touchSlop = DpiScaling.ScaleForWindow(5);
 
         private TextureAtlasRef bmpMinus;
         private TextureAtlasRef bmpPlus;
@@ -17,8 +18,10 @@ namespace FamiStudio
         private int buttonSize;
         private int hoverButtonIndex;
         private bool capture;
+        private bool changing;
         private int captureButton;
-        private int captureMouseX;
+        private Point capturePos;
+        private Point captureWinPos;
         private double captureTime;
         private float exp = 1.0f;
 
@@ -26,7 +29,6 @@ namespace FamiStudio
         {
             exp = 1.0f / (p.Logarithmic ? 4 : 1);
             height = DpiScaling.ScaleForWindow(16);
-            supportsLongPress = true;
         }
 
         protected override void OnAddedToContainer()
@@ -53,6 +55,8 @@ namespace FamiStudio
             return Utils.Saturate((x - buttonSize) / (float)(width - buttonSize * 2));
         }
 
+        public override bool CanReceiveLongPress => !changing;
+
         protected override void OnPointerDown(PointerEventArgs e)
         {
             if (IsParamEnabled())
@@ -61,21 +65,32 @@ namespace FamiStudio
                 {
                     var buttonIndex = GetButtonIndex(e.X);
                     Debug.Assert(!capture);
-                    InvokeValueChangeStart();
                     captureTime = Platform.TimeSeconds();
                     capture = true;
                     captureButton = buttonIndex;
-                    captureMouseX = e.X;
-                    CapturePointer();
+                    capturePos = e.Position;
+                    captureWinPos = ControlToWindow(e.Position);
 
-                    if (captureButton != 0)
+                    if (buttonIndex == 0)
                     {
-                        IncrementValue(buttonIndex, 0.0);
-                        SetTickEnabled(true);
+                        if (e.IsTouchEvent)
+                        {
+                            changing = false;
+                        }
+                        else
+                        {
+                            changing = true;
+                            ChangeValue(e.X);
+                            CapturePointer();
+                            InvokeValueChangeStart();
+                        }
                     }
                     else
                     {
-                        ChangeValue(e.X);
+                        changing = true;
+                        IncrementValue(buttonIndex, 0.0);
+                        SetTickEnabled(true);
+                        InvokeValueChangeStart();
                     }
                 }
             }
@@ -85,9 +100,13 @@ namespace FamiStudio
         {
             if (e.Left && capture)
             {
-                capture = false;
                 SetTickEnabled(false);
-                InvokeValueChangeEnd();
+                if (changing)
+                {
+                    InvokeValueChangeEnd();
+                }
+                capture = false;
+                changing = false;
             }
             else if (e.Right && GetButtonIndex(e.X) == 0)
             {
@@ -97,12 +116,36 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            if (capture)
+            // Add a bit of slop on mobile to prevent sliders to mess up vertical scrolling
+            if (capture && !changing && e.IsTouchEvent && captureButton == 0)
+            {
+                // If we start scrolling somehow, stop the capture.
+                var winPos = ControlToWindow(e.Position);
+
+                if (Math.Abs(winPos.Y - captureWinPos.Y) > touchSlop)
+                {
+                    ReleasePointer();
+                    capture  = false;
+                    changing = false;
+                    return;
+                }
+                if (Math.Abs(e.X - capturePos.X) > touchSlop)
+                {
+                    changing = true;
+                    CapturePointer();
+                    InvokeValueChangeStart();
+                }
+            }
+
+            if (changing)
             {
                 if (captureButton == 0)
+                {
                     ChangeValue(e.X);
+                }
 
                 SetAndMarkDirty(ref hoverButtonIndex, captureButton);
+                e.MarkHandled();
             }
             else
             {
@@ -132,18 +175,18 @@ namespace FamiStudio
 
             if (ctrl)
             {
-                var delta = (x - captureMouseX) / 4;
+                var delta = (x - capturePos.X) / 4;
                 if (delta != 0)
                 {
                     newVal = Utils.Clamp(oldVal + delta * param.SnapValue, param.GetMinValue(), param.GetMaxValue());
-                    captureMouseX = x;
+                    capturePos.X = x;
                 }
             }
             else
             {
                 var ratio = GetSliderRatio(x);
                 newVal = (int)Math.Round(Utils.Lerp(param.GetMinValue(), param.GetMaxValue(), MathF.Pow(ratio, 1.0f / exp)));
-                captureMouseX = x;
+                capturePos.X = x;
             }
 
             newVal = param.SnapAndClampValue(newVal);

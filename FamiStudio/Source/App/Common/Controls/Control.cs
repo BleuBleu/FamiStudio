@@ -126,21 +126,24 @@ namespace FamiStudio
 
         public void SendTouchLongPress(PointerEventArgs e)
         {
-            if (supportsLongPress)
+            if (CanReceiveLongPress)
             {
-                OnTouchLongPress(e);
-            }
-            else
-            {
-                // Pretend the left button is being released, followed by a click or the right.
-                // There will eventually be another left release later, but controls will ignore
-                // it hopefully. This is done to abort capture operations prior to showing a context
-                // menu, for example.
-                SendPointerUp(e);
+                if (supportsLongPress)
+                {
+                    OnTouchLongPress(e);
+                }
+                else
+                {
+                    // Pretend the left button is being released, followed by a click or the right.
+                    // There will eventually be another left release later, but controls will ignore
+                    // it hopefully. This is done to abort capture operations prior to showing a context
+                    // menu, for example.
+                    SendPointerUp(e);
 
-                var e2 = e.CloneWithNewButton(PointerEventArgs.ButtonRight); // Pretend right-click.
-                SendPointerDown(e2);
-                SendPointerUp(e2);
+                    var e2 = e.CloneWithNewButton(PointerEventArgs.ButtonRight); // Pretend right-click.
+                    SendPointerDown(e2);
+                    SendPointerUp(e2);
+                }
             }
         }
 
@@ -242,6 +245,7 @@ namespace FamiStudio
         public void ClearDialogFocus() { if (ParentDialog != null) ParentDialog.FocusedControl = null; }
         public bool Visible { get => visible; set { if (value != visible) { visible = value; OnVisibleChanged(); MarkDirty(); } } }
         public virtual bool Enabled { get => enabled; set => SetAndMarkDirty(ref enabled, value); }
+        public virtual bool CanReceiveLongPress => true;
         public bool CanFocus { get => canFocus; }
         public bool IsContainedByMainWindow => ParentTopContainer != null;
         public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }

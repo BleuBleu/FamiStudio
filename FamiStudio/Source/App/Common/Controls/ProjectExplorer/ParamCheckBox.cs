@@ -59,14 +59,6 @@ namespace FamiStudio
             return enabled && (param.IsEnabled == null || param.IsEnabled());
         }
 
-        public override void ShowParamContextMenu()
-        {
-            App.ShowContextMenuAsync(new[]
-            {
-                new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
-            });
-        }
-
         protected override void OnRender(Graphics g)
         {
             var c = g.GetCommandList();
