@@ -82,10 +82,18 @@ namespace FamiStudio
             set { if (SetAndMarkDirty(ref imageName, value)) UpdateAtlasBitmap(); }
         }
 
-        public float ImageScale 
+        public float ImageScale
         {
-            get { return imageScale; } 
-            set { SetAndMarkDirty(ref imageScale, value); }
+            get { return imageScale; }
+            set
+            {
+                if (SetAndMarkDirty(ref imageScale, value) && bmp != null)
+                {
+                    scaledImageSize = new Size(
+                        DpiScaling.ScaleCustom(bmp.ElementSize.Width,  imageScale),
+                        DpiScaling.ScaleCustom(bmp.ElementSize.Height, imageScale));
+                }
+            }
         }
 
         public Font Font
