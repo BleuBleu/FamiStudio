@@ -2206,7 +2206,7 @@ namespace FamiStudio
             if (project.SoundEngineUsesExtendedInstruments)
                 flags.Add($"Project has extended instrument mode enabled in the project settings. You must set FAMISTUDIO_USE_INSTRUMENT_EXTENDED_RANGE = 1.");
             if (project.Tuning != 440)
-                flags.Add("Project uses non-standard tuning, the note tables were dumped in the assembly code. You will need to manually patch in the sound engine code to hear the correct tuning.");
+                flags.Add("Project uses non-standard tuning, the note tables were dumped in .bin files. You will need to replace those in the sound engine code to hear the correct tuning.");
 
             return flags;
         }

@@ -1,10 +1,8 @@
-Steo TODO after merging PAL exp:
-- Add message when dumping FT2 note tables.
-- Are toolbar/osc flipped on mobile?
-
 4.3.0
 =====
+- Are toolbar/osc flipped on mobile?
 - Look at that ffmpeg change PR #342
+- The note table text parsing code is insane.
 - Is JTS song broken? Too big for demo ROMS + DAC effect at start?
 - Dump .bin note table (code is commented out right now)
 x Can we use "UserLandscape" on Android to allow both sides?
