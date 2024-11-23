@@ -631,7 +631,7 @@ namespace FamiStudio
                 }
             }
 
-            return new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects);
+            return new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);
         }
 
         protected void BindAndUpdateVertexBuffer(int attrib, int buffer, float[] array, int arraySize, int numComponents = 2)
