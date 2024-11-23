@@ -28,7 +28,7 @@ namespace FamiStudio
         private int surfaceResX;
         private int surfaceResY;
 
-        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
+        public virtual bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
             surfaceResX = resX;
             surfaceResY = resY;
@@ -36,13 +36,13 @@ namespace FamiStudio
             return true;
         }
 
-        public bool AddFrame(OffscreenGraphics graphics)
+        public virtual bool AddFrame(OffscreenGraphics graphics)
         {
             EglSwapBuffers();
             return true;
         }
 
-        public void EndEncoding(bool abort)
+        public virtual void EndEncoding(bool abort)
         {
             ElgShutdown();
         }
@@ -182,7 +182,7 @@ namespace FamiStudio
 
         // https://github.com/lanhq147/SampleMediaFrame/blob/e2f20ff9eef73318e5a9b4de15458c5c2eb0fd46/app/src/main/java/com/google/android/exoplayer2/video/av/HWRecorder.java
 
-        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
+        public override bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
             videoBufferInfo = new MediaCodec.BufferInfo();
             audioBufferInfo = new MediaCodec.BufferInfo();
@@ -284,7 +284,7 @@ namespace FamiStudio
             return audioDataIdx < audioData.Length;
         }
 
-        public bool AddFrame(OffscreenGraphics graphics)
+        public override bool AddFrame(OffscreenGraphics graphics)
         {
             Debug.WriteLine($"Sending frame {frameIndex} to encoder");
 
@@ -302,7 +302,7 @@ namespace FamiStudio
             return true;
         }
 
-        public void EndEncoding(bool abort)
+        public override void EndEncoding(bool abort)
         {
             Debug.WriteLine("Releasing encoder objects");
 
