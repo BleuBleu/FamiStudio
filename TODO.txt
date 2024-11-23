@@ -1,60 +1,54 @@
+- Is JTS song broken? Too big for demo ROMS + DAC effect at start?
+	=> ON HOLD. Micheal stuff missing tools, Steo batch files needs fixing.
+- Scan code for MATTT
+
 4.3.0
 =====
-- Dump .bin note table (code is commented out right now)
-- Can we use "UserLandscape" on Android to allow both sides?
-- We still embed quicksand.ttf in package???
-- Missing virtual/override on VideoEncoderAndroidBase.BeginEncoding, AddFrame, EndEncoding
-- Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
-- We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
-- Look at the toolbar 12 pixel offset. BUtton.ImageScale didnt update the cached image size.
-- A single-click on a slider doesnt change its value
-- Filter settings dont apply to instrument player?
-	https://discord.com/channels/747649221879922840/747649222354010173/1297729099103735828
-- MID import error :
-	https://discord.com/channels/@me/1286493072418672754/1286493156602282035
-- Is register overlay broken on android?
+- Steo PE thing that didnt work.
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
-- Look at michel_iwaniec changes
+- Realign all translations + tell translators to start updating.
+- GO TRHOUGH #BUGREPORT CHANNEL + GITHUB.
+- Look at that ffmpeg change PR #342
+- The note table text parsing code is insane.
+- Dump .bin note table (code is commented out right now)
+	=> TEST!
 - Review the copy/paste name matching. Maybe add a rename option.
-- Raw FDS modulation table envelope. 
-- Set multiple colums/rows by default for videos with TONS of channels. 
-- Import arpeggios.
-- "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
-- Add + buttons for each folder?
-	https://discord.com/channels/@me/819772561940152321/1282536913525542933
-- Sequencer:
-		1) Comment out all rendering/input code
-		2) Create basic UI with panels/labels/buttons/scroll bar
-		3) Create a Timeline control + PatternArea control.
-		4) Try to make everything work again on desktop.
-		5) Redo mobile input to minimize code duplication.
-		6) Add nice to have stuff (force display on mobile, make icons/force display/mute actually work on mobile)
-- Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
-		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
-- Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
 
 4.3.0 Testing
 =============
+- Make sure not ticking all the time.
+- Run all NSF/FS unit tests, update refs if needed.
+- Run sound engine unit test
+- Bump all versions everything, ROM, soundengine, app, etc. 
+- Make sure ROMs srill binary identical.
+- Rebuild all binaries, all platforms.
+- Test stuff that uses supportslongpress (envelope draw, etc.)
 - Test pinch to zoom on MacOS, we changed the mouse wheel code there.
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - PE Test scroll bars a lot more. 
+- Make sure the MacOS startup script checks for .NET 8.0
 
 4.3.0
 =====
-- Support for custom tuning (ex: where A is not 440Hz).
-- N163 auto position assignment
+- Support for custom tuning per project (ex: where A is not 440Hz)
+- N163 wave auto position assignment
 - New in-app font (Noto Sans) : More readable at low resolution and supports international characters
 - Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
 - Making more features available on mobile:
 	- MIDI import
 	- MIDI export
 	- Ability to import DPCM samples from other FMS projects
-	- *** Other???
-- Upgrade to .NET 8.0
+- PAL expansion audio support (Thanks Steo!)
+- Minor adjustment to NES APU volumes  (Thanks Steo!)
+- SDAS/GBDK support (Thanks Michel Iwaniec!)
+- Upgrade all platforms to .NET 8.0
+- Behavior/Breaking changes:
+	- Default bass cutoff and filter frequencies where changed to better match the hardware
+	- NES APU volumes have been adjusted slightly to better match the hardware
 
 Linux notes 
 =========== 
@@ -164,6 +158,14 @@ Discord
 
 Backlog: 
 =========
+- "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
+- Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
+		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
+- Raw FDS modulation table envelope. 
+- Rewrite Sequencer + piano roll.
+- Add + buttons for each folder?
+	https://discord.com/channels/@me/819772561940152321/1282536913525542933
+	- Import arpeggios.
 - FDS mod depth envelopes?
 	https://discord.com/channels/747649221879922840/747649222354010173/1289675252850360351
 - Unify mobile/desktop file operations. Remove all if {} there.
