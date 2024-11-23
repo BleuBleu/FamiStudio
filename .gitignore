@@ -46,3 +46,8 @@ SoundEngine/DemoSource/demo_cc65.s
 
 SoundEngine/Tools/tmp.bin
 FamiStudio/Properties/launchSettings.json
+*.cdb
+*.ihx
+*.noi
+*.rst
+*.sym
