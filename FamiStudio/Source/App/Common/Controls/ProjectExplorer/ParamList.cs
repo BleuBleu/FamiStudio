@@ -85,7 +85,10 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            SetAndMarkDirty(ref hoverButtonIndex, enabled ? GetButtonIndex(e.X) : 0);
+            if (!Platform.IsMobile)
+            {
+                SetAndMarkDirty(ref hoverButtonIndex, enabled ? GetButtonIndex(e.X) : 0);
+            }
         }
 
         protected override void OnPointerLeave(EventArgs e)

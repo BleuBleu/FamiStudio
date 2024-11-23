@@ -144,10 +144,14 @@ namespace FamiStudio
                     ChangeValue(e.X);
                 }
 
-                SetAndMarkDirty(ref hoverButtonIndex, captureButton);
+                if (!Platform.IsMobile)
+                {
+                    SetAndMarkDirty(ref hoverButtonIndex, captureButton);
+                }
+
                 e.MarkHandled();
             }
-            else
+            else if (!Platform.IsMobile)
             {
                 SetAndMarkDirty(ref hoverButtonIndex, enabled ? GetButtonIndex(e.X) : 0);
             }

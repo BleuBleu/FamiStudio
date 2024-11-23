@@ -29,10 +29,11 @@
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - PE Test scroll bars a lot more. 
+- Make sure the MacOS startup script checks for .NET 8.0
 
 4.3.0
 =====
-- Support for custom tuning (ex: where A is not 440Hz)
+- Support for custom tuning per project (ex: where A is not 440Hz)
 - N163 wave auto position assignment
 - New in-app font (Noto Sans) : More readable at low resolution and supports international characters
 - Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
@@ -42,8 +43,8 @@
 	- Ability to import DPCM samples from other FMS projects
 - PAL expansion audio support (Thanks Steo!)
 - Minor adjustment to NES APU volumes  (Thanks Steo!)
-- SDAS/GBDK support (Thanks Michel Iwaniec)
-- Upgrade to .NET 8.0
+- SDAS/GBDK support (Thanks Michel Iwaniec!)
+- Upgrade all platforms to .NET 8.0
 - Behavior/Breaking changes:
 	- Default bass cutoff and filter frequencies where changed to better match the hardware
 	- NES APU volumes have been adjusted slightly to better match the hardware
