@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -329,12 +330,14 @@ namespace FamiStudio
             return channelActives;
         }
 
-        private object[,] GetDefaultChannelsGridData(bool tranpose, bool trigger, Song song)
+        private object[,] GetDefaultChannelsGridData(bool tranpose, bool trigger, Song song, out int numActiveChannels)
         {
             // Find all channels used by the project.
             var anyChannelActive = false;
             var channelActives = new bool[project.GetActiveChannelCount()];
             var songs = song != null ? new [] { song } : project.Songs.ToArray();
+
+            numActiveChannels = 0;
 
             foreach (var s in songs)
             {
@@ -345,6 +348,7 @@ namespace FamiStudio
                     {
                         anyChannelActive = true;
                         channelActives[i] = true;
+                        numActiveChannels++;
                     }
                 }
             }
@@ -387,7 +391,7 @@ namespace FamiStudio
                         new ColumnDesc("", 0.0f, ColumnType.CheckBox), 
                         new ColumnDesc(ChannelColumn, 0.4f), 
                         new ColumnDesc(PanColumn, 0.6f, 0, 100, (o) => FormattableString.Invariant($"{o} %")) 
-                    }, GetDefaultChannelsGridData(false, false, app.SelectedSong), 7, ChannelGridTooltip); // 11
+                    }, GetDefaultChannelsGridData(false, false, app.SelectedSong, out _), 7, ChannelGridTooltip); // 11
                     page.SetPropertyEnabled( 3, false);
                     page.SetPropertyEnabled( 6, false);
                     page.SetPropertyVisible( 8, Platform.IsDesktop); // No separate files on mobile.
@@ -400,7 +404,7 @@ namespace FamiStudio
                 case ExportFormat.Video:
                     if (Platform.CanExportToVideo)
                     {
-                        var gridColumns = new List<ColumnDesc>();
+                        var channelsGridData = GetDefaultChannelsGridData(true, true, app.SelectedSong, out var numActiveChannels);
 
                         page.AddDropDownList(VideoModeLabel.Colon, Localization.ToStringArray(VideoMode.LocalizedNames), VideoMode.LocalizedNames[0], VideoModeTooltip); // 0
                         page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 1
@@ -410,13 +414,13 @@ namespace FamiStudio
                         page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000", "20000", "30000" }, "8000", VideoBitRateTooltip); // 5
                         page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 6
                         page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, DelayTooltip); // 7
-                        page.AddNumericUpDown(OscColumnsLabel.Colon, 1, 1, 5, 1, OscColumnsTooltip); // 8
+                        page.AddNumericUpDown(OscColumnsLabel.Colon, Utils.DivideAndRoundUp(numActiveChannels, 8), 1, 5, 1, OscColumnsTooltip); // 8
                         page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 9
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
                         page.AddDropDownList(PianoRollNoteWidthLabel.Colon, new[] { "Auto", "50%", "75%", "100%", "125%", "150%", "175%", "200%" }, "Auto", PianoRollNoteWidthTooltip); // 12
                         page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "6.25%", "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTooltip); // 13
-                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, 1, 1, 16, 1, PianoRollNumRowsTooltip); // 14
+                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, Utils.DivideAndRoundUp(numActiveChannels, 8), 1, 16, 1, PianoRollNumRowsTooltip); // 14
                         page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "30°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 15
                         page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 16
                         page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 17
@@ -426,7 +430,7 @@ namespace FamiStudio
                             new ColumnDesc(PanColumn, 0.2f, 0, 100, (o) => FormattableString.Invariant($"{o} %")),
                             new ColumnDesc(TransposeColumn, 0.2f, -8, 8),
                             new ColumnDesc(TriggerColumn, 0.2f, new string[] { EmulationOption, PeakSpeedOption })
-                        }, GetDefaultChannelsGridData(true, true, app.SelectedSong), project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 18
+                        }, channelsGridData, project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 18
                         page.AddButton(null, PreviewLabel); // 19
                         page.SetPropertyEnabled(12, false);
                         page.SetPropertyEnabled(13, false);
@@ -626,7 +630,7 @@ namespace FamiStudio
             }
             else if (propIdx == 1) // Song
             {
-                props.UpdateGrid(18, GetDefaultChannelsGridData(true, true, project.Songs[props.GetSelectedIndex(1)]));
+                props.UpdateGrid(18, GetDefaultChannelsGridData(true, true, project.Songs[props.GetSelectedIndex(1)], out _));
             }
             else if (propIdx == 17) // Stereo
             {
@@ -638,7 +642,7 @@ namespace FamiStudio
         {
             if (propIdx == 0)
             {
-                props.UpdateGrid(11, GetDefaultChannelsGridData(false, false, project.Songs[props.GetSelectedIndex(0)]));
+                props.UpdateGrid(11, GetDefaultChannelsGridData(false, false, project.Songs[props.GetSelectedIndex(0)], out _));
             }
             else if (propIdx == 1)
             {

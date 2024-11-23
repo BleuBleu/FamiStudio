@@ -1,21 +1,21 @@
+- Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
+- We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
+- Is JTS song broken? Too big for demo ROMS + DAC effect at start?
+- Scan code for MATTT
+
 4.3.0
 =====
 - GO TRHOUGH #BUGREPORT CHANNEL + GITHUB.
+- Rebuild all binaries, all platforms.
 - Look at that ffmpeg change PR #342
 - The note table text parsing code is insane.
-- Is JTS song broken? Too big for demo ROMS + DAC effect at start?
 - Dump .bin note table (code is commented out right now)
 	=> TEST!
-x Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
-	=> TEST!
-- We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Review the copy/paste name matching. Maybe add a rename option.
-- Set multiple colums/rows by default for videos with TONS of channels. 
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
-- Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
 
 4.3.0 Testing
 =============
