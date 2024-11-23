@@ -4,13 +4,15 @@ Steo TODO after merging PAL exp:
 
 4.3.0
 =====
-- NicoBros, corruption file full of zeroes. 
-  https://discord.com/channels/@me/808456248127127624/1305781728132071434
+- Look at that ffmpeg change PR #342
+- Is JTS song broken? Too big for demo ROMS + DAC effect at start?
 - Dump .bin note table (code is commented out right now)
-- Can we use "UserLandscape" on Android to allow both sides?
+x Can we use "UserLandscape" on Android to allow both sides?
+	=> TEST!
 - We still embed quicksand.ttf in package??? Look at our system dialogs to use Noto on there too.
-- Missing virtual/override on VideoEncoderAndroidBase.BeginEncoding, AddFrame, EndEncoding
-- Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
+x Missing virtual/override on VideoEncoderAndroidBase.BeginEncoding, AddFrame, EndEncoding
+x Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
+	=> TEST!
 - We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
 - Look at the toolbar 12 pixel offset. BUtton.ImageScale didnt update the cached image size.
 - A single-click on a slider doesnt change its value
@@ -21,22 +23,12 @@ Steo TODO after merging PAL exp:
 - Is register overlay broken on android?
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
-- Look at michel_iwaniec changes
 - Review the copy/paste name matching. Maybe add a rename option.
 - Raw FDS modulation table envelope. 
 - Set multiple colums/rows by default for videos with TONS of channels. 
 - "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
-- Add + buttons for each folder?
-	https://discord.com/channels/@me/819772561940152321/1282536913525542933
-- Sequencer:
-		1) Comment out all rendering/input code
-		2) Create basic UI with panels/labels/buttons/scroll bar
-		3) Create a Timeline control + PatternArea control.
-		4) Try to make everything work again on desktop.
-		5) Redo mobile input to minimize code duplication.
-		6) Add nice to have stuff (force display on mobile, make icons/force display/mute actually work on mobile)
 - Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
 		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
 - Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
@@ -62,7 +54,7 @@ Steo TODO after merging PAL exp:
 - Upgrade to .NET 8.0
 
 - Behavior/Breaking changes:
-	- Default bass cutoff 16 -> 24.
+	- Default bass cutoff and filter frequencies where changes to better match the hardware.
 	- 
 
 Linux notes 
@@ -173,7 +165,10 @@ Discord
 
 Backlog: 
 =========
-- Import arpeggios.
+- Rewrite Sequencer + piano roll.
+- Add + buttons for each folder?
+	https://discord.com/channels/@me/819772561940152321/1282536913525542933
+	- Import arpeggios.
 - FDS mod depth envelopes?
 	https://discord.com/channels/747649221879922840/747649222354010173/1289675252850360351
 - Unify mobile/desktop file operations. Remove all if {} there.

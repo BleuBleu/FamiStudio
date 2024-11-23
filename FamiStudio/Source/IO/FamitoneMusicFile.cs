@@ -1886,7 +1886,7 @@ namespace FamiStudio
             return CompressAndOutputSongData(songData, songIdx, bestMinNotesForJump, true);
         }
         
-        private void SetupFormat(int format)
+        private void SetupFormat(int format, bool separateSongs)
         {
             assemblyFormat = format;
 
@@ -1925,6 +1925,9 @@ namespace FamiStudio
                     hexp = "0x";
                     break;
             }
+
+            var name = Utils.MakeNiceAsmName(separateSongs ? project.Songs[0].Name : project.Name);
+            llp = GetLocalLabelPrefix(name);
         }
 
         private void RemoveUnsupportedFeatures()
@@ -2213,11 +2216,10 @@ namespace FamiStudio
             this.machine = machine;
 
             SetupProject(originalProject, songIds);
-            SetupFormat(format);
+            SetupFormat(format, separateSongs);
             CleanupEnvelopes();
             GatherDPCMMappings();
-            var name = Utils.MakeNiceAsmName(separateSongs ? project.Songs[0].Name : project.Name);
-            llp = GetLocalLabelPrefix(name);
+
             var dmcSizes     = OutputDPCMSamples(filename, dmcFilename, maxDpcmBankSize);
             var headerSize   = OutputHeader(separateSongs);
             var instSize     = OutputInstruments();
