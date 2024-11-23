@@ -28,7 +28,6 @@ namespace FamiStudio
         LocalizedString CreatePALProject;
         LocalizedString ExpansionsLabel;
         LocalizedString ChannelMappingLabel;
-        LocalizedString ChannelsLabel;
         LocalizedString NESChannelColumn;
         LocalizedString MIDISourceColumn;
         LocalizedString Channel10KeysColumn;
