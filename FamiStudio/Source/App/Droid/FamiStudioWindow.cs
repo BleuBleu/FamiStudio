@@ -355,7 +355,7 @@ namespace FamiStudio
 
             if (settingsWantLandscape != appIsInLandscape)
             {
-                RequestedOrientation = settingsWantLandscape ? ScreenOrientation.Landscape : ScreenOrientation.Unspecified;
+                RequestedOrientation = settingsWantLandscape ? ScreenOrientation.SensorLandscape : ScreenOrientation.Unspecified;
             }
         }
 
