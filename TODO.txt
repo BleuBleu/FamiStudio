@@ -1,24 +1,30 @@
-- Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
-- We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
 - Is JTS song broken? Too big for demo ROMS + DAC effect at start?
+	=> ON HOLD. Micheal stuff missing tools, Steo batch files needs fixing.
+- Mobile : add slop code to sliders in PE (ex: VRC7 sliders)
 - Scan code for MATTT
 
 4.3.0
 =====
+- Get korean translation and realign it
+	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
+- Realign all translations + tell translators to start updating.
 - GO TRHOUGH #BUGREPORT CHANNEL + GITHUB.
-- Rebuild all binaries, all platforms.
 - Look at that ffmpeg change PR #342
 - The note table text parsing code is insane.
 - Dump .bin note table (code is commented out right now)
 	=> TEST!
-- Get korean translation and realign it
-	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Review the copy/paste name matching. Maybe add a rename option.
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
 
 4.3.0 Testing
 =============
+- Run all NSF/FS unit tests, update refs if needed.
+- Run sound engine unit test
+- Bump all versions everything, ROM, soundengine, app, etc. 
+- Make sure ROMs srill binary identical.
+- Rebuild all binaries, all platforms.
+- Test stuff that uses supportslongpress (envelope draw, etc.)
 - Test pinch to zoom on MacOS, we changed the mouse wheel code there.
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.

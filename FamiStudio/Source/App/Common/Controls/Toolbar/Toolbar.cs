@@ -157,6 +157,10 @@ namespace FamiStudio
         private LocalizedString AccurateSeekLabel;
         private LocalizedString AccurateSeekTooltip;
 
+        // Help dialog
+        private LocalizedString ShowHelpTitle;
+        private LocalizedString ShowHelpLabel;
+
         #endregion
 
         public Toolbar()
@@ -636,7 +640,20 @@ namespace FamiStudio
 
         private void ButtonHelp_Click(Control sender)
         {
-            App.ShowHelp();
+            if (Platform.IsMobile)
+            {
+                Platform.MessageBoxAsync(window, ShowHelpLabel, ShowHelpTitle, MessageBoxButtons.YesNo, (r) =>
+                {
+                    if (r == DialogResult.Yes)
+                    {
+                        App.ShowHelp();
+                    }
+                });
+            }
+            else
+            {
+                App.ShowHelp();
+            }
         }
 
         private void Settings_KeyboardShortcutsChanged()
