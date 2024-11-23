@@ -351,7 +351,7 @@ namespace FamiStudio
         private void UpdateForceLandscape()
         {
             var settingsWantLandscape = Settings.ForceLandscape;
-            var appIsInLandscape = RequestedOrientation == ScreenOrientation.Landscape;
+            var appIsInLandscape = RequestedOrientation == ScreenOrientation.SensorLandscape;
 
             if (settingsWantLandscape != appIsInLandscape)
             {

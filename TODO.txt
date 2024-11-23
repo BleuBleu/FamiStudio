@@ -5,6 +5,7 @@
 - The note table text parsing code is insane.
 - Is JTS song broken? Too big for demo ROMS + DAC effect at start?
 - Dump .bin note table (code is commented out right now)
+	=> TEST!
 x Look at "new TextureAtlas(this, textureId, atlasSizeX, atlasSizeY, names, elementRects, Platform.IsMobile);" <= need to set filter=true for mobile
 	=> TEST!
 - We never look at "SupportsLongPress" anywhere. Test on the couple on controls that supports it.
