@@ -11,6 +11,7 @@ namespace FamiStudio
         private int numLines;
         private int scroll = 0;
         private bool draggingScrollbars;
+        private bool wrappedLinesDirty = true;
         private int captureScrollBarPos;
         private int captureMouseY;
         private int maxScroll = 0;
@@ -34,7 +35,7 @@ namespace FamiStudio
         {
             lines.Add(line);
             MarkDirty();
-            ConditionalUpdateWrappedLines();
+            wrappedLinesDirty = true;
             UpdateScrollParams();
             scroll = maxScroll;
         }
@@ -70,7 +71,7 @@ namespace FamiStudio
 
         protected override void OnResize(EventArgs e)
         {
-            ConditionalUpdateWrappedLines();
+            wrappedLinesDirty = true;
             base.OnResize(e);
         }
 
@@ -90,13 +91,15 @@ namespace FamiStudio
 
         private void ConditionalUpdateWrappedLines()
         {
-            if (fonts != null)
+            if (fonts != null && wrappedLinesDirty) 
             {
                 wrappedLines.Clear();
                 foreach (var line in lines)
                 {
                     wrappedLines.AddRange(fonts.FontMedium.SplitLongString(line, width - margin - scrollBarWidth, Localization.IsChinese, out _).Split('\n', StringSplitOptions.RemoveEmptyEntries));
                 }
+                wrappedLinesDirty = false;
+                UpdateScrollParams();
             }
         }
 
@@ -144,9 +147,9 @@ namespace FamiStudio
         protected override void OnRender(Graphics g)
         {
             Debug.Assert(enabled); // TODO : Add support for disabled state.
+            ConditionalUpdateWrappedLines();
 
             var c = g.GetCommandList();
-            ;
 
             c.FillAndDrawRectangle(0, 0, width - 1, height, Theme.DarkGreyColor1, Theme.LightGreyColor1);
 
