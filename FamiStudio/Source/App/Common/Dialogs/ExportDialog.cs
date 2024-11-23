@@ -1236,7 +1236,7 @@ namespace FamiStudio
             var songIds = GetSongIds(props.GetPropertyValue<bool[]>(5));
             var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
             var exportFormat = AssemblyFormat.GetValueForName(props.GetPropertyValue<string>(0));
-            var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
+            var ext = (exportFormat == AssemblyFormat.CA65 || exportFormat == AssemblyFormat.SDAS) ? "s" : "asm";
             var songNamePattern = props.GetPropertyValue<string>(2);
             var dpcmNamePattern = props.GetPropertyValue<string>(3);
             var generateInclude = props.GetPropertyValue<bool>(4);
@@ -1298,7 +1298,7 @@ namespace FamiStudio
         {
             var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioSfx : (int)ExportFormat.FamiTone2Sfx);
             var exportFormat = AssemblyFormat.GetValueForName(props.GetPropertyValue<string>(0));
-            var ext = exportFormat == AssemblyFormat.CA65 ? "s" : "asm";
+            var ext = (exportFormat == AssemblyFormat.CA65 || exportFormat == AssemblyFormat.SDAS) ? "s" : "asm";
             var mode = MachineType.GetValueForName(props.GetPropertyValue<string>(1));
             var engineName = famiStudio ? "FamiStudio" : "FamiTone2";
             var generateInclude = props.GetPropertyValue<bool>(2);
