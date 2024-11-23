@@ -286,7 +286,7 @@ namespace FamiStudio
 
         public override bool AddFrame(OffscreenGraphics graphics)
         {
-            Debug.WriteLine($"Sending frame {frameIndex} to encoder");
+            //Debug.WriteLine($"Sending frame {frameIndex} to encoder");
 
             long presentationTime = ComputePresentationTimeNsec(frameIndex++);
             EGLExt.EglPresentationTimeANDROID(eglDisplay, eglSurface, presentationTime);
@@ -346,7 +346,7 @@ namespace FamiStudio
 
         private void DrainEncoder(MediaCodec encoder, MediaCodec.BufferInfo bufferInfo, int trackIndex, bool endOfStream)
         {
-            Debug.WriteLine($"DrainEncoder {endOfStream})");
+           //Debug.WriteLine($"DrainEncoder {endOfStream})");
 
             const int TIMEOUT_USEC = 10000;
 
@@ -421,7 +421,7 @@ namespace FamiStudio
                         encodedData.Limit(bufferInfo.Offset + bufferInfo.Size);
 
                         muxer.WriteSampleData(trackIndex, encodedData, bufferInfo);
-                        Debug.WriteLine($"Sent {bufferInfo.Size} bytes to muxer");
+                        //Debug.WriteLine($"Sent {bufferInfo.Size} bytes to muxer");
                     }
 
                     encoder.ReleaseOutputBuffer(encoderStatus, false);

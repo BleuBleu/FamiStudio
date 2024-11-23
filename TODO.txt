@@ -1,6 +1,5 @@
 - Filter settings dont apply to instrument player?
 	https://discord.com/channels/747649221879922840/747649222354010173/1297729099103735828
-- Is register overlay broken on android?
 
 4.3.0
 =====

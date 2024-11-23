@@ -42,6 +42,7 @@ namespace FamiStudio
         protected bool beat = false;
         protected bool stereo = false;
         protected bool accurateSeek = false;
+        protected bool forceReadRegisterValues = false;
         protected volatile bool reachedEnd = false;
         protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
@@ -687,7 +688,7 @@ namespace FamiStudio
 
         protected void ReadBackRegisterValues()
         {
-            if (Settings.ShowRegisterViewer)
+            if (Settings.ShowRegisterViewer || forceReadRegisterValues)
             {
                 lock (registerValues)
                 {

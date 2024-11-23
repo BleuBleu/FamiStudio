@@ -656,6 +656,7 @@ namespace FamiStudio
             maxLoopCount = maxLoop;
             metadata = new List<VideoFrameMetadata>();
             readRegisters = registers;
+            forceReadRegisterValues = true;
         }
 
         private void WriteMetadata(List<VideoFrameMetadata> metadata)
