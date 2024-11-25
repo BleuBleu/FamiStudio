@@ -1,9 +1,13 @@
+- Checkbox tapclick
 - Is JTS song broken? Too big for demo ROMS + DAC effect at start?
 	=> ON HOLD. Micheal stuff missing tools, Steo batch files needs fixing.
 - Scan code for MATTT
+- How2B change song length while playing
+- Can we import songs/instrument from storage on mobile now??? I think we can now with all the refactoring.
 
 4.3.0
 =====
+- Mobile piano should always color samples by sample, not instrument. Becomes all 1 color.
 - Steo PE thing that didnt work.
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
@@ -41,7 +45,9 @@
 - Making more features available on mobile:
 	- MIDI import
 	- MIDI export
-	- Ability to import DPCM samples from other FMS projects
+	- Ability to import songs from storage
+	- Ability to import instruments from storage
+	- Ability to import DPCM samples from other FMS projects on device storage
 - PAL expansion audio support (Thanks Steo!)
 - Minor adjustment to NES APU volumes  (Thanks Steo!)
 - SDAS/GBDK support (Thanks Michel Iwaniec!)
@@ -49,6 +55,7 @@
 - Behavior/Breaking changes:
 	- Default bass cutoff and filter frequencies where changed to better match the hardware
 	- NES APU volumes have been adjusted slightly to better match the hardware
+	- Most "Select All" / "Select None" buttons have been replace by context menus (right-click on desktop, long press on mobile).
 
 Linux notes 
 =========== 

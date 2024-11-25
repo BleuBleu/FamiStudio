@@ -150,18 +150,10 @@ namespace FamiStudio
         {
             if (App.SelectedChannel.Type == ChannelType.Dpcm && App.SelectedInstrument != null && App.SelectedInstrument.HasAnyMappedSamples)
             {
-                if (Settings.DpcmColorMode == Settings.ColorModeSample)
+                var mapping = App.SelectedInstrument.GetDPCMMapping(note);
+                if (mapping != null)
                 {
-                    var mapping = App.SelectedInstrument.GetDPCMMapping(note);
-                    if (mapping != null)
-                    {
-                        color = mapping.Sample.Color;
-                        return true;
-                    }
-                }
-                else
-                {
-                    color = App.SelectedInstrument.Color;
+                    color = mapping.Sample.Color;
                     return true;
                 }
             }

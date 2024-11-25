@@ -2470,8 +2470,15 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                MobileProjectDialog dlg = new MobileProjectDialog(App, ImportSongsTitle, false, false);
-                dlg.ShowDialogAsync((f) => ImportSongsAction(f));
+                MobileProjectDialog dlg = new MobileProjectDialog(App, ImportSongsTitle, false, true);
+                dlg.ShowDialogAsync((f) =>
+                {
+                    // HACK : We don't support nested activities right now, so return this special code to signal that we should open from storage.
+                    if (f == "///STORAGE///")
+                        Platform.StartMobileLoadFileOperationAsync(new[] { "fms", "txt", "ftm" }, (fs) => { ImportSongsAction(fs); });
+                    else
+                        ImportSongsAction(f);
+                });
             }
             else
             {
@@ -2596,8 +2603,15 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                MobileProjectDialog dlg = new MobileProjectDialog(App, ImportInstrumentsTitle, false, false);
-                dlg.ShowDialogAsync((f) => ImportInstrumentsAction(f));
+                MobileProjectDialog dlg = new MobileProjectDialog(App, ImportInstrumentsTitle, false, true);
+                dlg.ShowDialogAsync((f) => 
+                {
+                    // HACK : We don't support nested activities right now, so return this special code to signal that we should open from storage.
+                    if (f == "///STORAGE///")
+                        Platform.StartMobileLoadFileOperationAsync(new[] { "fms", "fti", "txt", "ftm", "bti", "opni" }, (fs) => { ImportInstrumentsAction(fs); });
+                    else
+                        ImportInstrumentsAction(f); 
+                });
             }
             else
             {
@@ -2627,7 +2641,7 @@ namespace FamiStudio
                     {
                         var ext = Path.GetExtension(fn).ToLower();
 
-                        if (ext == ".fms" && Platform.IsDesktop)
+                        if (ext == ".fms")
                             numFamiStudioFiles++;
                         else if (ext == ".dmc" || ext == ".wav")
                             numSamplesFiles++;
