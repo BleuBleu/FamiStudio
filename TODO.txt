@@ -3,6 +3,7 @@
 - Scan code for MATTT
 - How2B change song length while playing
 - Missing bottom line mobile sequencer shy mode.
+	=> Also we we want channels to be bigger?
 - GO TRHOUGH #BUGREPORT CHANNEL + GITHUB.
 - Dump .bin note table (code is commented out right now)
 	=> TEST!
