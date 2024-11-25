@@ -2226,6 +2226,11 @@ namespace FamiStudio
 #endif
         }
 
+        public bool FolderExists(Folder folder)
+        {
+            return folders.Exists(f => f == folder);
+        }
+
         public bool FolderExists(int type, string name)
         {
             return folders.Exists(f => f.Type == type && f.Name == name);

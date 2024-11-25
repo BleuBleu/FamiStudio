@@ -1495,7 +1495,6 @@ namespace FamiStudio
             if (ParentWindow == null || App == null || App.Project == null)
                 return;
 
-            ValidateIntegrity();
             RemoveAllControls();
             RemoveAllInsertionPoints();
 
@@ -3441,6 +3440,9 @@ namespace FamiStudio
             ValidateIntegrity();
             TickFling(delta);
             UpdateCaptureOperation(mouseLastPos, true, delta);
+#if DEBUG
+            ValidateIntegrity();
+#endif
         }
 
         private void EditProjectProperties()
@@ -3723,8 +3725,53 @@ namespace FamiStudio
             });
         }
 
+        private void ValidateControlUserData(Control ctrl)
+        {
+            if (ctrl.UserData != null)
+            {
+                if (ctrl.UserData is Instrument inst)
+                {
+                    Debug.Assert(App.Project.InstrumentExists(inst));
+                }
+                else if (ctrl.UserData is Folder folder)
+                {
+                    Debug.Assert(App.Project.FolderExists(folder));
+                }
+                else if (ctrl.UserData is Arpeggio arp)
+                {
+                    Debug.Assert(App.Project.ArpeggioExists(arp));
+                }
+                else if (ctrl.UserData is DPCMSample sample)
+                {
+                    Debug.Assert(App.Project.SampleExists(sample));
+                }
+                else if (ctrl.UserData is Song song)
+                {
+                    Debug.Assert(App.Project.SongExists(song));
+                }
+                else if (ctrl.UserData is Project project)
+                {
+                    Debug.Assert(App.Project == project);
+                }
+            }
+        }
+
+        private void ValidateContainerUserData(Container container)
+        {
+            foreach (var c in container.Controls)
+            {
+                ValidateControlUserData(c);
+
+                if (c is Container cont)
+                {
+                    ValidateContainerUserData(cont);
+                }
+            }
+        }
+
         public void ValidateIntegrity()
         {
+#if DEBUG
             if (highlightedObject != null || App.Project == null)
             {
                 // TODO : We should properly clear the highlighted object whenever we delete something.
@@ -3737,6 +3784,9 @@ namespace FamiStudio
                 if (highlightedObject is Arpeggio arp)
                     Debug.Assert(App.Project.ArpeggioExists(arp));
             }
+
+            ValidateContainerUserData(this);
+#endif
         }
 
         public void Serialize(ProjectBuffer buffer)

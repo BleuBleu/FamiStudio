@@ -812,6 +812,7 @@ namespace FamiStudio
         private void UndoRedoManager_Updated()
         {
             ToolBar.MarkDirty();
+            ValidateIntegrity();
         }
 
         private void ValidateIntegrity()
