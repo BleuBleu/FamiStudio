@@ -77,15 +77,15 @@ FAMISTUDIO_ASM6_ZP_ENUM   = $00b4
 FAMISTUDIO_ASM6_BSS_ENUM  = $0300
 FAMISTUDIO_ASM6_CODE_BASE = $8000
 
-    .include "..\famistudio_asm6.asm"
+    .include "famistudio_asm6.asm"
 
 ; Our single screen.
 screen_data_rle:
-    .incbin "demo.rle"
+    .incbin "DemoSource\demo.rle"
 
 default_palette:
-    .incbin "demo.pal"
-    .incbin "demo.pal"
+    .incbin "DemoSource\demo.pal"
+    .incbin "DemoSource\demo.pal"
 
 ; Silver Surfer - BGM 2
 song_title_silver_surfer:
@@ -839,19 +839,19 @@ setup_background:
     ; SONG
     .org $a000
 song_silver_surfer:
-    .include "song_silver_surfer_asm6.asm"
+    .include "DemoSource\song_silver_surfer_asm6.asm"
 sfx_data:
-    .include "sfx_asm6.asm"
+    .include "DemoSource\sfx_asm6.asm"
     .org $c000
 song_journey_to_silius:
-    .include "song_journey_to_silius_asm6.asm"
+    .include "DemoSource\song_journey_to_silius_asm6.asm"
     .org $d000
 song_shatterhand:
-    .include "song_shatterhand_asm6.asm"
+    .include "DemoSource\song_shatterhand_asm6.asm"
 
     ; DPCM
     .org $e000
-    .incbin "song_journey_to_silius_asm6.dmc"
+    .incbin "DemoSource\song_journey_to_silius_asm6.dmc"
 
     ; VECTORS
     .org $fffa
@@ -860,5 +860,5 @@ song_shatterhand:
     .dw irq
 
     ; CHARS
-    .incbin "demo.chr"
-    .incbin "demo.chr"
+    .incbin "DemoSource\demo.chr"
+    .incbin "DemoSource\demo.chr"
