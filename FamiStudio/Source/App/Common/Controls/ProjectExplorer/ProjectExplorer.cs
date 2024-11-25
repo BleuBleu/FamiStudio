@@ -811,7 +811,7 @@ namespace FamiStudio
                     var env = CreateImageButton(panel, x, EnvelopeType.Icons[idx]);
                     env.Dimmed = instrument.Envelopes[idx].IsEmpty(idx);
                     env.WhiteHighlight = highlightedObject == instrument;
-                    env.UserData = instrument.Envelopes[idx];
+                    env.UserData = EnvelopeType.InternalNames[idx];
                     env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
                     env.Click += (s) => InstrumentEnvelope_Click(instrument, idx);
                     env.PointerDown += (s, e) => Instrument_PointerDown(s, e, instrument, idx, env.Image);
@@ -827,7 +827,9 @@ namespace FamiStudio
 
         private void InstrumentDpcm_PointerDown(Control sender, Instrument instrument, PointerEventArgs e, TextureAtlasRef image)
         {
-            if (!e.Handled && e.Left && highlightedObject == instrument)
+            var allowDrag = Platform.IsDesktop || (highlightedObject == instrument);
+
+            if (!e.Handled && e.Left && allowDrag)
             {
                 draggedInstrument = instrument;
                 envelopeDragTexture = image;
@@ -1596,9 +1598,17 @@ namespace FamiStudio
 
         public void InstrumentEnvelopeChanged(Instrument instrument, int envType)
         {
-            var env = instrument.Envelopes[envType];
-            var button = FindInstrumentEnvelopeButton(instrument, env);
-            button.Dimmed = env.IsEmpty(envType);
+            // Arpeggios trigger this, but with null instruments.
+            if (instrument != null)
+            {
+                var env = instrument.Envelopes[envType];
+                var button = FindInstrumentEnvelopeButton(instrument, envType);
+                button.Dimmed = env.IsEmpty(envType);
+            }
+            else
+            {
+                Debug.Assert(envType == EnvelopeType.Arpeggio);
+            }
         }
 
         public void NotifyDPCMSampleMapped()
@@ -2043,9 +2053,10 @@ namespace FamiStudio
 
                                 // Update envelope button.
                                 var newEnvelopeDst = instrumentDst.Envelopes[envelopeDragIdx];
-                                var button = FindInstrumentEnvelopeButton(instrumentDst, oldEnvelopeDst);
+                                var button = FindInstrumentEnvelopeButton(instrumentDst, envelopeDragIdx);
                                 button.Dimmed = newEnvelopeDst.IsEmpty(envelopeDragIdx);
-                                button.UserData = newEnvelopeDst;
+                                
+                                Debug.Assert((string)button.UserData == EnvelopeType.InternalNames[envelopeDragIdx]);
 
                                 if (Platform.IsDesktop)
                                     App.StartEditInstrument(instrumentDst, envelopeDragIdx);
@@ -2116,7 +2127,7 @@ namespace FamiStudio
             if (mainContainer.ClientRectangle.Contains(mainContainerPoint) && panel != null)
             {
                 var arpeggioSrc = draggedArpeggio;
-                var arpeggioDst = panel.UserData as Arpeggio;
+                var arpeggioDst = panel.UserData as Arpeggio; 
 
                 if (arpeggioSrc != arpeggioDst && arpeggioSrc != null && arpeggioDst != null && envelopeDragIdx != -1)
                 {
@@ -2921,9 +2932,9 @@ namespace FamiStudio
             return mainContainer.FindControlByUserData(inst) as PanelContainer;
         }
 
-        private Button FindInstrumentEnvelopeButton(Instrument inst, Envelope env)
+        private Button FindInstrumentEnvelopeButton(Instrument inst, int envType)
         {
-            return FindInstrumentPanel(inst).FindControlByUserData(env) as Button;
+            return FindInstrumentPanel(inst).FindControlByUserData(EnvelopeType.InternalNames[envType]) as Button;
         }
 
         private Button FindInstrumentDpcmButton(Instrument inst)
@@ -2938,7 +2949,7 @@ namespace FamiStudio
             env.ResetToDefault(envelopeType);
             inst.NotifyEnvelopeChanged(envelopeType, true);
             App.UndoRedoManager.EndTransaction();
-            FindInstrumentEnvelopeButton(inst, env).Dimmed = env.IsEmpty(envelopeType);
+            FindInstrumentEnvelopeButton(inst, envelopeType).Dimmed = env.IsEmpty(envelopeType);
             MarkDirty();
         }
 

@@ -4786,12 +4786,14 @@ namespace FamiStudio
                     case CaptureOperation.DeleteNotes:
                         EndDeleteNotes();
                         break;
+                    case CaptureOperation.ChangeEnvelopeValue:
+                        UpdateChangeEnvelopeValue(x, y, true);
+                        break;
                     case CaptureOperation.DragLoop:
                     case CaptureOperation.DragRelease:
                     case CaptureOperation.ChangeEffectValue:
                     case CaptureOperation.ChangeSelectionEffectValue:
                     case CaptureOperation.ChangeEnvelopeRepeatValue:
-                    case CaptureOperation.ChangeEnvelopeValue:
                         App.UndoRedoManager.EndTransaction();
                         break;
                 }
@@ -6400,7 +6402,7 @@ namespace FamiStudio
             return false;
         }
 
-        private void UpdateChangeEnvelopeValue(int x, int y)
+        private void UpdateChangeEnvelopeValue(int x, int y, bool final = false)
         {
             App.UndoRedoManager.RestoreTransaction(false);
 
@@ -6438,10 +6440,16 @@ namespace FamiStudio
                 env.Values[idx] = (sbyte)Utils.Clamp(env.Values[idx] + delta, min, max);
             }
 
-            // Arps will have null instruments.
-            if (editInstrument != null)
+            if (final)
             {
-                editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
+                // Arps will have null instruments.
+                if (editInstrument != null)
+                {
+                    editInstrument.NotifyEnvelopeChanged(editEnvelope, true);
+                }
+
+                EnvelopeChanged?.Invoke(editInstrument, editEnvelope);
+                App.UndoRedoManager.EndTransaction();
             }
 
             MarkDirty();
