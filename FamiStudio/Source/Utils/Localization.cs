@@ -23,6 +23,8 @@ namespace FamiStudio
             "POR",
             "ZHO",
             "DEU",
+            "RUS",
+            "KOR"
         };
 
         public static string[] LanguageNames = new[]
@@ -31,7 +33,9 @@ namespace FamiStudio
             "Español",
             "Português",
             "中文 (简体)",
-            "Deutsch"
+            "Deutsch",
+            "Русский",
+            "한국어"
         };
 
         static Localization()
