@@ -3,7 +3,6 @@
 
 4.3.0
 =====
-- Shy mode mobile + click on sequencer directly.
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Realign all translations + tell translators to start updating.
@@ -46,6 +45,8 @@
 - PAL expansion audio support (Thanks Steo!)
 - Minor adjustment to NES APU volumes  (Thanks Steo!)
 - SDAS/GBDK support (Thanks Michel Iwaniec!)
+- Russian translation (Thanks XXX!)
+- Korean translation (Thanks YYY!)
 - Upgrade all platforms to .NET 8.0
 - Behavior/Breaking changes:
 	- Default bass cutoff and filter frequencies where changed to better match the hardware

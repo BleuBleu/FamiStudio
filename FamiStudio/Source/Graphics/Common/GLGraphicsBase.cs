@@ -3043,15 +3043,15 @@ namespace FamiStudio
 
         public void DrawTextureAtlasCentered(TextureAtlasRef bmp, float x, float y, float width, float height, float scale = 1.0f, Color tint = new Color())
         {
-            x += MathF.Floor((width  - bmp.ElementSize.Width)  * 0.5f);
-            y += MathF.Floor((height - bmp.ElementSize.Height) * 0.5f);
+            x += float.Floor((width  - bmp.ElementSize.Width  * scale) * 0.5f);
+            y += float.Floor((height - bmp.ElementSize.Height * scale) * 0.5f);
             DrawTextureAtlas(bmp, x, y, scale, tint);
         }
 
         public void DrawTextureAtlasCentered(TextureAtlasRef bmp, Rectangle rect, float scale = 1.0f, Color tint = new Color())
         {
-            float x = rect.Left + (rect.Width  - bmp.ElementSize.Width)  / 2;
-            float y = rect.Top  + (rect.Height - bmp.ElementSize.Height) / 2;
+            float x = float.Floor(rect.Left + (rect.Width - bmp.ElementSize.Width * scale) * 0.5f);
+            float y = float.Floor(rect.Top + (rect.Height - bmp.ElementSize.Height * scale) * 0.5f);
             DrawTextureAtlas(bmp, x, y, scale, tint);
         }
 

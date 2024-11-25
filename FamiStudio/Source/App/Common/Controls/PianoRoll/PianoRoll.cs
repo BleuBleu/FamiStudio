@@ -5,6 +5,13 @@ using System.Linq;
 
 namespace FamiStudio
 {
+    // This and the Sequencer are the only 2 "Uber-Control" left, where everything is in one class with 
+    // no sub-widgets whatsoever. Both of these need a full rewrite. This is for historical reason, when
+    // the app started, we didnt have a proper widget system, we sort-of do now. Also, all the touch and
+    // mouse input would need to be unified as much as possible.
+    //
+    // The piano roll would need to be broken down into a timeline, a note area, a piano and things like
+    // the envelope editor/DPCM editor need to be pulled out and made into their own editors.
     public class PianoRoll : Container
     {
         const float MinZoomFamiStudio       = 1.0f / 32.0f;

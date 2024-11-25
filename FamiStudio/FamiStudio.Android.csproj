@@ -981,6 +981,8 @@
     <EmbeddedResource Include="Resources\Atlas\SelectAll@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SelectNone@4x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Sequencer@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ShyOn@2x.tga" />
+    <EmbeddedResource Include="Resources\Atlas\ShyOff@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Slide@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\SliderThumb@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\Snap@2x.tga" />

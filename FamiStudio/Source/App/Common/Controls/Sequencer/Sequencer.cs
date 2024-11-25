@@ -4,6 +4,13 @@ using System.Diagnostics;
 
 namespace FamiStudio
 {
+    // This and the Piano Roll are the only 2 "Uber-Control" left, where everything is in one class with 
+    // no sub-widgets whatsoever. Both of these need a full rewrite. This is for historical reason, when
+    // the app started, we didnt have a proper widget system, we sort-of do now. Also, all the touch and
+    // mouse input would need to be unified as much as possible.
+    //
+    // The sequencer would need to be broken down into a timeline, a pattern area, the channel names and
+    // associated icons needs to be made into real buttons, etc.
     public class Sequencer : Container
     {
         const int DefaultChannelNameSizeX    = Platform.IsMobile ? 64 : 94;
@@ -527,11 +534,9 @@ namespace FamiStudio
                 bitmapScale = DpiScaling.ScaleForWindowFloat(0.5f);
                 channelBitmapScale = DpiScaling.ScaleForWindowFloat(0.25f);
             }
-            else
-            {
-                bmpShyOn = g.GetTextureAtlasRef("ShyOn");
-                bmpShyOff = g.GetTextureAtlasRef("ShyOff");
-            }
+
+            bmpShyOn = g.GetTextureAtlasRef("ShyOn");
+            bmpShyOff = g.GetTextureAtlasRef("ShyOff");
             
             seekGeometry = new float[]
             {
@@ -631,8 +636,7 @@ namespace FamiStudio
             c.DrawLine(0, headerSizeY, channelNameSizeX, headerSizeY, Theme.BlackColor);
 
             // Shy
-            if (Platform.IsDesktop)
-                c.DrawTextureAtlasCentered(hideEmptyChannels && !forceShyOff ? bmpShyOn : bmpShyOff, GetShyButtonRect(), 1, hoverShy ? Theme.LightGreyColor1 : Theme.LightGreyColor2);
+            c.DrawTextureAtlasCentered(hideEmptyChannels && !forceShyOff ? bmpShyOn : bmpShyOff, GetShyButtonRect(), bitmapScale, hoverShy ? Theme.LightGreyColor1 : Theme.LightGreyColor2);
 
             // Vertical line seperating with the toolbar
             if (Platform.IsMobile && IsLandscape)
@@ -1205,12 +1209,13 @@ namespace FamiStudio
 
         Rectangle GetShyButtonRect()
         {
-            return new Rectangle(channelNameSizeX - ghostNoteOffsetX, (headerSizeY - bmpShyOn.ElementSize.Height) /2, bmpShyOn.ElementSize.Width, headerSizeY);
+            var sx = DpiScaling.ScaleCustom(bmpShyOn.ElementSize.Width, bitmapScale);
+            return new Rectangle(channelNameSizeX - ghostNoteOffsetX, 0, sx, headerSizeY);
         }
 
         bool IsPointInShyButton(int x, int y)
         {
-            return Platform.IsDesktop && GetShyButtonRect().Contains(x, y);
+            return GetShyButtonRect().Contains(x, y);
         }
 
         bool IsPointInHeader(int x, int y)
@@ -1365,16 +1370,16 @@ namespace FamiStudio
 
         private bool HandleMouseDownChannelName(PointerEventArgs e)
         {
-            if (e.Left && IsMouseInTrackName(e))
+            if (e.Left && IsMouseInTrackName(e.X, e.Y))
             { 
-                var chanIdx = GetChannelIndexFromIconPos(e);
+                var chanIdx = GetChannelIndexFromIconPos(e.X, e.Y);
                 if (chanIdx >= 0)
                 {
                     App.ToggleChannelActive(chanIdx);
                     return true;
                 }
 
-                chanIdx = GetChannelIndexFromGhostIconPos(e);
+                chanIdx = GetChannelIndexFromGhostIconPos(e.X, e.Y);
                 if (chanIdx >= 0)
                 {
                     App.ToggleChannelForceDisplay(chanIdx);
@@ -1387,14 +1392,7 @@ namespace FamiStudio
 
         private bool HandleMouseDownShy(PointerEventArgs e)
         {
-            if (e.Left && e.X < channelNameSizeX && e.Y < headerSizeY && IsPointInShyButton(e.X, e.Y))
-            {
-                SetHideEmptyChannels(!hideEmptyChannels);
-                ShyChanged?.Invoke();
-                return true;
-            }
-
-            return false;
+            return e.Left && HandleTouchClickShy(e.X, e.Y);
         }
 
         private bool HandleMouseUpChannelName(PointerEventArgs e)
@@ -1708,6 +1706,40 @@ namespace FamiStudio
             return false;
         }
 
+        private bool HandleTouchClickShy(int x, int y)
+        {
+            if (IsPointInShyButton(x, y))
+            {
+                SetHideEmptyChannels(!hideEmptyChannels);
+                ShyChanged?.Invoke();
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool HandleTouchClickChannelName(int x, int y)
+        {
+            if (IsMouseInTrackName(x, y))
+            {
+                var chanIdx = GetChannelIndexFromIconPos(x, y);
+                if (chanIdx >= 0)
+                {
+                    App.ToggleChannelActive(chanIdx);
+                    return true;
+                }
+
+                chanIdx = GetChannelIndexFromGhostIconPos(x, y);
+                if (chanIdx >= 0)
+                {
+                    App.ToggleChannelForceDisplay(chanIdx);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private bool HandleTouchDoubleClickPatternArea(int x, int y)
         {
             bool inPatternZone = GetPatternForCoord(x, y, out var location);
@@ -1942,17 +1974,8 @@ namespace FamiStudio
             var x = e.X;
             var y = e.Y;
 
-            // Header: 
-            // - Seek
-            // Pattern names:
-            // x Set current channel (NO WILL DO ON DOWN)
-            // - Toggle mute on icon
-            // - Force diplay? How small is the icon going to be?
-            // Pattern area:
-            // - Add pattern if empty (if pencil tool)
-            // - Select single pattern (if pencil tool)
-            // - 
-
+            if (HandleTouchClickShy(x, y)) goto Handled;
+            if (HandleTouchClickChannelName(x, y)) goto Handled;
             if (HandleTouchClickChannelChange(x, y)) goto Handled;
             if (HandleTouchClickPatternHeader(x, y)) goto Handled;
             if (HandleTouchClickPatternArea(x, y)) goto Handled;
@@ -2724,27 +2747,27 @@ namespace FamiStudio
             return e.Y < headerSizeY && e.X > channelNameSizeX;
         }
 
-        private bool IsMouseInTrackName(PointerEventArgs e)
+        private bool IsMouseInTrackName(int x, int y)
         {
-            return e.Y > headerSizeY && e.X < channelNameSizeX;
+            return y > headerSizeY && x < channelNameSizeX;
         }
 
-        private int GetChannelIndexFromIconPos(PointerEventArgs e)
+        private int GetChannelIndexFromIconPos(int x, int y)
         {
             for (int i = 0; i < rowToChannel.Length; i++)
             {
-                if (GetRowIconRect(i).Contains(e.X, e.Y))
+                if (GetRowIconRect(i).Contains(x, y))
                     return rowToChannel[i];
             }
 
             return -1;
         }
 
-        private int GetChannelIndexFromGhostIconPos(PointerEventArgs e)
+        private int GetChannelIndexFromGhostIconPos(int x, int y)
         {
             for (int i = 0; i < rowToChannel.Length; i++)
             {
-                if (GetRowGhostRect(i).Contains(e.X, e.Y))
+                if (GetRowGhostRect(i).Contains(x, y))
                     return rowToChannel[i];
             }
 
@@ -2809,13 +2832,13 @@ namespace FamiStudio
             {
                 tooltip = $"<MouseLeft> {SeekTooptip} - <MouseRight> {MoreOptionsTooltip} - <MouseRight><Drag> {SelectColumnTooltip}\n<L><MouseLeft> {SetLoopPointTooltip} - <MouseWheel><Drag> {PanTooltip}";
             }
-            else if (IsMouseInTrackName(e))
+            else if (IsMouseInTrackName(e.X, e.Y))
             {
-                if (GetChannelIndexFromIconPos(e) >= 0)
+                if (GetChannelIndexFromIconPos(e.X, e.Y) >= 0)
                 {
                     tooltip = $"<MouseLeft> {MuteChannelTooltip} - <MouseLeft><MouseLeft> {SoloChannelTooltip}";
                 }
-                else if (GetChannelIndexFromGhostIconPos(e) >= 0)
+                else if (GetChannelIndexFromGhostIconPos(e.X, e.Y) >= 0)
                 {
                     tooltip = $"<MouseLeft> {ForceDisplayTooltip}\n<MouseLeft><MouseLeft> {ForceDisplayAllChannelsTooltip}";
                     int idx = GetChannelIndexForCoord(e.Y);
@@ -3095,24 +3118,7 @@ namespace FamiStudio
 
         protected bool HandleMouseDoubleClickChannelName(PointerEventArgs e)
         {
-            if (e.Left && IsMouseInTrackName(e))
-            {
-                var chanIdx = GetChannelIndexFromIconPos(e);
-                if (chanIdx >= 0)
-                {
-                    App.ToggleChannelSolo(chanIdx, true);
-                    return true;
-                }
-
-                chanIdx = GetChannelIndexFromGhostIconPos(e);
-                if (chanIdx >= 0)
-                {
-                    App.ToggleChannelForceDisplayAll(chanIdx, true);
-                    return true;
-                }
-            }
-
-            return false;
+            return e.Left && HandleTouchClickChannelName(e.X, e.Y);
         }
 
         protected override void OnMouseDoubleClick(PointerEventArgs e)
