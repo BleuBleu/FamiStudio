@@ -1,8 +1,8 @@
 - Checkbox tapclick
-- Is JTS song broken? Too big for demo ROMS + DAC effect at start?
-	=> ON HOLD. Micheal stuff missing tools, Steo batch files needs fixing.
 - Scan code for MATTT
 - How2B change song length while playing
+
+- Add more stuff to ProjectExplorer.ValidateIntegrity, the envelope thing was scary.
 
 4.3.0
 =====
@@ -11,11 +11,11 @@
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Realign all translations + tell translators to start updating.
 - GO TRHOUGH #BUGREPORT CHANNEL + GITHUB.
-- Look at that ffmpeg change PR #342
-- The note table text parsing code is insane.
 - Dump .bin note table (code is commented out right now)
 	=> TEST!
 - Review the copy/paste name matching. Maybe add a rename option.
+
+- Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
 
