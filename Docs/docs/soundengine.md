@@ -84,7 +84,6 @@ The source code for the demo is located in the \DemoSource subfolder.
 * NESASM: `DemoSource\demo_nesasm.asm`
 * ASM6: `DemoSource\demo_asm6.asm`
 * SDAS: `DemoSource\demo_sdas.s`
-* GBDK/SDCC: `DemoSource\demo_sdcc.s`
 
 The songs used in the demo are available in the demo songs that are included with FamiStudio:
 
@@ -107,7 +106,7 @@ Another approach would be to compile the engine as a separate obj file and link 
 
 All the instructions to use it in your project are included as comments at the top of these files.
 
-For using the C bindings with CC65 or SDCC, you will need to include the `famistudio_cc65.h` header or `famistudio_sdcc.h` header respectively, and also include the `famistudio_ca65.s` or `famistudio_sdas.s` assembly file into your assembly startup routine. Make sure that `FAMISTUDIO_CFG_C_BINDINGS = 1` is set either as part of your external config or in the file or else the linker will be unable link object files.
+For using the C bindings with CC65, you will need to include the `famistudio_cc65.h` header and also include the `famistudio_ca65.s` into your assembly startup routine. Make sure that `FAMISTUDIO_CFG_C_BINDINGS = 1` is set either as part of your external config or in the file or else the linker will be unable link object files.
 
 ## Interface
 
@@ -186,7 +185,7 @@ For ASM6, you simply need to specify the location at which to allocate the `ZP`/
     FAMISTUDIO_ASM6_BSS_ENUM  = $0200
     FAMISTUDIO_ASM6_CODE_BASE = $8000
 
-#### SDAS (and GBDK/SDCC)
+#### SDAS
 
 For SDAS, you need to specify the name of your ZEROPAGE, RAM/BSS and CODE/PRG segments as c-style macros (`.define`) like the example below.
 
