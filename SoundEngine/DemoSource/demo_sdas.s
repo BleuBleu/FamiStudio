@@ -3,8 +3,8 @@
 ; The C version of the demo uses GBDK's patched SDCC binaries, and has no graphics/UI.
 
 FAMISTUDIO_VERSION_MAJOR  = 4
-FAMISTUDIO_VERSION_MINOR  = 2
-FAMISTUDIO_VERSION_HOTFIX = 1
+FAMISTUDIO_VERSION_MINOR  = 3
+FAMISTUDIO_VERSION_HOTFIX = 0
 
 .area _HEADER (ABS)
 .org 0x7FF0
