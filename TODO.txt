@@ -1,8 +1,8 @@
-- Scan code for MATTT
-- How2B change song length while playing
-
 4.3.0
 =====
+- Scan code for MATTT
+- How2B change song length while playing
+- Missing bottom line mobile sequencer shy mode.
 - Get korean translation and realign it
 	https://discord.com/channels/747649221879922840/1092593281688424569/1271818078455463936
 - Realign all translations + tell translators to start updating.
@@ -37,6 +37,7 @@
 - New in-app font (Noto Sans) : More readable at low resolution and supports international characters
 - Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
 - Making more features available on mobile:
+	- Shy mode
 	- MIDI import
 	- MIDI export
 	- Ability to import songs from storage

@@ -2000,6 +2000,8 @@ namespace FamiStudio
             }
 
             if (HandleTouchDoubleClickPatternArea(x, y)) goto Handled;
+            if (HandleTouchClickShy(x, y)) goto Handled;
+            if (HandleTouchClickChannelName(x, y)) goto Handled;
 
             return;
 
