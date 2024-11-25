@@ -26,14 +26,15 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (e.Left && IsParamEnabled())
+            if (e.Left && Platform.IsDesktop)
             {
-                InvokeValueChangeStart();
-                param.SetValue(param.GetValue() == 0 ? 1 : 0);
-                InvokeValueChangeEnd();
-                CheckedChanged?.Invoke(this, param.GetValue() != 0);
-                MarkDirty();
+                ToggleCheck();
             }
+        }
+
+        protected override void OnTouchClick(PointerEventArgs e)
+        {
+            ToggleCheck();
         }
 
         protected override void OnPointerUp(PointerEventArgs e)
@@ -52,6 +53,18 @@ namespace FamiStudio
         protected override void OnPointerLeave(System.EventArgs e)
         {
             SetAndMarkDirty(ref hover, false);
+        }
+
+        private void ToggleCheck()
+        {
+            if (IsParamEnabled())
+            {
+                InvokeValueChangeStart();
+                param.SetValue(param.GetValue() == 0 ? 1 : 0);
+                InvokeValueChangeEnd();
+                CheckedChanged?.Invoke(this, param.GetValue() != 0);
+                MarkDirty();
+            }
         }
 
         private bool IsParamEnabled()

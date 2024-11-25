@@ -1,8 +1,5 @@
-- Checkbox tapclick
 - Scan code for MATTT
 - How2B change song length while playing
-
-- Add more stuff to ProjectExplorer.ValidateIntegrity, the envelope thing was scary.
 
 4.3.0
 =====
