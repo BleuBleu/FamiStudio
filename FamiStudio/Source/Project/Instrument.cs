@@ -324,7 +324,7 @@ namespace FamiStudio
             }
         }
 
-        public int N163MaxWaveSize  => (project.N163WaveRAMSize * 2 - n163WavPos) & 0xfc; // Needs to be multiple of 4.
+        public int N163MaxWaveSize  => (project.N163WaveRAMSize * 2 - (n163WavAutoPos ? 0 : n163WavPos)) & 0xfc; // Needs to be multiple of 4.
         public int N163MaxWavePos   => (project.N163WaveRAMSize * 2 - 4);
         public int N163MaxWaveCount => Math.Min(64, N163WaveformEnvelope.Values.Length / n163WavSize); 
 

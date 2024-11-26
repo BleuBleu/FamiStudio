@@ -233,15 +233,13 @@ namespace FamiStudio
             var sliderWidth = width - buttonSize * 2;
             var buttonOffsetY = Utils.DivideAndRoundUp(height - buttonSize, 2);
             var val = param.GetValue();
-            var valPrev = param.SnapAndClampValue(val - 1);
-            var valNext = param.SnapAndClampValue(val + 1);
             var min = param.GetMinValue();
             var max = param.GetMaxValue();
             var ratio = (val - min) / (float)(max - min);
             var valWidth = max == min ? 0 : (int)Math.Round(MathF.Pow(ratio, exp) * sliderWidth);
             var opacity = paramEnabled ? 255 : 64;
-            var opacityL = paramEnabled && val != valPrev ? (hoverButtonIndex == -1 ? 150 : 255) : 64;
-            var opacityR = paramEnabled && val != valNext ? (hoverButtonIndex ==  1 ? 150 : 255) : 64;
+            var opacityL = paramEnabled && val != min ? (hoverButtonIndex == -1 ? 150 : 255) : 64;
+            var opacityR = paramEnabled && val != max ? (hoverButtonIndex ==  1 ? 150 : 255) : 64;
 
             c.DrawTextureAtlas(bmpMinus, 0, buttonOffsetY, bmpScale, Color.Black.Transparent(opacityL));
             c.PushTranslation(buttonSize, 0);

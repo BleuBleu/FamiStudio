@@ -408,6 +408,9 @@ namespace FamiStudio
             var h  = rect.Height;
             var instColors = stackalloc Color[8];
             var instIds = stackalloc int[8];
+            var textY = 0;
+            var overlapTextShown = false;
+            var wrongInstrumentTextShown = false;
 
             for (var x = 0; x < ramSize; x++)
             {
@@ -483,11 +486,21 @@ namespace FamiStudio
 
                 if (instCount > 1)
                 {
-                    c.DrawText(WaveOverlap, res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                    if (!overlapTextShown)
+                    {
+                        c.DrawText(WaveOverlap, res.FontSmall, 0, textY, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                        textY += res.FontSmall.LineHeight;
+                        overlapTextShown = true;
+                    }
                 }
                 else if (wrongInstrument)
                 {
-                    c.DrawText(WaveWrongPlaying, res.FontSmall, 0, 0, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                    if (!wrongInstrumentTextShown)
+                    {
+                        c.DrawText(WaveWrongPlaying, res.FontSmall, 0, textY, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                        textY += res.FontSmall.LineHeight;
+                        wrongInstrumentTextShown = true;
+                    }
                 }
 
                 c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, color);
