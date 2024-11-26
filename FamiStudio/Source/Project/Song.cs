@@ -1248,48 +1248,55 @@ namespace FamiStudio
             }
 
             // For looping, we simply extend the song by copying pattern instances.
-            if (loopCount > 1 && LoopPoint >= 0 && LoopPoint < Length)
+            if (loopCount > 1)
             {
-                var originalLength = Length;
-                var loopSectionLength = originalLength - LoopPoint;
+                if (LoopPoint >= 0 && LoopPoint < Length)
+                { 
+                    var originalLength = Length;
+                    var loopSectionLength = originalLength - LoopPoint;
 
-                SetLength(Math.Min(Song.MaxLength, originalLength + loopSectionLength * (loopCount - 1)));
+                    SetLength(Math.Min(Song.MaxLength, originalLength + loopSectionLength * (loopCount - 1)));
 
-                var srcPatIdx = LoopPoint;                
+                    var srcPatIdx = LoopPoint;                
 
-                for (var i = originalLength; i < Length; i++)
-                {
-                    for (var c = 0; c < channels.Length; c++)
+                    for (var i = originalLength; i < Length; i++)
                     {
-                        var channel = channels[c];
-
-                        channel.PatternInstances[i] = channel.PatternInstances[srcPatIdx];
-
-                        // Add a no attack note at the beginning of the loop point to mimic the final note of the song lasting forever.
-                        // We cant simply extend the final note since it may have slides, etc. So we really need another note. The max
-                        // duration we can set is 65536 frames, hopefully that's good enough.
-                        if (extendLastNotes && srcPatIdx == loopPoint && lastNotes[c] != null && (channel.PatternInstances[i] == null || !channel.PatternInstances[i].Notes.TryGetValue(0, out var note) || (!note.IsMusical && !note.IsStop)))
+                        for (var c = 0; c < channels.Length; c++)
                         {
-                            var lastNote = lastNotes[c];
-                            channel.PatternInstances[i] = channel.PatternInstances[i] == null ? channel.CreatePattern() : channel.PatternInstances[i].ShallowClone();
-                            note = channel.PatternInstances[i].GetOrCreateNoteAt(0);
-                            note.Value = lastNote.IsSlideNote ? lastNote.SlideNoteTarget : lastNote.Value;
-                            note.Instrument = lastNote.Instrument;
-                            note.HasAttack = false;
-                            note.Duration = 1000000;
+                            var channel = channels[c];
+
+                            channel.PatternInstances[i] = channel.PatternInstances[srcPatIdx];
+
+                            // Add a no attack note at the beginning of the loop point to mimic the final note of the song lasting forever.
+                            // We cant simply extend the final note since it may have slides, etc. So we really need another note. The max
+                            // duration we can set is 65536 frames, hopefully that's good enough.
+                            if (extendLastNotes && srcPatIdx == loopPoint && lastNotes[c] != null && (channel.PatternInstances[i] == null || !channel.PatternInstances[i].Notes.TryGetValue(0, out var note) || (!note.IsMusical && !note.IsStop)))
+                            {
+                                var lastNote = lastNotes[c];
+                                channel.PatternInstances[i] = channel.PatternInstances[i] == null ? channel.CreatePattern() : channel.PatternInstances[i].ShallowClone();
+                                note = channel.PatternInstances[i].GetOrCreateNoteAt(0);
+                                note.Value = lastNote.IsSlideNote ? lastNote.SlideNoteTarget : lastNote.Value;
+                                note.Instrument = lastNote.Instrument;
+                                note.HasAttack = false;
+                                note.Duration = 1000000;
+                            }
+                        }
+
+                        if (PatternHasCustomSettings(srcPatIdx))
+                        {
+                            var customSettings = GetPatternCustomSettings(srcPatIdx);
+                            SetPatternCustomSettings(i, customSettings.patternLength, customSettings.beatLength, customSettings.groove, customSettings.groovePaddingMode);
+                        }
+
+                        if (++srcPatIdx >= originalLength)
+                        {
+                            srcPatIdx = loopPoint;
                         }
                     }
-
-                    if (PatternHasCustomSettings(srcPatIdx))
-                    {
-                        var customSettings = GetPatternCustomSettings(srcPatIdx);
-                        SetPatternCustomSettings(i, customSettings.patternLength, customSettings.beatLength, customSettings.groove, customSettings.groovePaddingMode);
-                    }
-
-                    if (++srcPatIdx >= originalLength)
-                    {
-                        srcPatIdx = loopPoint;
-                    }
+                }
+                else
+                {
+                    Log.LogMessage(LogSeverity.Warning, "A loop count > 1 was specified, but the song has no loop point, ignoring.");
                 }
             }
         }
