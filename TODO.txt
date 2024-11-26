@@ -3,6 +3,7 @@
 - Scan code for MATTT
 - How2B change song length while playing (Mac only?)
 - Missing bottom line mobile sequencer shy mode.
+	=> Also we we want channels to be bigger?
 - GO TRHOUGH #BUGREPORT CHANNEL + GITHUB.
 	- Mobile export song name : https://discord.com/channels/747649221879922840/1299250008561946674/1299250008561946674
 		=> Test on mobile.
@@ -14,6 +15,7 @@
 - Dump .bin note table (code is commented out right now)
 	=> TEST!
 - Review the copy/paste name matching. Maybe add a rename option.
+- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
 
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
@@ -168,7 +170,6 @@ Backlog:
 =========
 - "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
-		- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
 - Raw FDS modulation table envelope. 
 - Rewrite Sequencer + piano roll.
 - Add + buttons for each folder?
