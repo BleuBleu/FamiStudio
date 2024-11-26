@@ -3884,6 +3884,11 @@ famistudio_advance_channel_with_delays:
     lda #0
     sta famistudio_chn_note,x
 
+    ; Special case for DPCM, need to stop it manually.
+    cpx #4
+    bne @done
+    jsr famistudio_sample_stop
+
     @done:
     rts
 
