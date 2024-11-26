@@ -347,7 +347,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 verticalScoll = true;
-                channelSizeY = Math.Max(((int)Math.Ceiling(height / DpiScaling.Window) - DefaultHeaderSizeY) / channelCount, 20);
+                channelSizeY = Math.Clamp(((int)Math.Ceiling(height / DpiScaling.Window) - DefaultHeaderSizeY) / visibleChannelCount, 20, 80);
                 return channelSizeY * channelCount + constantSize;
             }
             else
@@ -650,7 +650,7 @@ namespace FamiStudio
             c.PushTranslation(0, headerSizeY - scrollY);
 
             // Horizontal lines seperating patterns.
-            for (int i = 0, y = 0; i < rowToChannel.Length; i++, y += channelSizeY)
+            for (int i = 0, y = 0; i <= rowToChannel.Length; i++, y += channelSizeY)
                 c.DrawLine(0, y, channelNameSizeX, y, Theme.BlackColor);
 
             var showExpIcons = showExpansionIcons && Song.Project.UsesAnyExpansionAudio;
@@ -800,7 +800,7 @@ namespace FamiStudio
             c.PushTranslation(0, -scrollY);
 
             // Horizontal lines
-            for (int i = 0, y = 0; i < rowToChannel.Length; i++, y += channelSizeY)
+            for (int i = 0, y = 0; i <= rowToChannel.Length; i++, y += channelSizeY)
                 c.DrawLine(0, y, width, y, Theme.BlackColor);
 
             // TODO : This is really bad, since all the logic is in the rendering code. Make
