@@ -8,8 +8,6 @@
 	- DPCM export bug, I think i fixed this? https://discord.com/channels/747649221879922840/1278938505644605440/1278938505644605440
 	- Same as this too? https://discord.com/channels/747649221879922840/1264781147158741042/1264781147158741042
 
-- Dump .bin note table (code is commented out right now)
-	=> TEST!
 - Review the copy/paste name matching. Maybe add a rename option.
 - Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
 
@@ -19,6 +17,7 @@
 
 4.3.0 Testing
 =============
+- Test Dump .bin note table (code is commented out right now)
 - Make sure not ticking all the time.
 - Run all NSF/FS unit tests, update refs if needed.
 - Run sound engine unit test

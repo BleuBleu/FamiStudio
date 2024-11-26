@@ -880,7 +880,7 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                var songName = props.GetPropertyValue<string>(0);
+                var songName = props.GetPropertyValue<string>(1);
                 Platform.StartMobileSaveFileOperationAsync($"{songName}.mp4", (f) =>
                 {
                     new Thread(() =>
