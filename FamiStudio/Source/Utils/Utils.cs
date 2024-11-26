@@ -275,7 +275,7 @@ namespace FamiStudio
                 bytes[i] = ReverseBits(bytes[i]);
         }
 
-        public static string MakeNiceAsmName(string name)
+        public static string MakeNiceAsmName(string name, bool allowDash = true)
         {
             string niceName = "";
             foreach (var c in name)
@@ -284,7 +284,9 @@ namespace FamiStudio
                     niceName += char.ToLower(c);
                 else if (char.IsWhiteSpace(c) && niceName.Last() != '_')
                     niceName += '_';
-                else if (c == '_' || c == '-')
+                else if (c == '-')
+                    niceName += allowDash ? '-' : '_';
+                else if (c == '_')
                     niceName += c;
             }
             return niceName;
