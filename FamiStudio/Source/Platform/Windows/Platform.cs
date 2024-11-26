@@ -16,6 +16,7 @@ namespace FamiStudio
         public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FamiStudio");
         public static float DoubleClickTime => doubleClickTime;
 
+        public const bool   DllStaticLib = false;
         public const string DllPrefix = "";
         public const string DllExtension = ".dll";
 

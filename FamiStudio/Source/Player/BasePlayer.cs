@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -19,6 +19,7 @@ namespace FamiStudio
     {
         void NotifyInstrumentLoaded(Instrument instrument, long channelTypeMask);
         void NotifyRegisterWrite(int apuIndex, int reg, int data, int metadata = 0);
+        int GetN163AutoWavePosition(Instrument instrument);
         ChannelState GetChannelByType(int type); // Use sparingly, kind of hacky.
     }
 
@@ -41,9 +42,11 @@ namespace FamiStudio
         protected bool beat = false;
         protected bool stereo = false;
         protected bool accurateSeek = false;
+        protected bool forceReadRegisterValues = false;
         protected volatile bool reachedEnd = false;
         protected int  tndMode = NesApu.TND_MODE_SINGLE;
         protected int  beatIndex = -1;
+        protected Dictionary<int, int> n163AutoWavPosMap;
         protected Song song;
         protected ChannelState[] channelStates;
         protected LoopMode loopMode = LoopMode.Song;
@@ -284,12 +287,13 @@ namespace FamiStudio
             Debug.Assert(s.Project.OutputsStereoAudio == stereo);
 
             song = s;
+            song.Project.AutoAssignN163WavePositions(out n163AutoWavPosMap);
             famitrackerTempo = song.UsesFamiTrackerTempo;
             famitrackerSpeed = song.FamitrackerSpeed;
             playLocation = NoteLocation.Invalid; // This means "before the first frame".
             frameNumber = 0;
             famitrackerTempoCounter = 0;
-            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.ExpansionNumN163Channels, palPlayback);
+            channelStates = CreateChannelStates(song.Project, apuIndex, song.Project.Tuning, palPlayback, song.Project.ExpansionNumN163Channels);
             reachedEnd = false;
             playbackRateCounter = 1;
             tempoEnvelopeCounter = 0;
@@ -527,36 +531,36 @@ namespace FamiStudio
             }
         }
 
-        private ChannelState CreateChannelState(int apuIdx, int channelType, int expNumChannels, bool pal)
+        private ChannelState CreateChannelState(int apuIdx, int channelType, int expNumChannels, int tuning, bool pal)
         {
             switch (channelType)
             {
                 case ChannelType.Square1:
                 case ChannelType.Square2:
-                    return new ChannelStateSquare(this, apuIdx, channelType, pal);
+                    return new ChannelStateSquare(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Triangle:
-                    return new ChannelStateTriangle(this, apuIdx, channelType, pal);
+                    return new ChannelStateTriangle(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Noise:
-                    return new ChannelStateNoise(this, apuIdx, channelType, pal);
+                    return new ChannelStateNoise(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Dpcm:
-                    return new ChannelStateDpcm(this, apuIdx, channelType, pal);
+                    return new ChannelStateDpcm(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Vrc6Square1:
                 case ChannelType.Vrc6Square2:
-                    return new ChannelStateVrc6Square(this, apuIdx, channelType);
+                    return new ChannelStateVrc6Square(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Vrc6Saw:
-                    return new ChannelStateVrc6Saw(this, apuIdx, channelType);
+                    return new ChannelStateVrc6Saw(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
                 case ChannelType.Vrc7Fm4:
                 case ChannelType.Vrc7Fm5:
                 case ChannelType.Vrc7Fm6:
-                    return new ChannelStateVrc7(this, apuIdx, channelType);
+                    return new ChannelStateVrc7(this, apuIdx, channelType, tuning);
                 case ChannelType.FdsWave:
-                    return new ChannelStateFds(this, apuIdx, channelType);
+                    return new ChannelStateFds(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.Mmc5Square1:
                 case ChannelType.Mmc5Square2:
-                    return new ChannelStateMmc5Square(this, apuIdx, channelType);
+                    return new ChannelStateMmc5Square(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.N163Wave1:
                 case ChannelType.N163Wave2:
                 case ChannelType.N163Wave3:
@@ -565,36 +569,36 @@ namespace FamiStudio
                 case ChannelType.N163Wave6:
                 case ChannelType.N163Wave7:
                 case ChannelType.N163Wave8:
-                    return new ChannelStateN163(this, apuIdx, channelType, expNumChannels, pal);
+                    return new ChannelStateN163(this, apuIdx, channelType, tuning, pal, expNumChannels);
                 case ChannelType.S5BSquare1:
                 case ChannelType.S5BSquare2:
                 case ChannelType.S5BSquare3:
-                    return new ChannelStateS5B(this, apuIdx, channelType, pal);
+                    return new ChannelStateS5B(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.EPSMSquare1:
                 case ChannelType.EPSMSquare2:
                 case ChannelType.EPSMSquare3:
-                    return new ChannelStateEPSMSquare(this, apuIdx, channelType, pal);
+                    return new ChannelStateEPSMSquare(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.EPSMFm1:
                 case ChannelType.EPSMFm2:
                 case ChannelType.EPSMFm3:
                 case ChannelType.EPSMFm4:
                 case ChannelType.EPSMFm5:
                 case ChannelType.EPSMFm6:
-                    return new ChannelStateEPSMFm(this, apuIdx, channelType, pal);
+                    return new ChannelStateEPSMFm(this, apuIdx, channelType, tuning, pal);
                 case ChannelType.EPSMrythm1:
                 case ChannelType.EPSMrythm2:
                 case ChannelType.EPSMrythm3:
                 case ChannelType.EPSMrythm4:
                 case ChannelType.EPSMrythm5:
                 case ChannelType.EPSMrythm6:
-                    return new ChannelStateEPSMRythm(this, apuIdx, channelType, pal);
+                    return new ChannelStateEPSMRythm(this, apuIdx, channelType, tuning, pal);
             }
 
             Debug.Assert(false);
             return null;
         }
 
-        protected ChannelState[] CreateChannelStates(Project project, int apuIdx, int expNumChannels, bool pal)
+        protected ChannelState[] CreateChannelStates(Project project, int apuIdx, int tuning, bool pal, int expNumChannels)
         {
             var channelCount = project.GetActiveChannelCount();
             var states = new ChannelState[channelCount];
@@ -604,7 +608,7 @@ namespace FamiStudio
             {
                 if (project.IsChannelActive(i))
                 {
-                    var state = CreateChannelState(apuIdx, i, expNumChannels, pal);
+                    var state = CreateChannelState(apuIdx, i, expNumChannels, tuning, pal);
                     states[idx++] = state;
                 }
             }
@@ -671,9 +675,20 @@ namespace FamiStudio
             return Array.Find(channelStates, c => c.InnerChannelType == type);
         }
 
+        public int GetN163AutoWavePosition(Instrument instrument)
+        {
+            Debug.Assert(instrument != null && instrument.IsN163 && instrument.N163WaveAutoPos);
+
+            // Cant be NULL on instrument player thread, its fine, lets all put them at 0.
+            var pos = 0;
+            n163AutoWavPosMap?.TryGetValue(instrument.Id, out pos);
+
+            return pos;
+        }
+
         protected void ReadBackRegisterValues()
         {
-            if (Settings.ShowRegisterViewer)
+            if (Settings.ShowRegisterViewer || forceReadRegisterValues)
             {
                 lock (registerValues)
                 {
@@ -681,21 +696,9 @@ namespace FamiStudio
 
                     // Read some additionnal information that we may need for the
                     // register viewer, such as instrument colors, etc.
-                    for (int i = 0; i < channelStates.Length; i++)
+                    foreach (var state in channelStates)
                     {
-                        var state = channelStates[i];
-                        var note = state.CurrentNote;
-                        var instrument = note != null ? note.Instrument : null;
-
-                        registerValues.InstrumentColors[state.InnerChannelType] = instrument != null ? instrument.Color : Color.Transparent;
-
-                        if (state.InnerChannelType >= ChannelType.N163Wave1 &&
-                            state.InnerChannelType <= ChannelType.N163Wave8)
-                        {
-                            var idx = state.InnerChannelType - ChannelType.N163Wave1;
-                            registerValues.N163InstrumentRanges[idx].Position = instrument != null ? instrument.N163WavePos : (byte)0;
-                            registerValues.N163InstrumentRanges[idx].Size = instrument != null ? instrument.N163WaveSize : (byte)0;
-                        }
+                        state.AddRegisterValuesExtraData(registerValues);
                     }
                 }
             }

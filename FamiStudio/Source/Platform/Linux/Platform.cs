@@ -16,10 +16,11 @@ namespace FamiStudio
 
         private static short[] beep;
 
-        public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config/FamiStudio");
+        public static string SettingsDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "FamiStudio");
         public static string UserProjectsDirectory => null;
         public static float DoubleClickTime => 0.5f; // 0.5 sec is the default on both Windows and Mac. So let's use that.
 
+        public const bool   DllStaticLib = false;
         public const string DllPrefix = "lib";
         public const string DllExtension = ".so";
 

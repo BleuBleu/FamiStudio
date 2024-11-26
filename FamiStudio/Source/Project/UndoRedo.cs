@@ -179,7 +179,7 @@ namespace FamiStudio
             trans.Begin();
             index++;
             TransactionBegan?.Invoke(scope, flags);
-            project.ValidateIntegrity();
+            project.ValidateIntegrity(); 
         }
 
         public void EndTransaction()

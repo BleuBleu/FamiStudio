@@ -292,7 +292,6 @@ namespace FamiStudio
 
             // HACK : The scaling is not longer tied to the graphics, so we need to temporarely override it.
             DpiScaling.ForceUnitScaling = true;
-            Platform.AcquireGLContext();
 
             // Create graphics resources.
             videoGraphics = OffscreenGraphics.Create(videoResX, videoResY, !downsampled, settings.PreviewMode || downsampled);
@@ -415,7 +414,7 @@ namespace FamiStudio
                     var regViewer = registerViewers[i];
                     var icon = registerViewerIcons[i];
 
-                    c.DrawTexture(icon, 0, y, 1, Theme.LightGreyColor2);
+                    c.DrawTexture(icon, 0, y, Theme.LightGreyColor2);
                     c.DrawText(ExpansionType.GetLocalizedName(regViewer.Expansion, ExpansionType.LocalizationMode.ChipName), fonts.FontSmallBold, icon.Size.Width + 2, y, Theme.LightGreyColor2, TextFlags.Middle, 0, icon.Size.Height);
                     y += icon.Size.Height;
                     c.DrawLine(0, y, contentSizeX - 4, y, Theme.LightGreyColor2);
@@ -534,7 +533,7 @@ namespace FamiStudio
                     if (downsampleGraphics != null)
                     {
                         downsampleGraphics.BeginDrawFrame(new Rectangle(0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY), true, Theme.BlackColor);
-                        downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY, 1.0f);
+                        downsampleGraphics.DefaultCommandList.DrawTexture(videoGraphics.GetTexture(), 0, 0, downsampleGraphics.SizeX, downsampleGraphics.SizeY);
                         downsampleGraphics.EndDrawFrame(false);
                     }
 
@@ -657,6 +656,7 @@ namespace FamiStudio
             maxLoopCount = maxLoop;
             metadata = new List<VideoFrameMetadata>();
             readRegisters = registers;
+            forceReadRegisterValues = true;
         }
 
         private void WriteMetadata(List<VideoFrameMetadata> metadata)

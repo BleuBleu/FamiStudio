@@ -7,7 +7,7 @@ namespace FamiStudio
     {
         int prevPeriodHi;
 
-        public ChannelStateVrc6Saw(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
+        public ChannelStateVrc6Saw(IPlayerInterface player, int apuIdx, int channelType, int tuning, bool pal) : base(player, apuIdx, channelType, tuning, pal)
         {
         }
 

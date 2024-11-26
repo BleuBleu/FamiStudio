@@ -10,7 +10,7 @@ namespace FamiStudio
         private ushort modSpeed;
         private int    prevPeriodHi;
 
-        public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx) : base(player, apuIdx, channelIdx, false)
+        public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx, int tuning, bool pal) : base(player, apuIdx, channelIdx, tuning, pal)
         {
         }
 

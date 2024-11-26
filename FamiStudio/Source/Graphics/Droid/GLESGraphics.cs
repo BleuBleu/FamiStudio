@@ -139,7 +139,7 @@ namespace FamiStudio
             code += "#define INTERP_PERSPECTIVE_OUT varying\n";
             code += "#define TEX texture2D\n";
             code += "#define TEXPROJ texture2DProj\n";
-            code += "#define FAMISTUDIO_ANDROID 1\n";
+            code += "#define FAMISTUDIO_MOBILE 1\n";
             code += "#define FRAG_COLOR gl_FragColor\n";
 
             using (Stream stream = typeof(GraphicsBase).Assembly.GetManifestResourceStream(resourceName))
@@ -422,9 +422,21 @@ namespace FamiStudio
             GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, x, y, width, height, GLES20.GlRgba, GLES20.GlUnsignedByte, buffer);
         }
 
+        public void UpdateTexture(Texture bmp, int x, int y, int width, int height, byte[] data, TextureFormat format)
+        {
+            var glFormat = GetGLESTextureFormat(format, out var bpp);
+
+            var buffer = ByteBuffer.AllocateDirect(width * height * bpp).Order(ByteOrder.NativeOrder());
+            buffer.Put(data);
+            buffer.Position(0);
+
+            GLES20.GlBindTexture(GLES20.GlTexture2d, bmp.Id);
+            GLES20.GlTexSubImage2D(GLES20.GlTexture2d, 0, x, y, width, height, glFormat, GLES20.GlUnsignedByte, buffer);
+        }
+
         public override void UpdateTexture(int id, int x, int y, int width, int height, byte[] data)
         {
-            var buffer = ByteBuffer.AllocateDirect(width * height * sizeof(int)).Order(ByteOrder.NativeOrder());
+            var buffer = ByteBuffer.AllocateDirect(width * height).Order(ByteOrder.NativeOrder());
             buffer.Put(data);
             buffer.Position(0);
 
@@ -434,23 +446,24 @@ namespace FamiStudio
             GLES20.GlPixelStorei(GLES20.GlUnpackAlignment, 4);
         }
 
-        private int GetGLESTextureFormat(TextureFormat format)
+        private int GetGLESTextureFormat(TextureFormat format, out int bpp)
         {
             switch (format)
             {
-                case TextureFormat.R: return GLES20.GlLuminance;
-                case TextureFormat.Rgb: return GLES20.GlRgb;
-                case TextureFormat.Rgba: return GLES20.GlRgba;
-                case TextureFormat.Depth: return GLES20.GlDepthComponent;
+                case TextureFormat.R: bpp = 1;  return GLES20.GlLuminance;
+                case TextureFormat.Rgb: bpp = 3;  return GLES20.GlRgb;
+                case TextureFormat.Rgba: bpp = 4;  return GLES20.GlRgba;
+                case TextureFormat.Depth: bpp = 2;  return GLES20.GlDepthComponent;
                 default:
                     Debug.Assert(false);
+                    bpp = 0;
                     return GLES20.GlRgba;
             }
         }
 
         public override int CreateTexture(int width, int height, TextureFormat format, bool filter)
         {
-            Debug.Assert(Platform.ThreadOwnsGLContext);
+            Debug.Assert(OwnedByCurrentThread());
             var id = new int[1];
             GLES20.GlGenTextures(1, id, 0);
             Debug.Assert(id[0] > 0);
@@ -464,7 +477,7 @@ namespace FamiStudio
             buffer.Put(new int[width * height]);
             buffer.Position(0);
 
-            var texFormat = GetGLESTextureFormat(format);
+            var texFormat = GetGLESTextureFormat(format, out _);
             GLES20.GlTexImage2D(GLES20.GlTexture2d, 0, texFormat, width, height, 0, texFormat, format == TextureFormat.Depth ? GLES20.GlUnsignedShort : GLES20.GlUnsignedByte, format == TextureFormat.Depth ? null : buffer);
 
             return id[0];

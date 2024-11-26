@@ -9,7 +9,7 @@ namespace FamiStudio
         protected byte vrc7Instrument = 0;
         protected byte prevPeriodHi;
 
-        public ChannelStateVrc7(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
+        public ChannelStateVrc7(IPlayerInterface player, int apuIdx, int channelType, int tuning) : base(player, apuIdx, channelType, tuning)
         {
             channelIdx = channelType - ChannelType.Vrc7Fm1;
         }

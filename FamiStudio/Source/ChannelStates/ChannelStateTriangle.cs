@@ -4,7 +4,7 @@ namespace FamiStudio
 {
     public class ChannelStateTriangle : ChannelState
     {
-        public ChannelStateTriangle(IPlayerInterface player, int apuIdx, int channelType, bool pal) : base(player, apuIdx, channelType, pal)
+        public ChannelStateTriangle(IPlayerInterface player, int apuIdx, int channelType, int tuning, bool pal) : base(player, apuIdx, channelType, tuning, pal)
         {
         }
 

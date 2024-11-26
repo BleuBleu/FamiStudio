@@ -5,7 +5,7 @@ namespace FamiStudio
 {
     public static class Gif
     {
-        private const string GifDecDll = Platform.DllPrefix + "GifDec" + Platform.DllExtension;
+        private const string GifDecDll = Platform.DllStaticLib ? "__Internal" : Platform.DllPrefix + "GifDec" + Platform.DllExtension;
 
         [DllImport(GifDecDll, CallingConvention = CallingConvention.StdCall, EntryPoint = "GifOpen")]
         public static extern IntPtr Open(IntPtr data, int swap);

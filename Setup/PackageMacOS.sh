@@ -12,10 +12,10 @@ dotnet clean -c:Release ../FamiStudio/FamiStudio.Mac.csproj
 dotnet build -c:Release ../FamiStudio/FamiStudio.Mac.csproj
 
 # Copy binaries to package.
-cp ../FamiStudio/bin/Release/net7.0/*.dll ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/net7.0/*.json ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/net7.0/*.dylib ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Release/net7.0/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net8.0/*.dll ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net8.0/*.json ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net8.0/*.dylib ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Release/net8.0/FamiStudio.pdb ./FamiStudio.app/Contents/MacOS/
 
 # Localization
 rm -f ./FamiStudio.app/Contents/MacOS/Localization/*.ini

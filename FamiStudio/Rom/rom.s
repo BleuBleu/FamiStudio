@@ -2,8 +2,8 @@
 ; Based off Brad's (rainwarrior.ca) CA65 template, both the regular and FDS version.
 
 FAMISTUDIO_VERSION_MAJOR  = 4
-FAMISTUDIO_VERSION_MINOR  = 2
-FAMISTUDIO_VERSION_HOTFIX = 1
+FAMISTUDIO_VERSION_MINOR  = 3
+FAMISTUDIO_VERSION_HOTFIX = 0
 
 ; Enable all features.
 FAMISTUDIO_CFG_EXTERNAL                  = 1

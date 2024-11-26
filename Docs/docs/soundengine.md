@@ -8,11 +8,12 @@ The FamiStudio sound engine is used by the NSF and ROM exporter of FamiStudio an
 
 The engine is essentially a heavily modified version of [FamiTone2 by Shiru](https://shiru.untergrund.net/code.shtml). A lot of his code and comments are still present, so massive thanks to him!! I am not trying to steal his work or anything, i renamed a lot of functions and variables because at some point it was becoming a mess of coding standards and getting hard to maintain.
 
-The engine, as well as a demo project, is available for all 3 major assemblers:
+The engine, as well as a demo project, is available for all 4 major assemblers:
 
 * CA65 (and CC65)
 * NESASM
 * ASM6
+* SDAS
 
 ## Features
 
@@ -60,7 +61,7 @@ Features that can be toggled on/off depending on the needs of your projects:
 
 Enabling more features will make the sound engine code larger and use more RAM. The zeropage usage is 7 bytes and can be easily aliased with some of your ZP variables as they are only used as temporary variables inside the famistudio_xxx subroutines.
 
-Here is a table to give a rough idea of the best/worst case of RAM/CODE usage. Note that each column includes all features of the columns on the left. So the rightmost column has every feature enabled. In reality, you can toggle features individually. These tables where generated with only NTSC support, DPCM support enabled and no SFX streams.
+Here is a table to give a rough idea of the best/worst case of RAM/CODE usage. Note that each column includes all features of the columns on the left. So the rightmost column has every feature enabled. In reality, you can toggle features individually. These tables were generated with only NTSC support, DPCM support enabled, and no SFX streams.
 
 **Code size**
 
@@ -82,6 +83,7 @@ The source code for the demo is located in the \DemoSource subfolder.
 * CC65: `DemoSource\demo_cc65.c`
 * NESASM: `DemoSource\demo_nesasm.asm`
 * ASM6: `DemoSource\demo_asm6.asm`
+* SDAS: `DemoSource\demo_sdas.s`
 
 The songs used in the demo are available in the demo songs that are included with FamiStudio:
 
@@ -98,6 +100,7 @@ The sound engine is contained in a single file which can be simply included in o
 * CA65: `famistudio_ca65.s`
 * NESASM: `famistudio_nesasm.asm`
 * ASM6: `famistudio_asm6.asm`
+* SDAS: `famistudio_sdas.s`
 
 Another approach would be to compile the engine as a separate obj file and link it. This might require you to import the famistudio_xxx calls in other parts of your project.
 
@@ -182,6 +185,17 @@ For ASM6, you simply need to specify the location at which to allocate the `ZP`/
     FAMISTUDIO_ASM6_BSS_ENUM  = $0200
     FAMISTUDIO_ASM6_CODE_BASE = $8000
 
+#### SDAS
+
+For SDAS, you need to specify the name of your ZEROPAGE, RAM/BSS and CODE/PRG segments as c-style macros (`.define`) like the example below.
+
+    .define FAMISTUDIO_SDAS_ZP_SEGMENT   "_ZP"
+    .define FAMISTUDIO_SDAS_RAM_SEGMENT  "_BSS"
+    .define FAMISTUDIO_SDAS_CODE_SEGMENT "_CODE_0"
+
+Note that "_CODE_0" refers to bank 0 here. You can change this to a different bank of your choice.
+Alternatively you can use "_CODE_255" if you are using GBDK's auto-banking feature which performs the bank assignment for you between the compilation and link stage.
+
 ### 2. Audio Expansions Configuration
 
 You can only enable one audio expansion (`FAMISTUDIO_EXP_XXX`). Enabling more than one expansion will lead to undefined behavior. Memory usage goes up as more complex expansions are used. The audio expansion you choose **MUST MATCH** with the data you will load in the engine. Loading a FDS song while enabling VRC6 will lead to undefined behavior.
@@ -215,7 +229,6 @@ For more information on the Rainbow Mapper, [check the documentation here](https
 These are parameters that configures the engine, but are independent of the data you will be importing, such as which platform (`PAL`/`NTSC`) you want to support playback for, whether SFX are enabled or not, etc. They all have the form `FAMISTUDIO_CFG_XXX`.
 
     ; One of these MUST be defined (PAL or NTSC playback). 
-    ; Note that only NTSC support is supported when using any of the audio expansions.
     FAMISTUDIO_CFG_PAL_SUPPORT   = 1
     FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 

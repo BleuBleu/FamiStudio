@@ -7,7 +7,7 @@ namespace FamiStudio
         int regOffset = 0;
         int prevPeriodHi = 0x80;
 
-        public ChannelStateMmc5Square(IPlayerInterface player, int apuIdx, int channelType) : base(player, apuIdx, channelType, false)
+        public ChannelStateMmc5Square(IPlayerInterface player, int apuIdx, int channelType, int tuning, bool pal) : base(player, apuIdx, channelType, tuning, pal)
         {
             regOffset = (channelType - ChannelType.Mmc5Square1) * 4;
         }

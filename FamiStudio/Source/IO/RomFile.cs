@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -49,7 +50,6 @@ namespace FamiStudio
                 }
 
                 Debug.Assert(!originalProject.UsesMultipleExpansionAudios);
-                Debug.Assert(!originalProject.UsesAnyExpansionAudio || !pal);
 
                 var maxSong = originalProject.UsesEPSMExpansion ? RomMaxSongsEpsm : RomMaxSongs;
 
@@ -86,6 +86,16 @@ namespace FamiStudio
                 romBinStream.Seek(-RomPrgAndTocSize - RomChrSize, SeekOrigin.End);
                 romBinStream.Read(prgBytes, 0, RomPrgAndTocSize);
                 romBinStream.Read(chrBytes, 0, RomPrgAndTocSize);
+
+                // Patch note tables if needed
+                if (project.Tuning != 440) 
+                {
+                    var tblFile = Path.ChangeExtension(romName, ".tbl");
+                    if (!FamitoneMusicFile.PatchNoteTable(prgBytes, tblFile, project.Tuning, pal ? MachineType.PAL : MachineType.NTSC , project.ExpansionNumN163Channels))
+                    {
+                        return false;
+                    }
+                }
 
                 Log.LogMessage(LogSeverity.Info, $"ROM code and graphics size: {prgBytes.Length} bytes.");
 

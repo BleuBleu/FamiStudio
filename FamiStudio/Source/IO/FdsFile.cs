@@ -82,7 +82,7 @@ namespace FamiStudio
             fdsData.AddRange(newFileData);
         }
 
-        public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author)
+        public unsafe bool Save(Project originalProject, string filename, int[] songIds, string name, string author, bool pal)
         {
             try
             {
@@ -103,6 +103,8 @@ namespace FamiStudio
                     project.SetExpansionAudioMask(ExpansionType.FdsMask);
 
                 string fdsDiskName = "FamiStudio.Rom.fds";
+                if (pal)
+                    fdsDiskName += "_pal";
                 if (project.UsesFamiTrackerTempo)
                     fdsDiskName += "_famitracker";
                 fdsDiskName += ".fds";
@@ -111,6 +113,16 @@ namespace FamiStudio
                 var fdsDiskBinStream = typeof(RomFile).Assembly.GetManifestResourceStream(fdsDiskName);
                 var fdsDiskInitBytes = new byte[fdsDiskBinStream.Length];
                 fdsDiskBinStream.Read(fdsDiskInitBytes, 0, fdsDiskInitBytes.Length);
+
+                // Patch note tables if needed
+                if (project.Tuning != 440) 
+                {
+                    var tblFile = Path.ChangeExtension(fdsDiskName, ".tbl");
+                    if (!FamitoneMusicFile.PatchNoteTable(fdsDiskInitBytes, tblFile, project.Tuning, pal ? MachineType.PAL : MachineType.NTSC, project.ExpansionNumN163Channels))
+                    {
+                        return false;
+                    }
+                }
 
                 TruncateToLastFile(ref fdsDiskInitBytes);
 

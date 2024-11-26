@@ -285,7 +285,7 @@ namespace FamiStudio
         {
             "WAV",
             "MP3",
-#if !FAMISTUDIO_ANDROID
+#if !FAMISTUDIO_MOBILE
             "Ogg Vorbis"
 #endif
         };

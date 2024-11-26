@@ -9,36 +9,27 @@ namespace FamiStudio
         protected LocalizedString PitchLabel;
         protected LocalizedString VolumeLabel;
         protected LocalizedString DutyLabel;
+        protected LocalizedString WaveOverlap;
+        protected LocalizedString WaveWrongPlaying;
 
         // These are really UI specific things... Should be somewhere else.
-        protected int IconSquare = 0;
-        protected int IconTriangle = 1;
-        protected int IconNoise = 2;
-        protected int IconDPCM = 3;
-        protected int IconSaw = 4;
-        protected int IconFM = 5;
-        protected int IconWaveTable = 6;
-        protected int IconRhythm = 7;
+        protected static readonly string IconSquare    = "ChannelSquare";
+        protected static readonly string IconTriangle  = "ChannelTriangle";
+        protected static readonly string IconNoise     = "ChannelNoise";
+        protected static readonly string IconDPCM      = "ChannelDPCM";
+        protected static readonly string IconSaw       = "ChannelSaw";
+        protected static readonly string IconFM        = "ChannelFM";
+        protected static readonly string IconWaveTable = "ChannelWaveTable";
+        protected static readonly string IconRhythm    = "ChannelRythm";
 
         protected int expansion;
 
-        public static readonly string[] Icons =
-        {
-            "ChannelSquare",
-            "ChannelTriangle",
-            "ChannelNoise",
-            "ChannelDPCM",
-            "ChannelSaw",
-            "ChannelFM",
-            "ChannelWaveTable",
-            "ChannelRythm"
-        };
-
         public string[] InterpreterLabels { get; internal set; }
-        public int[] InterpreterIcons { get; internal set; }
+        public string[] InterpreterIcons { get; internal set; }
         public RegisterViewerRow[] RegisterRows { get; internal set; }
         public RegisterViewerRow[][] InterpeterRows { get; internal set; }
         public int Expansion => expansion;
+        public virtual int GetNumInterpreterRows(Project p) => InterpeterRows.Length;
 
         public delegate object GetRegisterValueDelegate();
         public delegate void DrawRegisterDelegate(CommandList c, Fonts res, Rectangle rect, bool video);
@@ -133,7 +124,7 @@ namespace FamiStudio
             for (int j = 0; j < 5; j++){
                 InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.Square1+j];
             };
-            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconTriangle, IconNoise, IconDPCM };
+            InterpreterIcons = new string[]{ IconSquare, IconSquare, IconTriangle, IconNoise, IconDPCM };
             Localization.Localize(this);
             i = new ApuRegisterInterpreter(r);
             RegisterRows = new[]
@@ -188,7 +179,7 @@ namespace FamiStudio
             for (int j = 0; j < 3; j++){
                 InterpreterLabels[j] = ChannelType.LocalizedNames[ChannelType.Vrc6Square1+j];
             };
-            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSaw };
+            InterpreterIcons = new string[]{ IconSquare, IconSquare, IconSaw };
             Localization.Localize(this);
             i = new Vrc6RegisterInterpreter(r);
             RegisterRows = new[]
@@ -226,7 +217,7 @@ namespace FamiStudio
         public Vrc7RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Vrc7)
         {
             InterpreterLabels = new string[6];
-            InterpreterIcons = new int[6];
+            InterpreterIcons = new string[6];
             Localization.Localize(this);
             i = new Vrc7RegisterIntepreter(r);
             RegisterRows = new[]
@@ -262,7 +253,7 @@ namespace FamiStudio
         public FdsRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.Fds)
         {
             InterpreterLabels = new string[] { ChannelType.LocalizedNames[ChannelType.FdsWave] };
-            InterpreterIcons = new int[] { IconWaveTable };
+            InterpreterIcons = new string[] { IconWaveTable };
             Localization.Localize(this);
             i = new FdsRegisterIntepreter(r);
             RegisterRows = new[]
@@ -332,7 +323,7 @@ namespace FamiStudio
                 ChannelType.LocalizedNames[ChannelType.Mmc5Square1],
                 ChannelType.LocalizedNames[ChannelType.Mmc5Square2]
             };
-            InterpreterIcons = new int[] { IconSquare, IconSquare };
+            InterpreterIcons = new string[] { IconSquare, IconSquare };
             Localization.Localize(this);
             i = new Mmc5RegisterIntepreter(r);
             RegisterRows = new[]
@@ -359,12 +350,16 @@ namespace FamiStudio
 
     public class N163RegisterViewer : RegisterViewer
     {
+        LocalizedString WavePosLabel;
+        LocalizedString WaveSizeLabel;
         N163RegisterIntepreter i;
+
+        public override int GetNumInterpreterRows(Project p) => p.ExpansionNumN163Channels;
 
         public N163RegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.N163)
         {
             InterpreterLabels = new string[8];
-            InterpreterIcons = new int[8];
+            InterpreterIcons = new string[8];
             Localization.Localize(this);
             i = new N163RegisterIntepreter(r);
             RegisterRows = new[]
@@ -395,13 +390,15 @@ namespace FamiStudio
                 InterpreterIcons[j] = IconWaveTable;
                 InterpeterRows[c] = new[]
                 {
-                    new RegisterViewerRow(PitchLabel,  () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
-                    new RegisterViewerRow(VolumeLabel, () => i.GetVolume(c).ToString("00"), true),
+                    new RegisterViewerRow(PitchLabel,    () => GetPitchString(i.GetPeriod(c), i.GetFrequency(c)), true),
+                    new RegisterViewerRow(VolumeLabel,   () => i.GetVolume(c).ToString("00"), true),
+                    new RegisterViewerRow(WavePosLabel,  () => i.GetWavePos(c).ToString()),
+                    new RegisterViewerRow(WaveSizeLabel, () => i.GetWaveSize(c).ToString())
                 };
             }
         }
 
-        void DrawRamMap(CommandList c, Fonts res, Rectangle rect, bool video)
+        unsafe void DrawRamMap(CommandList c, Fonts res, Rectangle rect, bool video)
         {
             var ramSize   = 128 - i.NumActiveChannels * 8;
             var numValues = ramSize * 2;
@@ -409,29 +406,102 @@ namespace FamiStudio
             var sx = Math.Max(1, rect.Width  / numValues);
             var sy = rect.Height / 15.0f;
             var h  = rect.Height;
+            var instColors = stackalloc Color[8];
+            var instIds = stackalloc int[8];
+            var textY = 0;
+            var overlapTextShown = false;
+            var wrongInstrumentTextShown = false;
 
-            for (int x = 0; x < ramSize; x++)
+            for (var x = 0; x < ramSize; x++)
             {
                 var val = i.Registers.GetRegisterValue(ExpansionType.N163, NesApu.N163_DATA, x);
                 var lo = ((val >> 0) & 0xf) * sy;
                 var hi = ((val >> 4) & 0xf) * sy;
-                    
-                // See if the RAM address matches any of the instrument.
-                // This isn't very accurate since we don't actually know
-                // which instrument last wrote to RAM at the moment, but
-                // it will work when there is no overlap.
-                var channelIndex = -1;
-                for (int j = 0; j < i.NumActiveChannels; j++)
+
+                // Look at the list of ranges and use the color of the channel that last wrote to that location.
+                var mostRecentUpdate = -1;
+                var mostRecentInstrumentId = 0;
+                var wrongInstrument = false;
+
+                var instCount = 0;
+                instColors[0] = Theme.LightGreyColor2;
+
+                // Find the instrument that last wrote to that RAM location.
+                for (var j = 0; j < i.NumActiveChannels; j++)
                 {
-                    if (x * 2 >= i.Registers.N163InstrumentRanges[j].Position &&
-                        x * 2 <  i.Registers.N163InstrumentRanges[j].Position + i.Registers.N163InstrumentRanges[j].Size)
+                    var range = i.Registers.N163InstrumentRanges[j];
+
+                    if (x >= range.Pos && x < range.Pos + range.Size)
                     {
-                        channelIndex = j;
-                        break;
+                        if (range.LastUpdate > mostRecentUpdate)
+                        {
+                            mostRecentInstrumentId = range.InstrumentId;
+                            mostRecentUpdate = range.LastUpdate;
+                        }
                     }
                 }
 
-                var color = channelIndex >= 0 ? i.Registers.InstrumentColors[ChannelType.N163Wave1 + channelIndex] : Theme.LightGreyColor2;
+                for (var j = 0; j < i.NumActiveChannels; j++)
+                {
+                    var range = i.Registers.N163InstrumentRanges[j];
+                    var instrumentId = i.Registers.N163InstrumentRanges[j].InstrumentId;
+
+                    if (range.AnyNotePlaying && x >= range.Pos && x < range.Pos + range.Size && instrumentId != 0)
+                    {
+                        // Dont show conflicts in video export.
+                        if (!video)
+                        {
+                            var alreadySeenInstrument = false;
+                            for (var k = 0; k < instCount; k++)
+                            {
+                                if (instIds[k] == instrumentId)
+                                {
+                                    alreadySeenInstrument = true;
+                                    break;
+                                }
+                            }
+
+                            if (!alreadySeenInstrument)
+                            {
+                                instIds[instCount] = instrumentId;
+                                instColors[instCount] = i.Registers.InstrumentColors[ChannelType.N163Wave1 + j];
+                                instCount++;
+
+                                // Check if another instrument corrupted our RAM earlier in the song.
+                                if (instrumentId != mostRecentInstrumentId)
+                                    wrongInstrument = true;
+                            }
+                        }
+
+                        if (range.AnyNotePlaying && range.LastUpdate == mostRecentUpdate && video)
+                        {
+                            instColors[0] = i.Registers.InstrumentColors[ChannelType.N163Wave1 + j];
+                        }
+                    }
+                }
+
+                // Blink all conflicting colors if there is a conflict.
+                var colorIndex = video || instCount == 0 ? 0 : (int)(Platform.TimeSeconds() * 15) % instCount;
+                var color = instColors[colorIndex];
+
+                if (instCount > 1)
+                {
+                    if (!overlapTextShown)
+                    {
+                        c.DrawText(WaveOverlap, res.FontSmall, 0, textY, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                        textY += res.FontSmall.LineHeight;
+                        overlapTextShown = true;
+                    }
+                }
+                else if (wrongInstrument)
+                {
+                    if (!wrongInstrumentTextShown)
+                    {
+                        c.DrawText(WaveWrongPlaying, res.FontSmall, 0, textY, Theme.LightRedColor, TextFlags.TopLeft | TextFlags.DropShadow);
+                        textY += res.FontSmall.LineHeight;
+                        wrongInstrumentTextShown = true;
+                    }
+                }
 
                 c.FillRectangle((x * 2 + 0) * sx, h - lo, (x * 2 + 1) * sx, h, color);
                 c.FillRectangle((x * 2 + 1) * sx, h - hi, (x * 2 + 2) * sx, h, color);
@@ -469,7 +539,7 @@ namespace FamiStudio
             else if ((shape & 0b1100) == 0b0100) shape = 0b1111;    // Shape: /___
 
             var bmp = c.Graphics.GetTextureAtlasRef($"S5BEnvelope{shape:X1}");
-            c.DrawTextureAtlas(bmp, 0, 0, 1, 1, Theme.LightGreyColor1);
+            c.DrawTextureAtlas(bmp, 0, 0, 1, Theme.LightGreyColor1);
 
             if (!video)
             {
@@ -492,7 +562,7 @@ namespace FamiStudio
                 ChannelType.LocalizedNames[ChannelType.S5BSquare3],
                 null, null
             };
-            InterpreterIcons = new int[]{ IconSquare, IconSquare, IconSquare, IconNoise, IconSaw }; //TODO: ACTUAL ENVELOPE ICON
+            InterpreterIcons = new string[]{ IconSquare, IconSquare, IconSquare, IconNoise, IconSaw }; //TODO: ACTUAL ENVELOPE ICON
             Localization.Localize(this); 
             InterpreterLabels[3] = NoiseLabel.ToString();
             InterpreterLabels[4] = EnvelopeLabel.ToString();
@@ -547,7 +617,7 @@ namespace FamiStudio
         public EpsmRegisterViewer(NesApu.NesRegisterValues r) : base(ExpansionType.EPSM)
         {
             InterpreterLabels = new string[17];
-            InterpreterIcons = new int[17];
+            InterpreterIcons = new string[17];
             Localization.Localize(this);
             i = new EpsmRegisterIntepreter(r);
             RegisterRows = new[]

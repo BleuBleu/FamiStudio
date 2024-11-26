@@ -1,37 +1,49 @@
-4.2.2
+4.3.0
 =====
-- MIDI Crash
-- #bug-report stuff (cant type "-")
-- Crash if project name is " " + NSF export.
-- Upgrade Android min SDK to make google happy.
-- Russian translation.
-- JTS song is too big now? 
-	https://discord.com/channels/@me/1256890811921207330/1260320240986755083
+- Review the copy/paste name matching. Maybe add a rename option.
+- Look at that ffmpeg change PR #342
+- Merge new flatpak ffmpeg PR. 
+	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
+
+4.3.0 Testing
+=============
+- Test Dump .bin note table (code is commented out right now)
+- Make sure not ticking all the time.
+- Run all NSF/FS unit tests, update refs if needed.
+- Run sound engine unit test
+- Bump all versions everything, ROM, soundengine, app, etc. 
+- Make sure ROMs srill binary identical.
+- Rebuild all binaries, all platforms.
+- Test stuff that uses supportslongpress (envelope draw, etc.)
+- Test pinch to zoom on MacOS, we changed the mouse wheel code there.
+- Make sure we consider messagebox/alerts as async dialogs.
+- Test detuning with sound, dual NSF, slide notes, etc.
+- PE Test scroll bars a lot more. 
+- Make sure the MacOS startup script checks for .NET 8.0
 
 4.3.0
 =====
-- VRC6 square popping how2/kawashin
-	- https://discord.com/channels/@me/819772561940152321/1231885934656753704
-	- https://discord.com/channels/352252932953079811/601877396857159680/1243843923298750545
-	- Experiments saved in `OneDrive\NES\Nes_Vrc6_ProperPopTests.cpp`
-	- Also locally modified mesen to do same.
-	- Works good, but pops more often than real HW, why???
-	- *** RETEST PHASE RESETS WITH THESE CHANGES!
-- Separate export VS. DPCM : 
-  https://discord.com/channels/747649221879922840/798008185977176074/1239648701669179452
-- Disable NMI during FDS file loading
-	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
-- Look at michel_iwaniec changes
-- FDS test for Persune
-- Upgrade to latest GLFW, there is some good stuff in there : menu for for macos, etc.
-- Check out Yxx stuff from Alex.
-	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
-- YARN : Small hitch beginning of VRC6 songs? Not sure
-- YARN : Change ini ROM code persune suggestion.
-- Review the copy/paste name matching. Maybe add a rename option.
-- Remove ..\..\Tools\ca65 path in sound engine build scripts (have a normal + dev version)
-- N163 wave pos inconsistency. we sometimes force to multiple of 2/4. it needs to be 2 everywhere.
-- Make ROM export fail if go over limit. Not a warning.
+- Support for custom tuning per project (ex: where A is not 440Hz)
+- N163 wave auto position assignment
+- New in-app font (Noto Sans) : More readable at low resolution and supports international characters
+- Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
+- Making more features available on mobile:
+	- Shy mode
+	- MIDI import
+	- MIDI export
+	- Ability to import songs from storage
+	- Ability to import instruments from storage
+	- Ability to import DPCM samples from other FMS projects on device storage
+- PAL expansion audio support (Thanks Steo!)
+- Minor adjustment to NES APU volumes  (Thanks Steo!)
+- SDAS/GBDK support (Thanks Michel Iwaniec!)
+- Russian translation (Thanks XXX!)
+- Korean translation (Thanks YYY!)
+- Upgrade all platforms to .NET 8.0
+- Behavior/Breaking changes:
+	- Default bass cutoff and filter frequencies where changed to better match the hardware
+	- NES APU volumes have been adjusted slightly to better match the hardware
+	- Most "Select All" / "Select None" buttons have been replace by context menus (right-click on desktop, long press on mobile).
 
 Linux notes 
 =========== 
@@ -74,9 +86,21 @@ MacOS notes
 - If NAT network doesnt work (problem is only in Monterey right now) do that:
 	ethernet0.virtualDev = "vmxnet3"
 
+To take screenshot on android:
+=============================
+"C:\Program Files (x86)\Android\android-sdk\platform-tools\adb" exec-out screencap -p > d:\temp\screen.png
+
 Convert PNG to TGA
 ==================
-"c:\Program Files\ImageMagick-7.1.0-Q8\magick.exe" mogrify -path D:\Dump\Icons\Out\Tga -compress RLE -format tga *.png
+"D:\Temp\ImageMagick-7.1.1-39-portable-Q8-x64\magick.exe" mogrify -path D:\Temp\Icons\Out\Tga -compress RLE -format tga *.png
+
+To set beyond compare + sublime as default git editor
+=====================================================
+git config --global diff.tool bc
+git config --global difftool.bc.path "C:/Program Files (x86)/Beyond Compare 3/BComp.exe"
+git config --global merge.tool bc
+git config --global mergetool.bc.path "C:/Program Files (x86)/Beyond Compare 3/BComp.exe"
+git config --global core.editor "'C:/Program Files/sublime text/subl.exe' -w"
 
 Discord Invite Link (new as of April 2024)
 ==========================================
@@ -129,7 +153,31 @@ Discord
 
 Backlog: 
 =========
-- N163 auto positioning 
+- "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
+- Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
+- Raw FDS modulation table envelope. 
+- Rewrite Sequencer + piano roll.
+- Add + buttons for each folder?
+	https://discord.com/channels/@me/819772561940152321/1282536913525542933
+	- Import arpeggios.
+- FDS mod depth envelopes?
+	https://discord.com/channels/747649221879922840/747649222354010173/1289675252850360351
+- Unify mobile/desktop file operations. Remove all if {} there.
+- Disable NMI during FDS file loading
+	https://discord.com/channels/747649221879922840/798008185977176074/1235154978486878298
+- FDS test for Persune
+- VRC6 square popping how2/kawashin
+	- https://discord.com/channels/@me/819772561940152321/1231885934656753704
+	- https://discord.com/channels/352252932953079811/601877396857159680/1243843923298750545
+	- Experiments saved in `OneDrive\NES\Nes_Vrc6_ProperPopTests.cpp`
+	- Also locally modified mesen to do same.
+	- Works good, but pops more often than real HW, why???
+	- *** RETEST PHASE RESETS WITH THESE CHANGES!
+- Check out Yxx stuff from Alex.
+	https://discord.com/channels/747649221879922840/747649222354010173/1231585732318199850
+- YARN : Small hitch beginning of VRC6 songs? Not sure
+- YARN : Change ini ROM code persune suggestion.
+- Could we import DMC initial values from NSF?
 - NSF/FS comparison bugs:
 	- N163 : Sound OK, but gets out of phase at the first slide note and remains like that. This is normal, this is due to slide notes not being able to be approximated correctly with fine pitch. 
 	- VRC7 : Very slight pitch issue due to pitch shift (3) used on VRC7 and how we look for best matching note.
@@ -139,7 +187,7 @@ Backlog:
 - Allow changing vibrato depth without resetting (vibrato speed will still reset for the time being)
 	- Dont compress vibrato envelopes.
 	- New opcode "override envelope and reset", call only when speed changes.
-	- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
+- Kawashin N163 comparison with NSFPLAY, listen to Wave 1 isolated. (https://discord.com/channels/@me/1093046594062004286/1183464431674470570)
 - BUG : Why does Mesen play NSF ~0.3% to ~0.4% faster than us? Export a wav and compare. Affects both ROM and NSF.
 - Paste FX values from text. Kain wanted to change DAC slowly, had values to paste. 
 - Simple parameters for instruments (duty, volume)
@@ -161,7 +209,6 @@ Backlog:
 - How to add to the "open with" list on Android.
 - Better autosave names?
 - Delete instruments resets play head.
-- Export DMC samples on Mobile.
 - Option to set snapping auto depending on last resize.
 - "Read only" N163 instrument. Just specify RAM position + size. Other instruments will do the writing.
 - NSF import issue TF74
@@ -170,7 +217,6 @@ Backlog:
 - Dual APU (VT02) support? Mesen doesnt support it, fuck it. 
 - S5B is 1 octave off. Periods are 12 bits, so technically can do lower, but we still bottom at A0???
 - Shy mode on mobile?
-- BUG : Quit menu does nothing on MacOS
 - Weird shift when using an external display with different scaling (ex: 100% vs 150%)
 - Add effect to select N163 wave. How does it react in FT.
 - Full range volume for expansions?
@@ -180,16 +226,11 @@ Backlog:
 - Do a pass on tooltips for ParamProviders.
 - Left resize to preserve release position?
 - Display number of selected channels in grid for video export?
-- BUG : Drag single pattern (with one note covring the entire pattern) from 1 channel to the other while its playing, the old note keeps playing and adds on top.
-- BUG : "theres a bug where when you select a pattern multiple times and you try to change a note, the change is multiplied by the # of patterns you selected", see video.
 - Reorder channels for video export.
 - Overclocking (2x, 3x, 4x would be a good start).
 - Hardware sweep (how to not conflict with smooth vibrato?)
 - Scales
-- Raw FDS modulation table envelope. 
 - Sound output selection?
-- Give better names to auto saves
-- Android : Starting scroll on a slider (in vrc7 instrument) changes the value. How to fix???
 - Cleanup : remove duplicated fx values (ex: same volume applied multiple times)
 - Paste special, option to rename patterns.
 - Uncompressed envelopes
@@ -205,5 +246,3 @@ Backlog:
 	https://discord.com/channels/747649221879922840/747649222354010173/1206908564262617151
 - Option to remove high-pitch from triangle. Mesen has an option, but that's now what we need. I think how2B wants more filtering. Filtering options per channel type?
 	https://discord.com/channels/@me/819772561940152321/1187597131859636276
-- Select all/none for list of songs in export dialog
-	https://discord.com/channels/747649221879922840/747649222354010173/1209404796428357652

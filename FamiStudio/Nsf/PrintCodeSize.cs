@@ -11,7 +11,6 @@ namespace PrintCodeSize
             {
                 var bytes = File.ReadAllBytes(args[0]);
                 var bankCount = int.Parse(args[1].Substring(12)); // {CODEBANKS}=X
-
                 var driverSize = bytes.Length;
 
                 for (; driverSize >= 1; driverSize--)

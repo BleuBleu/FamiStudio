@@ -1,16 +1,16 @@
-﻿using Android.Media;
-using Android.Opengl;
-using Android.Views;
-using Java.Nio;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Essentials;
+using Android.Media;
+using Android.Opengl;
+using Android.Views;
+using Java.Nio;
 
 namespace FamiStudio
 {
-    public class VideoEncoderAndroidEglBase
+    public class VideoEncoderAndroidBase : IVideoEncoder
     {
         protected const int EGL_RECORDABLE_ANDROID = 0x3142;
 
@@ -25,7 +25,29 @@ namespace FamiStudio
         protected EGLSurface prevEglSurfaceRead;
         protected EGLSurface prevEglSurfaceDraw;
 
-        protected bool ElgInitialize(int surfaceResX = 0, int surfaceResY = 0)
+        private int surfaceResX;
+        private int surfaceResY;
+
+        public virtual bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
+        {
+            surfaceResX = resX;
+            surfaceResY = resY;
+            ElgInitialize();
+            return true;
+        }
+
+        public virtual bool AddFrame(OffscreenGraphics graphics)
+        {
+            EglSwapBuffers();
+            return true;
+        }
+
+        public virtual void EndEncoding(bool abort)
+        {
+            ElgShutdown();
+        }
+
+        private bool ElgInitialize()
         {
             prevEglContext = EGL14.EglGetCurrentContext();
             prevEglDisplay = EGL14.EglGetCurrentDisplay();
@@ -91,7 +113,7 @@ namespace FamiStudio
             return true;
         }
 
-        protected void ElgShutdown()
+        private void ElgShutdown()
         {
             if (eglDisplay != EGL14.EglNoDisplay)
             {
@@ -113,90 +135,20 @@ namespace FamiStudio
             EGL14.EglMakeCurrent(prevEglDisplay, prevEglSurfaceDraw, prevEglSurfaceRead, prevEglContext);
         }
 
+        private void EglSwapBuffers()
+        {
+            EGL14.EglSwapBuffers(eglDisplay, eglSurface);
+            CheckEglError();
+        }
+
         protected void CheckEglError()
         {
             Debug.Assert(EGL14.EglGetError() == EGL14.EglSuccess);
         }
     }
 
-    public class AndroidPreviewEncoder : VideoEncoderAndroidEglBase, IVideoEncoder, ILogOutput
-    {
-        private PropertyPage page;
-        private int propIdx;
-        private int previewResX;
-        private int previewResY;
-        private bool abort;
-        private float targetFrameTime;
-        private double lastFrameTime = -1;
-
-        public bool AbortOperation => abort;
-
-        public AndroidPreviewEncoder(PropertyPage p, int idx)
-        {
-            page = p;
-            propIdx = idx;
-        }
-
-        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
-        {
-            if (!ElgInitialize(resX, resY))
-                return false;
-
-            previewResX = resX;
-            previewResY = resY;
-            targetFrameTime = rateDenom / (float)rateNumer;
-            lastFrameTime = Platform.TimeSeconds();
-
-            var black = new byte[previewResX * previewResY * 4];
-            for (int i = 3; i < black.Length; i += 4)
-                black[i] = 0xff;
-
-            MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, black));
-
-            return true;
-        }
-
-        public bool AddFrame(OffscreenGraphics graphics)
-        {
-            EGL14.EglSwapBuffers(eglDisplay, eglSurface);
-            CheckEglError();
-
-            var buffer = new byte[previewResX * previewResY * 4];
-            graphics.GetBitmap(buffer); 
-            
-            MainThread.InvokeOnMainThreadAsync(() => page.UpdateImageBox(propIdx, previewResX, previewResY, buffer));
-
-            // Throttle to mimic target FPS.
-            var currentFrameTime = Platform.TimeSeconds();
-            var delta = currentFrameTime - lastFrameTime;
-            if (delta < targetFrameTime)
-                System.Threading.Thread.Sleep((int)((targetFrameTime - delta) * 1000));
-
-            lastFrameTime = currentFrameTime;
-
-            return !abort;
-        }
-
-        public void EndEncoding(bool abort)
-        {
-        }
-
-        public void Abort()
-        {
-            abort = true;
-        }
-
-        public void LogMessage(string msg)
-        {
-        }
-
-        public void ReportProgress(float progress)
-        {
-        }
-    }
-
     // Based off https://bigflake.com/mediacodec/. Thanks!!!
-    public class VideoEncoderAndroid : VideoEncoderAndroidEglBase, IVideoEncoder
+    public class VideoEncoderAndroid : VideoEncoderAndroidBase
     {
         const long SecondsToMicroSeconds = 1000000;
         const long SecondsToNanoSeconds  = 1000000000;
@@ -230,7 +182,7 @@ namespace FamiStudio
 
         // https://github.com/lanhq147/SampleMediaFrame/blob/e2f20ff9eef73318e5a9b4de15458c5c2eb0fd46/app/src/main/java/com/google/android/exoplayer2/video/av/HWRecorder.java
 
-        public bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
+        public override bool BeginEncoding(int resX, int resY, int rateNumer, int rateDenom, int videoBitRate, int audioBitRate, bool stereo, string audioFile, string outputFile)
         {
             videoBufferInfo = new MediaCodec.BufferInfo();
             audioBufferInfo = new MediaCodec.BufferInfo();
@@ -273,8 +225,11 @@ namespace FamiStudio
             audioTrackIndex = -1;
             muxerStarted = false;
 
-            if (!ElgInitialize())
+            if (!base.BeginEncoding(resX, resY, rateNumer, rateDenom, videoBitRate, audioBitRate, stereo, audioFile, outputFile))
+            {
                 return false;
+
+            }
 
             audioData = File.ReadAllBytes(audioFile);
 
@@ -329,23 +284,25 @@ namespace FamiStudio
             return audioDataIdx < audioData.Length;
         }
 
-        public bool AddFrame(OffscreenGraphics graphics)
+        public override bool AddFrame(OffscreenGraphics graphics)
         {
-            Debug.WriteLine($"Sending frame {frameIndex} to encoder");
+            //Debug.WriteLine($"Sending frame {frameIndex} to encoder");
 
             long presentationTime = ComputePresentationTimeNsec(frameIndex++);
             EGLExt.EglPresentationTimeANDROID(eglDisplay, eglSurface, presentationTime);
             CheckEglError();
 
-            EGL14.EglSwapBuffers(eglDisplay, eglSurface);
-            CheckEglError();
+            if (!base.AddFrame(graphics))
+            {
+                return false;
+            }
 
             DrainEncoder(videoEncoder, videoBufferInfo, videoTrackIndex, false);
             
             return true;
         }
 
-        public void EndEncoding(bool abort)
+        public override void EndEncoding(bool abort)
         {
             Debug.WriteLine("Releasing encoder objects");
 
@@ -377,7 +334,7 @@ namespace FamiStudio
                 audioEncoder = null;
             }
 
-            ElgShutdown();
+            base.EndEncoding(abort);
 
             if (muxer != null)
             {
@@ -389,7 +346,7 @@ namespace FamiStudio
 
         private void DrainEncoder(MediaCodec encoder, MediaCodec.BufferInfo bufferInfo, int trackIndex, bool endOfStream)
         {
-            Debug.WriteLine($"DrainEncoder {endOfStream})");
+           //Debug.WriteLine($"DrainEncoder {endOfStream})");
 
             const int TIMEOUT_USEC = 10000;
 
@@ -464,7 +421,7 @@ namespace FamiStudio
                         encodedData.Limit(bufferInfo.Offset + bufferInfo.Size);
 
                         muxer.WriteSampleData(trackIndex, encodedData, bufferInfo);
-                        Debug.WriteLine($"Sent {bufferInfo.Size} bytes to muxer");
+                        //Debug.WriteLine($"Sent {bufferInfo.Size} bytes to muxer");
                     }
 
                     encoder.ReleaseOutputBuffer(encoderStatus, false);

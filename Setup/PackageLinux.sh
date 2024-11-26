@@ -12,7 +12,7 @@ rm $filename
 zip -9 $filename Demo\ Songs/*.* Demo\ Instruments/*.* LinuxReadme.txt
 cd ../FamiStudio
 zip -u -9 ../Setup/$filename Localization/*.ini
-cd bin/Release/net7.0
+cd bin/Release/net8.0
 zip -u -9 ../../../../Setup/$filename *.so *.dll *.config *.json LICENSE FamiStudio.pdb
 cd ../../../../Setup/
 

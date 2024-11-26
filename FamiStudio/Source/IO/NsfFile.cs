@@ -140,8 +140,6 @@ namespace FamiStudio
                 if (songIds.Length == 0)
                     return false;
 
-                Debug.Assert(!originalProject.UsesAnyExpansionAudio || machine == MachineType.NTSC);
-
                 var project = originalProject.DeepClone();
                 project.DeleteAllSongsBut(songIds);
                 project.SoundEngineUsesExtendedInstruments = true;
@@ -209,6 +207,16 @@ namespace FamiStudio
             
                 // Our drivers are all 1, 2 or 3 bank large. 
                 Debug.Assert(nsfBinBuffer.Length % NsfBankSize == 0);
+
+                // Patch note tables if needed
+                if (project.Tuning != 440 && kernel == FamiToneKernel.FamiStudio)
+                {
+                    var tblFile = "FamiStudio.Nsf." + Path.ChangeExtension(kernelBinary, ".tbl");
+                    if (!FamitoneMusicFile.PatchNoteTable(nsfBinBuffer, tblFile, project.Tuning, machine, project.ExpansionNumN163Channels))
+                    {
+                        return false;
+                    }
+                }
 
                 var driverSizePadded = nsfBinBuffer.Length;
                 var driverBankCount = driverSizePadded / NsfBankSize;

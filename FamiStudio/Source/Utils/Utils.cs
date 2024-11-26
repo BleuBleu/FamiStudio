@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using System.Threading;
 
@@ -110,6 +111,13 @@ namespace FamiStudio
             return result;
         }
 
+        // Used for color, basically 8-bit fixed point. 255 = 1.0, 128 = 0.5, etc.
+        public static int ColorMultiply(int  x, int y)
+        {
+            Debug.Assert(x >= 0 && y >= 0);
+            return Math.Min((x * y) / 255, 255);
+        }
+
         public static byte[] IntToBytes24Bit(int x)
         {
             return new byte[] { (byte)(x & 0xff), (byte)(x >> 8 & 0xff), (byte)(x >> 16 & 0xff) };
@@ -128,20 +136,21 @@ namespace FamiStudio
 
         public static int Log2Int(int x)
         {
+            // I dont remember why we return min. But BitOperations.Log2(0) returns 0
+            // and I dont want to break anything.
             if (x == 0)
                 return int.MinValue;
 
-            int bits = 0;
-            while (x > 0)
-            {
-                bits++;
-                x >>= 1;
-            }
-            return bits - 1;
+            return BitOperations.Log2((uint)x);
         }
 
         public static int ParseIntWithTrailingGarbage(string s)
         {
+            if (s == null)
+            {
+                return 0;
+            }
+
             int idx = 0;
             int start = 0;
             int sign = 1;
@@ -163,9 +172,10 @@ namespace FamiStudio
             return idx == 0 ? 0 : int.Parse(s.Substring(start, idx - start)) * sign;
         }
 
-        public static int ParseIntAmongAllSortsOfGarbage(string s)
+        public static int ParseIntWithLeadingAndTrailingGarbage(string s)
         {
-            return ParseIntWithTrailingGarbage(new String(s.Where(char.IsDigit).ToArray()));
+            s = new String(s.SkipWhile((c) => !char.IsDigit(c)).ToArray());
+            return ParseIntWithTrailingGarbage(s);
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)
@@ -230,15 +240,7 @@ namespace FamiStudio
 
         public static int NextPowerOfTwo(int v)
         {
-            v--;
-            v |= v >> 1;
-            v |= v >> 2;
-            v |= v >> 4;
-            v |= v >> 8;
-            v |= v >> 16;
-            v++;
-
-            return v;
+            return (int)BitOperations.RoundUpToPowerOf2((uint)v);
         }
 
         public static int PrevPowerOfTwo(int v)
@@ -248,16 +250,12 @@ namespace FamiStudio
 
         public static int NumberOfSetBits(int i)
         {
-            i = i - ((i >> 1) & 0x55555555);
-            i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
-            return (((i + (i >> 4)) & 0x0F0F0F0F) * 0x01010101) >> 24;
+            return BitOperations.PopCount((uint)i);
         }
 
         public static int NumberOfSetBits(long i)
         {
-            i = i - ((i >> 1) & 0x5555555555555555L);
-            i = (i & 0x3333333333333333L) + ((i >> 2) & 0x3333333333333333L);
-            return (int)(unchecked(((i + (i >> 4)) & 0xF0F0F0F0F0F0F0FL) * 0x101010101010101L) >> 56);
+            return BitOperations.PopCount((ulong)i);
         }
 
         static readonly byte[] BitLookups = new byte[]
@@ -277,7 +275,7 @@ namespace FamiStudio
                 bytes[i] = ReverseBits(bytes[i]);
         }
 
-        public static string MakeNiceAsmName(string name)
+        public static string MakeNiceAsmName(string name, bool allowDash = true)
         {
             string niceName = "";
             foreach (var c in name)
@@ -286,7 +284,9 @@ namespace FamiStudio
                     niceName += char.ToLower(c);
                 else if (char.IsWhiteSpace(c) && niceName.Last() != '_')
                     niceName += '_';
-                else if (c == '_' || c == '-')
+                else if (c == '-')
+                    niceName += allowDash ? '-' : '_';
+                else if (c == '_')
                     niceName += c;
             }
             return niceName;
@@ -362,17 +362,24 @@ namespace FamiStudio
             y = MathF.Sin(angle) * distance;
         }
 
+        // TODO : This needs to be in Platform.
         public static string GetTemporaryDiretory()
         {
-            var tempFolder = Path.Combine(Path.GetTempPath(), "FamiStudio");
-
-            try
+            var tempFolder = Path.GetTempPath();
+            
+            if (Platform.IsDesktop)
             {
-                Directory.Delete(tempFolder, true);
-            }
-            catch { }
+                tempFolder = Path.Combine(tempFolder, "FamiStudio");
 
-            Directory.CreateDirectory(tempFolder);
+                try
+                {
+                    Directory.Delete(tempFolder, true);
+                }
+                catch { }
+
+                Directory.CreateDirectory(tempFolder);
+            }
+
             return tempFolder;
         }
 

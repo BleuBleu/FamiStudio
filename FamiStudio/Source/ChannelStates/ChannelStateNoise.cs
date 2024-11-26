@@ -4,7 +4,7 @@ namespace FamiStudio
 {
     public class ChannelStateNoise : ChannelState
     {
-        public ChannelStateNoise(IPlayerInterface player, int apuIdx, int channelIdx, bool pal) : base(player, apuIdx, channelIdx, pal)
+        public ChannelStateNoise(IPlayerInterface player, int apuIdx, int channelIdx, int tuning, bool pal) : base(player, apuIdx, channelIdx, tuning, pal)
         {
         }
 
