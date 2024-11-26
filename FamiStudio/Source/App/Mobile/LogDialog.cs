@@ -44,8 +44,7 @@ namespace FamiStudio
             {
                 // HACK : We only use this for video export on mobile.
                 dialog = new PropertyDialog(parentForm, title, 100, false);
-                //dialog.Properties.AddProgressBar("Export progress", 0.0f, text); // 0 MATTT
-                dialog.Properties.AddProgressBar("Export progress"); 
+                dialog.Properties.AddProgressBar("Export progress"); // 0
                 dialog.Properties.AddLabel("Current Step", " "); // 1
                 dialog.Properties.Build();
             });

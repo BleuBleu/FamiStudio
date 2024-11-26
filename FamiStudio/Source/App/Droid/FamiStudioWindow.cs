@@ -203,7 +203,7 @@ namespace FamiStudio
 
             Intent intent = new Intent(Intent.ActionOpenDocument);
             intent.AddCategory(Intent.CategoryOpenable);
-            intent.SetType("*/*"); // MATTT
+            intent.SetType("*/*");
             StartActivityForResult(intent, currentFileActivity.RequestCode);
         }
 
@@ -212,9 +212,25 @@ namespace FamiStudio
             Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
             currentFileActivity = new SaveActivity(callback);
 
+            var ext = Path.GetExtension(filename).ToLower();
+            var mime = "*/*";
+
+            if (ext == ".mp4")
+            {
+                mime = "video/mp4";
+            }
+            else
+            {
+                var idx = Array.FindIndex(AudioFormatType.Extensions, (e) => $".{e}" == ext);
+                if (idx >= 0)
+                {
+                    mime = AudioFormatType.MimeTypes[idx];
+                }
+            }
+
             Intent intent = new Intent(Intent.ActionCreateDocument);
             intent.AddCategory(Intent.CategoryOpenable);
-            intent.SetType("*/*"); // MATTT : Get extension from filename + have a mime type map!
+            intent.SetType(mime);
             intent.PutExtra(Intent.ExtraTitle, filename);
             StartActivityForResult(intent, currentFileActivity.RequestCode);
             ForceScreenOn(true);

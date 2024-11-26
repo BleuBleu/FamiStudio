@@ -417,7 +417,7 @@ namespace FamiStudio
 
         private static NoteTableSet GetOrCreateNoteTableSet(int tuning)
         {
-            // MATTT : Use TLS to avoid blocking?
+            // TODO : Use TLS to avoid blocking?
             lock (NoteTables)
             {
                 if (NoteTables.TryGetValue(tuning, out var noteTableSet))

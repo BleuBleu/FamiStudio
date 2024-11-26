@@ -1,16 +1,6 @@
 4.3.0
 =====
-- Scan code for MATTT
-- GO TRHOUGH #BUGREPORT CHANNEL + GITHUB.
-	- Mobile export song name : https://discord.com/channels/747649221879922840/1299250008561946674/1299250008561946674
-		=> Test on mobile.
-	- DPCM note cut fix : https://discord.com/channels/747649221879922840/1293516353600225371/1293541083028127784
-	- DPCM export bug, I think i fixed this? https://discord.com/channels/747649221879922840/1278938505644605440/1278938505644605440
-	- Same as this too? https://discord.com/channels/747649221879922840/1264781147158741042/1264781147158741042
-
 - Review the copy/paste name matching. Maybe add a rename option.
-- Mobile With Noto Sans, on mobile, it seems the ellipsis happens way too early.
-
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959

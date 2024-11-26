@@ -335,7 +335,7 @@ namespace FamiStudio
                 localFgColor = localFgColor.Scaled(128);
             }
 
-            // MATTT : On mobile, would be nice to have transparent buttons changed their opacities a bit.
+            // TODO : On mobile, would be nice to have transparent buttons changed their opacities a bit.
             if (localEnabled && !transparent && (border || press || hover))
             {
                 var localBgColor = bgColor;

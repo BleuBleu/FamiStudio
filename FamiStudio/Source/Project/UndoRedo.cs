@@ -179,8 +179,7 @@ namespace FamiStudio
             trans.Begin();
             index++;
             TransactionBegan?.Invoke(scope, flags);
-            if (!Platform.IsMobile) // MATTT
-                project.ValidateIntegrity(); 
+            project.ValidateIntegrity(); 
         }
 
         public void EndTransaction()
@@ -192,8 +191,7 @@ namespace FamiStudio
             trans.End();
             TransactionEnded?.Invoke(trans.Scope, trans.Flags);
             Updated?.Invoke();
-            if (!Platform.IsMobile) // MATTT
-                project.ValidateIntegrity();
+            project.ValidateIntegrity();
         }
 
         public void AbortTransaction()

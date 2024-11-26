@@ -13,7 +13,7 @@ namespace FamiStudio
         private const int   DefaultSpacingX         = Platform.IsMobile ? 0 : 2;
         private const int   DefaultPanelSizeY       = 21;
         private const int   DefaultDraggedLineSizeY = 5;
-        private const int   DefaultParamSizeX       = Platform.IsMobile ? 84 : 104; // MATTT : Review.
+        private const int   DefaultParamSizeX       = Platform.IsMobile ? 92 : 104;
         private const float ScrollSpeedFactor       = Platform.IsMobile ? 2.0f : 1.0f;
 
         private int expandSizeX;
@@ -22,7 +22,7 @@ namespace FamiStudio
         private int iconSizeX;
         private int panelSizeY;
         private int paramSizeX;
-        private int virtualSizeY; // MATTT : Move this functionality to container directly.
+        private int virtualSizeY;
         private int dragLineSizeY;
         private int topTabSizeY;
 
@@ -2307,7 +2307,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        // MATTT : This is never called? Suspicious. Look in 4.2.x
+        // TODO : This is never called? Suspicious. In 4.2.x, this was called on long press + double click.
         private void AbortCaptureOperation()
         {
             if (App.UndoRedoManager.HasTransactionInProgress)
