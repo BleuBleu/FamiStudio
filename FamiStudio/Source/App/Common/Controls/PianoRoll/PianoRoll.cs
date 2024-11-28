@@ -2726,7 +2726,7 @@ namespace FamiStudio
                 var highlightLastInstrument = (Instrument)null;
                 var highlightAttackState = NoteAttackState.Attack;
 
-                if (editMode != EditionMode.VideoRecording && !ParentWindow.IsAsyncDialogInProgress)
+                if (editMode != EditionMode.VideoRecording)
                 {
                     if (Platform.IsMobile)
                     {
@@ -2736,7 +2736,7 @@ namespace FamiStudio
                             highlightNote = song.Channels[editChannel].GetNoteAt(highlightLocation);
                         }
                     }
-                    else
+                    else if (!ParentWindow.IsAsyncDialogInProgress)
                     {
                         if (HasHighlightedNote() && CaptureOperationRequiresNoteHighlight(captureOperation))
                         {
