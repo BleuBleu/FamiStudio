@@ -91,7 +91,6 @@ namespace FamiStudio
         PatternLocation selectionMin = PatternLocation.Invalid;
         PatternLocation selectionMax = PatternLocation.Invalid;
         PatternLocation highlightLocation = PatternLocation.Invalid;
-        DateTime lastPatternCreateTime = DateTime.Now;
 
         // Hover tracking
         int hoverRow = -1;
@@ -1687,7 +1686,6 @@ namespace FamiStudio
                 {
                     CreateNewPattern(location);
                     SetHighlightedPattern(location);
-                    lastPatternCreateTime = DateTime.Now;
                 }
                 else 
                 {
@@ -1994,7 +1992,7 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
 
             // Ignore double tap if we handled a single tap recently.
-            if (captureOperation != CaptureOperation.None || (DateTime.Now - lastPatternCreateTime).TotalMilliseconds < 500)
+            if (captureOperation != CaptureOperation.None/* || (DateTime.Now - lastPatternCreateTime).TotalMilliseconds < 500*/)
             {
                 return;
             }
@@ -2013,6 +2011,11 @@ namespace FamiStudio
         {
             var x = e.X;
             var y = e.Y;
+
+            if (e.IsDoubleTapLongPress)
+            {
+                return;
+            }
 
             // Header:
             // - Context menu : seet loop point, custom settings

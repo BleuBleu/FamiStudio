@@ -202,6 +202,7 @@ namespace FamiStudio
                 captureButton = -1;
                 ReleasePointer();
                 SetTickEnabled(false);
+                MarkDirty();
             }
             else
             {

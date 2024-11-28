@@ -44,8 +44,11 @@ namespace FamiStudio
         private ModifierKeys modifiers = new ModifierKeys();
         private Rectangle cachedViewRect;
 
+        private long doubleTapStartTime;
         private Point doubleTapLocation;
         private Control doubleTapControl;
+        private bool doubleTapReceived;
+        private bool doubleTapCanSendLongpress;
 
         private string delayedMessage = null;
         private string delayedMessageTitle = null;
@@ -779,6 +782,8 @@ namespace FamiStudio
                             ctrl.SendPointerUp(new PointerEventArgs(x, y));
                         }
                     }
+
+                    doubleTapReceived = false;
                 }
                 else if (e.Action == MotionEventActions.Move && !scaleDetector.IsInProgress)
                 {
@@ -786,6 +791,11 @@ namespace FamiStudio
                     {
                         var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
                         ctrl?.SendPointerMove(new PointerEventArgs(x, y));
+                    }
+
+                    if (doubleTapReceived && ((int.Abs(doubleTapLocation.X - (int)e.GetX()) > 32 || int.Abs(doubleTapLocation.Y - (int)e.GetY()) > 32)))
+                    {
+                        doubleTapCanSendLongpress = false;
                     }
                 }
 
@@ -832,11 +842,17 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                 {
-                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
-                    ctrl?.SendTouchLongPress(new PointerEventArgs(x, y)); 
+                    var px = (int)e.GetX();
+                    var py = (int)e.GetY();
+
+                    if (!doubleTapReceived || doubleTapCanSendLongpress)
+                    {
+                        var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
+                        ctrl?.SendTouchLongPress(new PointerEventArgs(x, y) { IsDoubleTapLongPress = doubleTapReceived });
+                    }
                 }
             }
         }
@@ -927,8 +943,11 @@ namespace FamiStudio
                 Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                 {
+                    doubleTapStartTime = e.EventTime;
                     doubleTapLocation = new Point((int)e.GetX(), (int)e.GetY());
-                    doubleTapControl = GetCapturedControlAtCoord(doubleTapLocation.X, doubleTapLocation.Y, out var x, out var y); 
+                    doubleTapControl = GetCapturedControlAtCoord(doubleTapLocation.X, doubleTapLocation.Y, out var x, out var y);
+                    doubleTapReceived = true;
+                    doubleTapCanSendLongpress = true;
                 }
                 return true;
             }
@@ -945,7 +964,7 @@ namespace FamiStudio
                 lock (renderLock)
                 { 
                     Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()}) (Action={e.Action})");
-                    if (e.Action == MotionEventActions.Down)
+                    if (e.Action == MotionEventActions.Up && (e.EventTime - doubleTapStartTime) < 350)
                     {
                         // "OnDoubleTap" returns the coordinate of the first tap, so it you tap
                         // at 2 different locations very quickly, the second tap will still be at

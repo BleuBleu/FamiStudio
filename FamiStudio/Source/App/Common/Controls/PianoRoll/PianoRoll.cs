@@ -324,7 +324,6 @@ namespace FamiStudio
         bool captureRealTimeUpdate = false;
         bool panning = false;
         bool continuouslyFollowing = false;
-        bool deleteNotesToastShown = false;
         bool maximized = false;
         bool showEffectsPanel = false;
         bool snap = true;
@@ -4560,13 +4559,6 @@ namespace FamiStudio
                 }
             }
 
-            if (Platform.IsMobile && !deleteNotesToastShown && captureOperation == CaptureOperation.DeleteNotes && ((Platform.TimeSeconds() - captureTime) > 0.5 || captureThresholdMet))
-            {
-                Platform.VibrateClick();
-                Platform.ShowToast(window, HoldFingersToEraseMessage);
-                deleteNotesToastShown = true;
-            }
-
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
             {
                 x += captureOffsetX;
@@ -6685,8 +6677,6 @@ namespace FamiStudio
                 {
                     AbortCaptureOperation();
                     DeleteSingleNote(noteLocation, mouseLocation, note);
-                    StartCaptureOperation(x, y, CaptureOperation.DeleteNotes);
-                    deleteNotesToastShown = false;
                 }
 
                 return true;
@@ -6928,6 +6918,15 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        private bool HandleDoubleTapLongPressChannelNote(int x, int y)
+        {
+            HandleTouchDoubleClickChannelNote(x, y);
+            StartCaptureOperation(x, y, CaptureOperation.DeleteNotes);
+            Platform.VibrateClick();
+            Platform.ShowToast(window, HoldFingersToEraseMessage);
+            return true;
         }
 
         private bool HandleTouchLongPressChannelNote(int x, int y)
@@ -7437,6 +7436,16 @@ namespace FamiStudio
             }
 
             AbortCaptureOperation();
+
+            if (e.IsDoubleTapLongPress)
+            {
+                if (editMode == EditionMode.Channel)
+                {
+                    if (HandleDoubleTapLongPressChannelNote(x, y)) goto Handled;
+                }
+
+                return;
+            }
 
             if (editMode == EditionMode.Channel)
             {
