@@ -13,14 +13,14 @@ namespace FamiStudio
     // associated icons needs to be made into real buttons, etc.
     public class Sequencer : Container
     {
-        const int DefaultChannelNameSizeX    = Platform.IsMobile ? 64 : 94;
+        const int DefaultChannelNameSizeX    = Platform.IsMobile ? 68 : 94;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 13;
         const int DefaultBarTextPosY         = 2;
         const int DefaultChannelIconPosX     = 2;
         const int DefaultChannelIconPosY     = 3;
         const int DefaultChannelNamePosX     = 21;
-        const int DefaultGhostNoteOffsetX    = Platform.IsMobile ? 12 : 16;
+        const int DefaultGhostNoteOffsetX    = 16;
         const int DefaultGhostNoteOffsetY    = Platform.IsMobile ? 16 : 15;
         const int DefaultPatternNamePosX     = 2;
         const int DefaultHeaderIconPosX      = 3;
