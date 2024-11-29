@@ -131,6 +131,7 @@ namespace FamiStudio
         LocalizedString MobileOpenProjectTitle;
         LocalizedString MobileSaveProjectTitle;
         LocalizedString MobileFamiTrackerImportWarning;
+        LocalizedString MobileMidiPolyphonyWarning;
         LocalizedString WarningTitle;
         LocalizedString ProjectSaveSuccess;
         LocalizedString ProjectSaveError;
@@ -1081,7 +1082,15 @@ namespace FamiStudio
                 if (mid)
                 {
                     var dlg = new MidiImportDialog(window, filename);
-                    dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
+                    dlg.ShowDialogAsync(window, (p, e) => 
+                    {
+                        if (Platform.IsMobile && e > 0)
+                        {
+                            Platform.DelayedMessageBoxAsync(MobileMidiPolyphonyWarning.Format(e), WarningTitle);
+                        }
+
+                        ClearTemporaryProjectAndInvokeAction(p);
+                    });
                 }
                 else if (nsf)
                 {
