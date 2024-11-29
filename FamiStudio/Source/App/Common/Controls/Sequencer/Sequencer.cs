@@ -676,7 +676,7 @@ namespace FamiStudio
                     // Force display icon.
                     var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 192 : 255;
                     var ghostFinalOpacity = Utils.ColorMultiply((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 255 : 50, ghostHoverOpacity);
-                    c.DrawTextureAtlasCentered(bmpForceDisplay, GetRowGhostRect(i).Offsetted(0, -headerSizeY + scrollY), channelBitmapScale, Theme.LightGreyColor1.Transparent(ghostFinalOpacity));
+                    c.DrawTextureAtlasCentered(bmpForceDisplay, GetRowGhostRect(channelToRow[i]).Offsetted(0, -headerSizeY + scrollY), channelBitmapScale, Theme.LightGreyColor1.Transparent(ghostFinalOpacity));
 
                     // Hover
                     if (isHoverRow)
