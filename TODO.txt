@@ -1,6 +1,10 @@
 4.3.0
 =====
-- Add message on MIDI error.
+- Double-tap ghost notes should toggle all. 
+- Move toast postion ABOVE the quick access bar on mobile in portrait.
+	- Plus make it a short message on mobile.
+- Tapping shy icon drags the seek bar too.
+===
 - Review the copy/paste name matching. Maybe add a rename option.
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
@@ -8,13 +12,13 @@
 
 4.3.0 Testing
 =============
+- Rebuild all binaries, all platforms.
 - Test Dump .bin note table (code is commented out right now)
 - Make sure not ticking all the time.
 - Run all NSF/FS unit tests, update refs if needed.
 - Run sound engine unit test
 - Bump all versions everything, ROM, soundengine, app, etc. 
 - Make sure ROMs srill binary identical.
-- Rebuild all binaries, all platforms.
 - Test stuff that uses supportslongpress (envelope draw, etc.)
 - Test pinch to zoom on MacOS, we changed the mouse wheel code there.
 - Make sure we consider messagebox/alerts as async dialogs.
