@@ -1173,6 +1173,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
                 Log.LogMessage(LogSeverity.Error, e.Message);
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
+                polyphonyCount = 0;
                 return null;
             }
 #endif
