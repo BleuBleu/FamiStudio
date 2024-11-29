@@ -20,8 +20,8 @@ namespace FamiStudio
         const int DefaultChannelIconPosX     = 2;
         const int DefaultChannelIconPosY     = 3;
         const int DefaultChannelNamePosX     = 21;
-        const int DefaultGhostNoteOffsetX    = 16;
-        const int DefaultGhostNoteOffsetY    = 15;
+        const int DefaultGhostNoteOffsetX    = Platform.IsMobile ? 12 : 16;
+        const int DefaultGhostNoteOffsetY    = Platform.IsMobile ? 16 : 15;
         const int DefaultPatternNamePosX     = 2;
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
@@ -346,7 +346,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 verticalScoll = true;
-                channelSizeY = visibleChannelCount > 0 ? Math.Clamp(((int)Math.Ceiling(height / DpiScaling.Window) - DefaultHeaderSizeY) / visibleChannelCount, 20, 80) : 20;
+                channelSizeY = visibleChannelCount > 0 ? Math.Clamp(((int)Math.Ceiling(height / DpiScaling.Window) - DefaultHeaderSizeY) / visibleChannelCount, 21, 80) : 21;
                 return channelSizeY * channelCount + constantSize;
             }
             else
@@ -676,7 +676,7 @@ namespace FamiStudio
                     // Force display icon.
                     var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 192 : 255;
                     var ghostFinalOpacity = Utils.ColorMultiply((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 255 : 50, ghostHoverOpacity);
-                    c.DrawTextureAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, bitmapScale, Theme.LightGreyColor1.Transparent(ghostFinalOpacity));
+                    c.DrawTextureAtlasCentered(bmpForceDisplay, GetRowGhostRect(i).Offsetted(0, -headerSizeY + scrollY), channelBitmapScale, Theme.LightGreyColor1.Transparent(ghostFinalOpacity));
 
                     // Hover
                     if (isHoverRow)

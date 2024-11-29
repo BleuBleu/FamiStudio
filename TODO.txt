@@ -1,5 +1,6 @@
 4.3.0
 =====
+- Add message on MIDI error.
 - Review the copy/paste name matching. Maybe add a rename option.
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
