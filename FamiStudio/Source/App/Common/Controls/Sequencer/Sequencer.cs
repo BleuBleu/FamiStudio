@@ -1588,7 +1588,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownDragSeekBar(int x, int y)
         {
-            if (IsPointInHeader(x, y))
+            if (IsPointInHeader(x, y) && !IsPointInShyButton(x, y))
             {
                 var seekX = GetPixelForNote(App.CurrentFrame) + channelNameSizeX;
 
@@ -1716,21 +1716,35 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchClickChannelName(int x, int y)
+        private bool HandleTouchClickChannelName(int x, int y, bool doubleClick = false)
         {
             if (IsMouseInTrackName(x, y))
             {
                 var chanIdx = GetChannelIndexFromIconPos(x, y);
                 if (chanIdx >= 0)
                 {
-                    App.ToggleChannelActive(chanIdx);
+                    if (doubleClick)
+                    {
+                        App.ToggleChannelSolo(chanIdx, true);
+                    }
+                    else
+                    {
+                        App.ToggleChannelActive(chanIdx);
+                    }
                     return true;
                 }
 
                 chanIdx = GetChannelIndexFromGhostIconPos(x, y);
                 if (chanIdx >= 0)
                 {
-                    App.ToggleChannelForceDisplay(chanIdx);
+                    if (doubleClick) 
+                    { 
+                        App.ToggleChannelForceDisplayAll(chanIdx, true);
+                    }
+                    else
+                    {
+                        App.ToggleChannelForceDisplay(chanIdx);
+                    }
                     return true;
                 }
             }
@@ -1999,7 +2013,7 @@ namespace FamiStudio
 
             if (HandleTouchDoubleClickPatternArea(x, y)) goto Handled;
             if (HandleTouchClickShy(x, y)) goto Handled;
-            if (HandleTouchClickChannelName(x, y)) goto Handled;
+            if (HandleTouchClickChannelName(x, y, true)) goto Handled;
 
             return;
 
@@ -3123,7 +3137,7 @@ namespace FamiStudio
 
         protected bool HandleMouseDoubleClickChannelName(PointerEventArgs e)
         {
-            return e.Left && HandleTouchClickChannelName(e.X, e.Y);
+            return e.Left && HandleTouchClickChannelName(e.X, e.Y, true);
         }
 
         protected override void OnMouseDoubleClick(PointerEventArgs e)

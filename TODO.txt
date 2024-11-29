@@ -1,10 +1,6 @@
 4.3.0
 =====
-- Double-tap ghost notes should toggle all. 
-- Move toast postion ABOVE the quick access bar on mobile in portrait.
-	- Plus make it a short message on mobile.
-- Tapping shy icon drags the seek bar too.
-===
+- Ghost note icon on mobile is ugly now.
 - Review the copy/paste name matching. Maybe add a rename option.
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 

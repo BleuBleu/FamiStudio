@@ -753,9 +753,9 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayNotification(string msg, bool beep = true, bool forceLongDuration = false)
+        public void DisplayNotification(string msg, bool beep = true, bool forceLongDuration = false, bool forceShortDuration = false)
         {
-            Platform.ShowToast(window, msg, forceLongDuration || msg.Length > 60);
+            Platform.ShowToast(window, msg, forceShortDuration ? false : (forceLongDuration || msg.Length > 60));
 
             if (beep)
                 Platform.Beep();
@@ -1568,7 +1568,7 @@ namespace FamiStudio
                 if (channel.IsExpansionChannel)
                     message += $"\n{IncompatibleExpRequiredError}";
             }
-            DisplayNotification(message, beep);
+            DisplayNotification(message, beep, false, Platform.IsMobile);
         }
 
         public void PlayInstrumentNote(int n, bool showWarning, bool allowRecording, bool custom = false, Instrument customInstrument = null, Arpeggio customArpeggio = null, float stopDelay = 0.0f)
