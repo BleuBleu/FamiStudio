@@ -36,7 +36,7 @@ namespace FamiStudio
         const int DefaultReleaseNoteSizeY          = 8;
         const int DefaultEnvelopeSizeY             = Platform.IsMobile ? 4 : 9;
         const int DefaultPianoSizeX                = 94;
-        const int DefaultPianoSizeXMobile          = 40;
+        const int DefaultPianoSizeXMobile          = 44;
         const int DefaultWhiteKeySizeY             = 20;
         const int DefaultBlackKeySizeX             = 56;
         const int DefaultBlackKeySizeXMobile       = 20;
@@ -667,7 +667,7 @@ namespace FamiStudio
 
             // Make sure the effect panel actually fit on screen on mobile.
             if (Platform.IsMobile && ParentWindow != null)
-                effectPanelSizeY = Math.Min(ParentWindowSize.Height / 2, DpiScaling.ScaleForWindow(DefaultEffectPanelSizeY));
+                effectPanelSizeY = height / 2 - headerSizeY;
             else
                 effectPanelSizeY = DpiScaling.ScaleForWindow(DefaultEffectPanelSizeY);
 
