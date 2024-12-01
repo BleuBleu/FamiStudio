@@ -6,19 +6,12 @@
 
 4.3.0 Testing
 =============
-- Rebuild all binaries, all platforms.
-- Test Dump .bin note table (code is commented out right now)
-- Make sure not ticking all the time.
 - Run all NSF/FS unit tests, update refs if needed.
 - Run sound engine unit test
-- Bump all versions everything, ROM, soundengine, app, etc. 
-- Make sure ROMs srill binary identical.
-- Test stuff that uses supportslongpress (envelope draw, etc.)
-- Test pinch to zoom on MacOS, we changed the mouse wheel code there.
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - PE Test scroll bars a lot more. 
-- Make sure the MacOS startup script checks for .NET 8.0
+- Mobile : Test stuff that uses supportslongpress (envelope draw, etc.)
 
 4.3.0
 =====
