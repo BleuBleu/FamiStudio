@@ -6,8 +6,8 @@
 
 4.3.0 Testing
 =============
-- Run all NSF/FS unit tests, update refs if needed.
-- Run sound engine unit test
+- Rebuild NotSotFatso on Linux/MacOS/etc. to get E001 fix.
+- Rebuild soundengine demo ROMS, re-run sound engine unit test with latest michael changes.
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - PE Test scroll bars a lot more. 
