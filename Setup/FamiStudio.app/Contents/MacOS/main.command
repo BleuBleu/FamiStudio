@@ -10,11 +10,11 @@ APPNAME="FamiStudio"
 
 # .NET version check
 VERSION_TITLE="Cannot launch $APPNAME"
-VERSION_MSG="$APPNAME requires the .NET 7.0 runtime."
+VERSION_MSG="$APPNAME requires the .NET 8.0 runtime."
 DOWNLOAD_URL="https://famistudio.org/doc/install/#macos"
 
 DOTNET_RUNTIMES="$(/usr/local/share/dotnet/dotnet --list-runtimes)"
-DOTNET_RUNTIME_GREP="$(echo $DOTNET_RUNTIMES | grep 'Microsoft.NETCore.App 7.0')"
+DOTNET_RUNTIME_GREP="$(echo $DOTNET_RUNTIMES | grep 'Microsoft.NETCore.App 8.0')"
 
 if [ -z "$DOTNET_RUNTIMES" ] || [ -z "$DOTNET_RUNTIME_GREP" ] 
 then
