@@ -725,7 +725,7 @@ void CNSFCore::WriteMemory_FME07(WORD a,BYTE v)
 
 	if(a == 0xC000)
 		nFME07_Address = v;
-	if(a == 0xE000)
+	if(a == 0xE000 || a == 0xE001) // TODO : It should be anything from 0xE000 to 0xFFFF.
 	{
 		switch(nFME07_Address)
 		{
