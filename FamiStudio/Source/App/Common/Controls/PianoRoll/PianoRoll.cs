@@ -2280,34 +2280,21 @@ namespace FamiStudio
             SetSelection(startFrameIdx, startFrameIdx + notes.Length - 1);
         }
 
-        private void PasteNotes(bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false, int repeat = 1)
+        private void PasteNotes(bool pasteNotes, int pasteFxMask, bool mix, int repeat, ClipboardImportFlags instImportFlags, ClipboardImportFlags arpImportFlags, ClipboardImportFlags sampleImportFlags)
         {
             if (!IsSelectionValid())
                 return;
 
-            bool createMissingInstrument = false;
-            bool createMissingArpeggios  = false;
-            bool createMissingSamples    = false;
+            var createAnythingMissing =
+                instImportFlags.HasFlag(ClipboardImportFlags.CreateMissing) ||
+                arpImportFlags.HasFlag(ClipboardImportFlags.CreateMissing)  ||
+                sampleImportFlags.HasFlag(ClipboardImportFlags.CreateMissing);
 
-            if (pasteNotes)
-            {
-                var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingArpeggios, out var missingSamples);
-
-                if (missingInstruments)
-                    createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-                if (missingArpeggios)
-                    createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-                if (missingSamples && editChannel == ChannelType.Dpcm)
-                    createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-            }
-
-            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
+            App.UndoRedoManager.BeginTransaction(createAnythingMissing ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
 
             for (int i = 0; i < repeat && IsSelectionValid(); i++)
             {
-                var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingArpeggios, createMissingSamples);
+                var notes = ClipboardUtils.LoadNotes(App.Project, instImportFlags, arpImportFlags, sampleImportFlags);
 
                 if (notes == null)
                 {
@@ -2326,6 +2313,36 @@ namespace FamiStudio
 
             NotesPasted?.Invoke();
             App.UndoRedoManager.EndTransaction();
+        }
+        
+        private void PasteNotesWithConflictDialog(bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false, int repeat = 1)
+        {
+            if (!ClipboardUtils.GetClipboardContentFlags(Song, true, out var instFlags, out var arpFlags, out var sampleFlags, out var patternFlags))
+            {
+                return;
+            }
+
+            var anyConflicts =
+                instFlags    != ClipboardContentFlags.None ||
+                arpFlags     != ClipboardContentFlags.None ||
+                sampleFlags  != ClipboardContentFlags.None ||
+                patternFlags != ClipboardContentFlags.None;
+
+            if (pasteNotes && anyConflicts)
+            {
+                var dlg = new PasteConflictDialog(window, instFlags, arpFlags, sampleFlags);
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        PasteNotes(pasteNotes, pasteFxMask, mix, repeat, dlg.InstrumentFlags, dlg.ArpeggioFlags, dlg.DPCMSampleFlags);
+                    }
+                });
+            }
+            else
+            {
+                PasteNotes(pasteNotes, pasteFxMask, mix, repeat, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName);
+            }
         }
 
         private sbyte[] GetSelectedEnvelopeValues()
@@ -2445,7 +2462,7 @@ namespace FamiStudio
             AbortCaptureOperation();
 
             if (editMode == EditionMode.Channel)
-                PasteNotes();
+                PasteNotesWithConflictDialog();
             else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 PasteEnvelopeValues();
         }
@@ -2478,7 +2495,7 @@ namespace FamiStudio
                         if ((effectMask & Note.EffectVolumeMask) != 0 && Song.Channels[editChannel].SupportsEffect(Note.EffectVolumeSlide))
                             effectMask |= Note.EffectVolumeAndSlideMask;
 
-                        PasteNotes(dlg.PasteNotes, effectMask, dlg.PasteMix, dlg.PasteRepeat);
+                        PasteNotesWithConflictDialog(dlg.PasteNotes, effectMask, dlg.PasteMix, dlg.PasteRepeat);
 
                         lastPasteSpecialPasteMix = dlg.PasteMix;
                         lastPasteSpecialPasteNotes = dlg.PasteNotes;

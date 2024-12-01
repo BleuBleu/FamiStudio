@@ -1,6 +1,5 @@
 4.3.0
 =====
-- Review the copy/paste name matching. Maybe add a rename option.
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
@@ -25,6 +24,7 @@
 =====
 - Support for custom tuning per project (ex: where A is not 440Hz)
 - N163 wave auto position assignment
+- Improve conflict resolution when pasting between songs/projects
 - New in-app font (Noto Sans) : More readable at low resolution and supports international characters
 - Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
 - Making more features available on mobile:

@@ -175,6 +175,7 @@
     <Compile Include="Source\App\Common\Dialogs\ExportDialog.cs" />
     <Compile Include="Source\App\Common\Dialogs\MidiImportDialog.cs" />
     <Compile Include="Source\App\Common\Dialogs\NsfImportDialog.cs" />
+    <Compile Include="Source\App\Common\Dialogs\PasteConflictDialog.cs" />
     <Compile Include="Source\App\Common\Dialogs\PasteSpecialDialog.cs" />
     <Compile Include="Source\App\Common\Dialogs\ProjectPropertiesDialog.cs" />
     <Compile Include="Source\App\Common\Dialogs\TempoProperties.cs" />

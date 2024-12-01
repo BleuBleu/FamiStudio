@@ -591,31 +591,31 @@ namespace FamiStudio
         public void Serialize(ref Song song)
         {
             int songId = song == null ? -1 : song.Id;
-            Serialize(ref songId);
+            Serialize(ref songId, true);
         }
 
         public void Serialize(ref Instrument instrument)
         {
             int instrumentId = instrument == null ? -1 : instrument.Id;
-            Serialize(ref instrumentId);
+            Serialize(ref instrumentId, true);
         }
 
         public void Serialize(ref Arpeggio arpeggio)
         {
             int arpeggioId = arpeggio == null ? -1 : arpeggio.Id;
-            Serialize(ref arpeggioId);
+            Serialize(ref arpeggioId, true);
         }
 
         public void Serialize(ref Pattern pattern, Channel channel)
         {
             int patternId = pattern == null ? -1 : pattern.Id;
-            Serialize(ref patternId);
+            Serialize(ref patternId, true);
         }
 
         public void Serialize(ref DPCMSample sample)
         {
             int sampleId = sample == null ? -1 : sample.Id;
-            Serialize(ref sampleId);
+            Serialize(ref sampleId, true);
         }
 
         public void InitializeList<T>(ref List<T> list, int count) where T : new()

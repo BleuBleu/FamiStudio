@@ -2102,26 +2102,17 @@ namespace FamiStudio
             }
         }
 
-        private void PasteInternal(bool insert, bool extend, int repeat)
+        private void PasteInternal(bool insert, bool extend, int repeat, ClipboardImportFlags instImportFlags, ClipboardImportFlags arpImportFlags, ClipboardImportFlags sampleImportFlags, ClipboardImportFlags patternImportFlags)
         {
-            var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, false, out var missingArpeggios, out var missingSamples);
+            var createAnythingMissing =
+                instImportFlags.HasFlag(ClipboardImportFlags.CreateMissing) ||
+                arpImportFlags.HasFlag(ClipboardImportFlags.CreateMissing)  ||
+                sampleImportFlags.HasFlag(ClipboardImportFlags.CreateMissing);
 
-            bool createMissingInstrument = false;
-            if (missingInstruments)
-                createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-            bool createMissingArpeggios = false;
-            if (missingArpeggios)
-                createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-            bool createMissingSamples = false;
-            if (missingSamples)
-                createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
+            App.UndoRedoManager.BeginTransaction(createAnythingMissing ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
             var song = Song;
-            var patterns = ClipboardUtils.LoadPatterns(App.Project, song, createMissingInstrument, createMissingArpeggios, createMissingSamples, out var customSettings);
+            var patterns = ClipboardUtils.LoadPatterns(song, instImportFlags, arpImportFlags, sampleImportFlags, patternImportFlags, out var customSettings);
 
             if (patterns == null)
             {
@@ -2229,12 +2220,42 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private void PasteInternalWithConflictDialog(bool insert, bool extend, int repeat)
+        {
+            if (!ClipboardUtils.GetClipboardContentFlags(Song, false, out var instFlags, out var arpFlags, out var sampleFlags, out var patternFlags))
+            {
+                return;
+            }
+
+            var anyConflicts =
+                instFlags    != ClipboardContentFlags.None ||
+                arpFlags     != ClipboardContentFlags.None ||
+                sampleFlags  != ClipboardContentFlags.None ||
+                patternFlags != ClipboardContentFlags.None;
+
+            if (anyConflicts)
+            {
+                var dlg = new PasteConflictDialog(window, instFlags, arpFlags, sampleFlags, patternFlags);
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        PasteInternal(insert, extend, repeat, dlg.InstrumentFlags, dlg.ArpeggioFlags, dlg.DPCMSampleFlags, dlg.PatternFlags);
+                    }
+                });
+            }
+            else
+            {
+                PasteInternal(insert, extend, repeat, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName);
+            }
+        }
+
         public void Paste()
         {
             if (!IsSelectionValid())
                 return;
 
-            PasteInternal(false, false, 1);
+            PasteInternalWithConflictDialog(false, false, 1);
         }
 
         public void PasteSpecial()
@@ -2254,7 +2275,7 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    PasteInternal(
+                    PasteInternalWithConflictDialog(
                         dialog.Properties.GetPropertyValue<bool>(0),
                         dialog.Properties.GetPropertyValue<bool>(1),
                         dialog.Properties.GetPropertyValue<int> (2));
