@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 
 namespace FamiStudio
 {
@@ -595,6 +596,7 @@ namespace FamiStudio
         LocalizedString SlideNoteTooltip;
         LocalizedString ToggleAttackTooltip;
         LocalizedString InstrumentEyedropTooltip;
+        LocalizedString SetNoteInstrumentTooltip;
         LocalizedString DeleteNoteTooltip;
         LocalizedString AddStopNoteTooltip;
         LocalizedString SetEnvelopeValueTooltip;
@@ -5948,6 +5950,7 @@ namespace FamiStudio
                     var slide   = Settings.SlideNoteShortcut.IsKeyDown(ParentWindow);
                     var attack  = Settings.AttackShortcut.IsKeyDown(ParentWindow);
                     var eyedrop = Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow);
+                    var setInst = Settings.SetNoteInstrumentShortcut.IsKeyDown(ParentWindow);
 
                     if (delete)
                     {
@@ -5962,6 +5965,10 @@ namespace FamiStudio
                     else if (attack && note != null)
                     {
                         ToggleNoteAttack(noteLocation, note);
+                    }
+                    else if (setInst && note != null)
+                    {
+                        SetNoteInstrument(noteLocation, note, App.SelectedInstrument);
                     }
                     else if (eyedrop && note != null)
                     {
@@ -8191,6 +8198,25 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
+        public void SetNoteInstrument(NoteLocation location, Note note, Instrument instrument)
+        {
+            var channel = Song.Channels[editChannel];
+
+            if (channel.SupportsInstrument(instrument))
+            {
+                var pattern = channel.PatternInstances[location.PatternIndex];
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                note.Instrument = instrument;
+                MarkPatternDirty(pattern);
+                App.UndoRedoManager.EndTransaction();
+                MarkDirty();
+            }
+            else
+            {
+                App.ShowInstrumentError(channel, true);
+            }
+        }
+
         public void ReplaceSelectionInstrument(Instrument instrument, Point pos, Instrument matchInstrument = null, bool forceInSelection = false)
         {
             if (editMode == EditionMode.Channel)
@@ -8524,6 +8550,8 @@ namespace FamiStudio
                                     tooltipList.Add($"{Settings.AttackShortcut.TooltipString}<MouseLeft> {ToggleAttackTooltip}");
                                 if (Settings.EyeDropNoteShortcut.IsShortcutValid(0))
                                     tooltipList.Add($"{Settings.EyeDropNoteShortcut.TooltipString}<MouseLeft> {InstrumentEyedropTooltip}");
+                                if (Settings.SetNoteInstrumentShortcut.IsShortcutValid(0))
+                                    tooltipList.Add($"{Settings.SetNoteInstrumentShortcut.TooltipString}<MouseLeft> {SetNoteInstrumentTooltip}");
                             }
                             tooltipList.Add($"<MouseLeft><MouseLeft> {OrTooltip} <Shift><MouseLeft> {DeleteNoteTooltip}");
                         }

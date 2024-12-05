@@ -1,13 +1,14 @@
 4.3.0
 =====
+- GLFW 3.3 thing
+	https://discord.com/channels/747649221879922840/798008185977176074/1313906026486956104
+- Test rename of multiple identical patterns when pasting (ex: pattern 1 gets renamed to 2, all instances need to be 2 now)
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
 
 4.3.0 Testing
 =============
-- Rebuild NotSotFatso on Linux/MacOS/etc. to get E001 fix.
-- Rebuild soundengine demo ROMS, re-run sound engine unit test with latest michael changes.
 - Make sure we consider messagebox/alerts as async dialogs.
 - Test detuning with sound, dual NSF, slide notes, etc.
 - PE Test scroll bars a lot more. 
@@ -28,10 +29,10 @@
 	- Ability to import instruments from storage
 	- Ability to import DPCM samples from other FMS projects on device storage
 - PAL expansion audio support (Thanks Steo!)
-- Minor adjustment to NES APU volumes  (Thanks Steo!)
+- Minor adjustment to NES APU volumes (Thanks Steo!)
 - SDAS/GBDK support (Thanks Michel Iwaniec!)
-- Russian translation (Thanks XXX!)
-- Korean translation (Thanks YYY!)
+- Russian translation (Thanks Alex and Furmilion!)
+- Korean translation (Thanks Nyaongi and Ospaggi!)
 - Upgrade all platforms to .NET 8.0
 - Behavior/Breaking changes:
 	- Default bass cutoff and filter frequencies where changed to better match the hardware
