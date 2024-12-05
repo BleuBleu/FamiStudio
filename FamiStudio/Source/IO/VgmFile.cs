@@ -485,17 +485,17 @@ namespace FamiStudio
         private bool preserveDpcmPadding;
         private readonly int[] DPCMOctaveOrder = new[] { 4, 5, 3, 6, 2, 7, 1, 0 };
 
-        int[] apuRegister = new int[0xff];
-        int[] vrc7Register = new int[0xff];
+        int[] apuRegister = new int[0x100];
+        int[] vrc7Register = new int[0x100];
         int[] vrc7Trigger = new int[0x6];
-        int[] epsmRegisterLo = new int[0xff];
-        int[] epsmRegisterHi = new int[0xff];
+        int[] epsmRegisterLo = new int[0x100];
+        int[] epsmRegisterHi = new int[0x100];
         int[] epsmFmTrigger = new int[0x6];
         int[] epsmEnvTrigger = new int[0x3];
         int[] epsmFmEnabled = new int[0x6];
         int[] epsmFmKey = new int[0x6];
         int[] epsmFmRegisterOrder = new[] { 0xB0, 0xB4, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90, 0x38, 0x48, 0x58, 0x68, 0x78, 0x88, 0x98, 0x34, 0x44, 0x54, 0x64, 0x74, 0x84, 0x94, 0x3c, 0x4c, 0x5c, 0x6c, 0x7c, 0x8c, 0x9c, 0x22 };
-        int[] s5bRegister = new int[0xff];
+        int[] s5bRegister = new int[0x100];
         int[] s5bEnvTrigger = new int[0x3];
         bool dpcmTrigger = false;
         byte[] dpcmData = new byte[0xffff];
