@@ -812,7 +812,7 @@ namespace FamiStudio
                     env.Dimmed = instrument.Envelopes[idx].IsEmpty(idx);
                     env.WhiteHighlight = highlightedObject == instrument;
                     env.UserData = EnvelopeType.InternalNames[idx];
-                    env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())} - <MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
+                    env.ToolTip = $"<MouseLeft> {EditEnvelopeTooltip.Format(EnvelopeType.LocalizedNames[idx].Value.ToLower())}\n<MouseLeft><Drag> {CopyEnvelopeTooltip} - <MouseRight> {MoreOptionsTooltip}";
                     env.Click += (s) => InstrumentEnvelope_Click(instrument, idx);
                     env.PointerDown += (s, e) => Instrument_PointerDown(s, e, instrument, idx, env.Image);
                     env.PointerUp += (s, e) => Instrument_PointerUp(e, instrument, idx);
