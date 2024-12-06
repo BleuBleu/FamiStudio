@@ -27,6 +27,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
+using FamiStudio;
 
 namespace GLFWDotNet
 {
@@ -1199,7 +1200,12 @@ namespace GLFWDotNet
 			_glfwGetInstanceProcAddress = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetInstanceProcAddress>(getProcAddress("glfwGetInstanceProcAddress"));
 			_glfwGetPhysicalDevicePresentationSupport = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetPhysicalDevicePresentationSupport>(getProcAddress("glfwGetPhysicalDevicePresentationSupport"));
 			_glfwCreateWindowSurface = Marshal.GetDelegateForFunctionPointer<Delegates.glfwCreateWindowSurface>(getProcAddress("glfwCreateWindowSurface"));
-			_glfwGetPlatform = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetPlatform>(getProcAddress("glfwGetPlatform"));
+			try
+			{
+				// Only exists in GLFW 3.4, some linux distro ship with 3.3.
+  				_glfwGetPlatform = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetPlatform>(getProcAddress("glfwGetPlatform"));
+			}
+			catch { }
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) _glfwGetWin32Window = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetWin32Window>(getProcAddress("glfwGetWin32Window"));
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) _glfwGetX11Window = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetX11Window>(getProcAddress("glfwGetX11Window"));
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) _glfwGetX11Display = Marshal.GetDelegateForFunctionPointer<Delegates.glfwGetX11Display>(getProcAddress("glfwGetX11Display"));
@@ -3831,7 +3837,30 @@ namespace GLFWDotNet
 		*/
 		public static IntPtr glfwGetPlatform()
 		{
-			return _glfwGetPlatform();
+			if (_glfwGetPlatform != null)
+			{
+				return _glfwGetPlatform();
+			}
+			else
+			{
+				// Best guess for 3.3.
+				if (Platform.IsLinux)
+				{
+					return GLFW_PLATFORM_X11;
+				}
+				else if (Platform.IsMacOS)
+				{
+					return GLFW_PLATFORM_COCOA;
+				}
+				else if (Platform.IsWindows)
+				{
+					return GLFW_PLATFORM_WIN32;
+				}
+				else
+				{
+					return GLFW_PLATFORM_NULL;
+				}
+			}
 		}
 
 	}

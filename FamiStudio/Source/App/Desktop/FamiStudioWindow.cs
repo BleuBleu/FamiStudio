@@ -110,7 +110,10 @@ namespace FamiStudio
             charModsCallback = new GLFWcharmodsfun(CharModsCallback);
             dropCallback = new GLFWdropfun(DropCallback);
 
+            #if DEBUG
             glfwSetErrorCallback(errorCallback);
+            #endif
+            
             glfwSetWindowSizeCallback(window, windowSizeCallback);
             glfwSetWindowCloseCallback(window, windowCloseCallback);
             glfwSetWindowRefreshCallback(window, windowRefreshCallback);
