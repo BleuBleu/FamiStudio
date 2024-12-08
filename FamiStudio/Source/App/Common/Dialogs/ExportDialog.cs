@@ -1126,26 +1126,45 @@ namespace FamiStudio
 
         private void ExportMidi()
         {
-            var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
-            if (filename != null)
+            var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
+
+            Action<string> ExportMidiAction = (filename) =>
             {
-                var props = dialog.GetPropertyPage((int)ExportFormat.Midi);
+                if (filename != null)
+                {
+                    var songName = props.GetPropertyValue<string>(0);
+                    var velocity = props.GetPropertyValue<bool>(1);
+                    var slideNotes = props.GetPropertyValue<bool>(2);
+                    var pitchRange = props.GetPropertyValue<int>(3);
+                    var instrumentMode = props.GetSelectedIndex(4);
+                    var song = project.GetSong(songName);
+                    var instrumentMapping = new int[instrumentMode == MidiExportInstrumentMode.Channel ? song.Channels.Length : song.Project.Instruments.Count];
+
+                    for (int i = 0; i < instrumentMapping.Length; i++)
+                        instrumentMapping[i] = Array.IndexOf(MidiFileReader.MidiInstrumentNames, props.GetPropertyValue<string>(5, i, 1));
+
+                    new MidiFileWriter().Save(project, filename, song.Id, instrumentMode, instrumentMapping, velocity, slideNotes, pitchRange);
+
+                    ShowExportResultToast(FormatMidiMessage);
+
+                    lastExportFilename = filename;
+                }
+            };
+
+            if (Platform.IsMobile)
+            {
                 var songName = props.GetPropertyValue<string>(0);
-                var velocity = props.GetPropertyValue<bool>(1);
-                var slideNotes = props.GetPropertyValue<bool>(2);
-                var pitchRange = props.GetPropertyValue<int>(3);
-                var instrumentMode = props.GetSelectedIndex(4);
-                var song = project.GetSong(songName);
-                var instrumentMapping = new int[instrumentMode == MidiExportInstrumentMode.Channel ? song.Channels.Length : song.Project.Instruments.Count];
-
-                for (int i = 0; i < instrumentMapping.Length; i++)
-                    instrumentMapping[i] = Array.IndexOf(MidiFileReader.MidiInstrumentNames, props.GetPropertyValue<string>(5, i, 1));
-
-                new MidiFileWriter().Save(project, filename, song.Id, instrumentMode, instrumentMapping, velocity, slideNotes, pitchRange);
-
-                ShowExportResultToast(FormatMidiMessage);
-
-                lastExportFilename = filename;
+                Platform.StartMobileSaveFileOperationAsync($"{songName}.mid", (f) =>
+                {
+                    ExportMidiAction(f);
+                    Platform.FinishMobileSaveFileOperationAsync(true, () => ShowExportResultToast(FormatAudioMessage, true));
+                });
+            }
+            else
+            {
+                var filename = lastExportFilename != null ? lastExportFilename  : Platform.ShowSaveFileDialog("Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
+                ExportMidiAction(filename);
+                ShowExportResultToast(FormatAudioMessage);
             }
         }
 
