@@ -1052,7 +1052,7 @@ namespace FamiStudio
                 app.SaveProjectCopy(filename);
                 Platform.StartShareFileAsync(filename, () => 
                 {
-                    Platform.ShowToast(dialog.ParentWindow, "Sharing Successful!");
+                    ShowExportResultToast("Sharing Successful!");
                 });
             }
             else
@@ -1060,7 +1060,7 @@ namespace FamiStudio
                 Platform.StartMobileSaveFileOperationAsync(filename, (f) =>
                 {
                     app.SaveProjectCopy(f);
-                    Platform.FinishMobileSaveFileOperationAsync(true, () => { Platform.ShowToast(dialog.ParentWindow, "Sharing Successful!"); });
+                    Platform.FinishMobileSaveFileOperationAsync(true, () => { ShowExportResultToast("Sharing Successful!"); });
                 });
             }
         }
