@@ -4,7 +4,9 @@
 	https://discord.com/channels/747649221879922840/1315173481234567178/1315181743908589611
 - Mobile switches channel icons
 	https://discord.com/channels/747649221879922840/1315173481234567178/1315182827549229126
-
+- Merge latest korean trnslation.
+	https://discord.com/channels/747649221879922840/1315173481234567178/1315192026202902551
+	
 4.3.0
 =====
 - Look at that ffmpeg change PR #342
