@@ -90,7 +90,10 @@ namespace FamiStudio
         {
             Platform.InvokeOnMainThread(() =>
             {
-                dialog.Close(DialogResult.OK);
+                if (dialog.Result == DialogResult.None)
+                {
+                    dialog.Close(DialogResult.OK);
+                }
             });
         }
 
