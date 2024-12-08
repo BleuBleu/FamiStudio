@@ -1,17 +1,8 @@
 4.3.0
 =====
-- GLFW 3.3 thing
-	https://discord.com/channels/747649221879922840/798008185977176074/1313906026486956104
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
-
-4.3.0 Testing
-=============
-- Make sure we consider messagebox/alerts as async dialogs.
-- Test detuning with sound, dual NSF, slide notes, etc.
-- PE Test scroll bars a lot more. 
-- Mobile : Test stuff that uses supportslongpress (envelope draw, etc.)
 
 4.3.0
 =====
