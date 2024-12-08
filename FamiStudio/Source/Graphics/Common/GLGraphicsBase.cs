@@ -1205,7 +1205,7 @@ namespace FamiStudio
             {
                 var numCharsWeCanFit = GetNumCharactersForSize(input, maxWidth);
                 var n = numCharsWeCanFit;
-                var done = n == input.Length;
+                var done = n == input.Length || n == 0;
                 var newLineIndex = input.IndexOf('\n');
                 var newLine = false;
 

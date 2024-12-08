@@ -32,7 +32,7 @@ namespace FamiStudio
         public Font Font
         {
             get { return font; }
-            set { font = value; MarkDirty(); }
+            set { font = value; AdjustHeightForMultiline(); MarkDirty(); }
         }
 
         public bool Centered
