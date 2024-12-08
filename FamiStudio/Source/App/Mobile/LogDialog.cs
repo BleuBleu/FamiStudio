@@ -32,6 +32,7 @@ namespace FamiStudio
         bool shown = false;
         bool abort = false;
         bool hasMessages = false;
+        bool messageChanged = false;
         private float lastProgress;
         private PropertyDialog dialog;
         private FamiStudioWindow parentForm;
@@ -52,6 +53,8 @@ namespace FamiStudio
 
         public void LogMessage(string msg)
         {
+            messageChanged = true;
+
             Platform.InvokeOnMainThread(() =>
             {
                 dialog.Properties.SetPropertyValue(1, msg);
@@ -61,7 +64,7 @@ namespace FamiStudio
         public void ReportProgress(float progress)
         {
             // Avoid bombarding the main thread with tiny updates, slows down everything.
-            if (Math.Abs(lastProgress - progress) > 0.1f)
+            if (Math.Abs(lastProgress - progress) > 0.1f || messageChanged)
             {
                 Platform.InvokeOnMainThread(() =>
                 {
@@ -75,6 +78,7 @@ namespace FamiStudio
                 });
 
                 lastProgress = progress;
+                messageChanged = false;
             }
         }
 
