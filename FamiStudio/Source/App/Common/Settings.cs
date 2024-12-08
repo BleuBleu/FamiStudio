@@ -133,6 +133,7 @@ namespace FamiStudio
         private static LocalizedString SlideNoteName;
         private static LocalizedString AttackName;
         private static LocalizedString EyeDropNoteName;
+        private static LocalizedString SetNoteInstrumentName;
         private static LocalizedString SetLoopPointName;
 
         private static LocalizedString QwertyPrefix;
@@ -186,6 +187,7 @@ namespace FamiStudio
         public static Shortcut SlideNoteShortcut;
         public static Shortcut AttackShortcut;
         public static Shortcut EyeDropNoteShortcut;
+        public static Shortcut SetNoteInstrumentShortcut;
         public static Shortcut SetLoopPointShortcut;
 
         public static Shortcut[] QwertyNoteShortcuts;
@@ -294,12 +296,13 @@ namespace FamiStudio
             EffectPanelShortcut       = new Shortcut(EffectPanelName,       "EffectPanel",       Keys.D1);
             MaximizePianoRollShortcut = new Shortcut(MaximizePianoRollName, "MaximizePianoRoll", Keys.D1, ModifierKeys.Control);
 
-            ReleaseNoteShortcut       = new Shortcut(ReleaseNoteName,  "ReleaseNote",  Keys.R, false);
-            StopNoteShortcut          = new Shortcut(StopNoteName,     "StopNote",     Keys.T, false);
-            SlideNoteShortcut         = new Shortcut(SlideNoteName,    "SlideNote",    Keys.S, false);
-            AttackShortcut            = new Shortcut(AttackName,       "ToggleAttack", Keys.A, false);
-            EyeDropNoteShortcut       = new Shortcut(EyeDropNoteName,  "EyeDrop",      Keys.I, false);
-            SetLoopPointShortcut      = new Shortcut(SetLoopPointName, "LoopPoint",    Keys.L, false);
+            ReleaseNoteShortcut       = new Shortcut(ReleaseNoteName,       "ReleaseNote",       Keys.R, false);
+            StopNoteShortcut          = new Shortcut(StopNoteName,          "StopNote",          Keys.T, false);
+            SlideNoteShortcut         = new Shortcut(SlideNoteName,         "SlideNote",         Keys.S, false);
+            AttackShortcut            = new Shortcut(AttackName,            "ToggleAttack",      Keys.A, false);
+            EyeDropNoteShortcut       = new Shortcut(EyeDropNoteName,       "EyeDrop",           Keys.I, false);
+            SetNoteInstrumentShortcut = new Shortcut(SetNoteInstrumentName, "SetNoteInstrument", Keys.O, false);
+            SetLoopPointShortcut      = new Shortcut(SetLoopPointName,      "LoopPoint",         Keys.L, false);
 
             QwertyNoteShortcuts = new Shortcut[]
             {

@@ -189,7 +189,7 @@ namespace FamiStudio
         {
             Localization.Localize(this);
 
-            dialog = new MultiPropertyDialog(win, Title, 570, true);
+            dialog = new MultiPropertyDialog(win, Title, 600, true);
 
             // Keep a copy of keyboart shortcuts
             shortcuts = Shortcut.CloneList(Settings.AllShortcuts);
@@ -363,7 +363,7 @@ namespace FamiStudio
                 }
                 case ConfigSection.Keys:
                 {
-                    page.AddGrid(DoubleClickLabel, new[] { new ColumnDesc(ActionColumn, 0.4f), new ColumnDesc(KeyColumn, 0.3f), new ColumnDesc(KeyAltColumn, 0.3f) }, GetKeyboardShortcutStrings(), 14, null, GridOptions.None, PropertyFlags.MultiLineLabel); // 0
+                    page.AddGrid(DoubleClickLabel, new[] { new ColumnDesc(ActionColumn, 0.46f), new ColumnDesc(KeyColumn, 0.27f), new ColumnDesc(KeyAltColumn, 0.27f) }, GetKeyboardShortcutStrings(), 14, null, GridOptions.None, PropertyFlags.MultiLineLabel); // 0
                     page.AddButton(null, ResetDefaultLabel); // 1
                     page.PropertyClicked += KeyboardPage_PropertyClicked;
                     page.SetColumnEnabled(0, 0, false);

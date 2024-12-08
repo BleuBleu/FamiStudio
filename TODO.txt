@@ -1,30 +1,14 @@
 4.3.0
 =====
-- Review the copy/paste name matching. Maybe add a rename option.
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
-
-4.3.0 Testing
-=============
-- Test Dump .bin note table (code is commented out right now)
-- Make sure not ticking all the time.
-- Run all NSF/FS unit tests, update refs if needed.
-- Run sound engine unit test
-- Bump all versions everything, ROM, soundengine, app, etc. 
-- Make sure ROMs srill binary identical.
-- Rebuild all binaries, all platforms.
-- Test stuff that uses supportslongpress (envelope draw, etc.)
-- Test pinch to zoom on MacOS, we changed the mouse wheel code there.
-- Make sure we consider messagebox/alerts as async dialogs.
-- Test detuning with sound, dual NSF, slide notes, etc.
-- PE Test scroll bars a lot more. 
-- Make sure the MacOS startup script checks for .NET 8.0
 
 4.3.0
 =====
 - Support for custom tuning per project (ex: where A is not 440Hz)
 - N163 wave auto position assignment
+- Improve conflict resolution when pasting between songs/projects
 - New in-app font (Noto Sans) : More readable at low resolution and supports international characters
 - Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
 - Making more features available on mobile:
@@ -35,10 +19,10 @@
 	- Ability to import instruments from storage
 	- Ability to import DPCM samples from other FMS projects on device storage
 - PAL expansion audio support (Thanks Steo!)
-- Minor adjustment to NES APU volumes  (Thanks Steo!)
+- Minor adjustment to NES APU volumes (Thanks Steo!)
 - SDAS/GBDK support (Thanks Michel Iwaniec!)
-- Russian translation (Thanks XXX!)
-- Korean translation (Thanks YYY!)
+- Russian translation (Thanks Alex and Furmilion!)
+- Korean translation (Thanks Nyaongi and Ospaggi!)
 - Upgrade all platforms to .NET 8.0
 - Behavior/Breaking changes:
 	- Default bass cutoff and filter frequencies where changed to better match the hardware

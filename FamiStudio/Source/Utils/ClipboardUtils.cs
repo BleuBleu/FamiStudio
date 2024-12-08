@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Runtime.CompilerServices;
 
 namespace FamiStudio
 {
@@ -68,39 +69,47 @@ namespace FamiStudio
                 {
                     var patId = pat.Id;
                     var patChannel = pat.ChannelType;
+                    var patCrc = pat.ComputeCRC();
                     var patName = pat.Name;
                     serializer.Serialize(ref patId);
                     serializer.Serialize(ref patChannel);
+                    serializer.Serialize(ref patCrc);
                     serializer.Serialize(ref patName);
                 }
 
                 foreach (var pat in patterns)
+                {
                     pat.Serialize(serializer);
+                }
             }
         }
 
-        private static int LoadAndMergePatternList(ProjectLoadBuffer serializer, Song song)
+        private static ClipboardContentFlags LoadAndMergePatternList(ProjectLoadBuffer serializer, Song song, bool checkOnly, ClipboardImportFlags importFlags = ClipboardImportFlags.CreateMissing)
         {
-            int numPatterns = 0;
+            var numPatterns = 0;
             serializer.Serialize(ref numPatterns);
+
+            var flags = ClipboardContentFlags.None;
 
             if (numPatterns > 0)
             {
                 // Remap whatever original song we had to the current one.
-                int songId = -1;
+                var songId = -1;
                 serializer.Serialize(ref songId);
                 serializer.RemapId(songId, song.Id);
 
-                var patternIdNameMap = new List<Tuple<int,int, string>>();
+                var patternList = new List<(int, int, uint, string)>();
                 for (int i = 0; i < numPatterns; i++)
                 {
                     var patId = 0;
                     var patChannel = 0;
+                    var patCrc = 0u;
                     var patName = "";
                     serializer.Serialize(ref patId);
                     serializer.Serialize(ref patChannel);
+                    serializer.Serialize(ref patCrc);
                     serializer.Serialize(ref patName);
-                    patternIdNameMap.Add(new Tuple<int, int, string>(patId, patChannel, patName));
+                    patternList.Add((patId, patChannel, patCrc, patName));
                 }
 
                 var dummyPattern = new Pattern();
@@ -108,24 +117,45 @@ namespace FamiStudio
                 // Match patterns by name, create missing ones and remap IDs.
                 for (int i = 0; i < numPatterns; i++)
                 {
-                    var patId      = patternIdNameMap[i].Item1;
-                    var patChannel = patternIdNameMap[i].Item2;
-                    var patName    = patternIdNameMap[i].Item3;
+                    var patId      = patternList[i].Item1;
+                    var patChannel = patternList[i].Item2;
+                    var patCrc     = patternList[i].Item3;
+                    var patName    = patternList[i].Item4;
 
                     if (serializer.Project.IsChannelActive(patChannel))
                     {
                         var existingPattern = song.GetChannelByType(patChannel).GetPattern(patName);
+                        var crcMatch = existingPattern == null || patCrc == existingPattern.ComputeCRC();
 
-                        if (existingPattern != null)
+                        if (existingPattern != null && (checkOnly || importFlags.HasFlag(ClipboardImportFlags.MatchByName) || crcMatch))
                         {
+                            if (checkOnly && !crcMatch)
+                            {
+                                flags |= ClipboardContentFlags.NameConflict;
+                            }
+
                             serializer.RemapId(patId, existingPattern.Id);
                             dummyPattern.Serialize(serializer); // Skip 
                         }
                         else
                         {
-                            var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
-                            serializer.RemapId(patId, pattern.Id);
-                            pattern.Serialize(serializer);
+                            if (!checkOnly)
+                            {
+                                if (existingPattern != null)
+                                {
+                                    patName = song.Channels[patChannel].GenerateUniquePatternNameSmart(patName);
+                                }
+
+                                var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
+                                serializer.RemapId(patId, pattern.Id);
+                                pattern.Serialize(serializer);
+                                pattern.Name = patName;
+                            }
+                            else
+                            {
+                                serializer.RemapId(patId, -1);
+                                dummyPattern.Serialize(serializer); // Skip
+                            }
                         }
                     }
                     else
@@ -136,7 +166,7 @@ namespace FamiStudio
                 }
             }
 
-            return numPatterns;
+            return flags;
         }
 
         private static void SaveArpeggioList(ProjectSaveBuffer serializer, ICollection<Arpeggio> arpeggios)
@@ -147,13 +177,17 @@ namespace FamiStudio
             foreach (var arp in arpeggios)
             {
                 var arpId = arp.Id;
+                var arpCrc = arp.ComputeCRC(); 
                 var arpName = arp.Name;
                 serializer.Serialize(ref arpId);
+                serializer.Serialize(ref arpCrc);
                 serializer.Serialize(ref arpName);
             }
 
             foreach (var arp in arpeggios)
+            {
                 arp.Serialize(serializer);
+            }
         }
 
         private static void SaveInstrumentList(ProjectSaveBuffer serializer, ICollection<Instrument> instruments)
@@ -165,14 +199,18 @@ namespace FamiStudio
             {
                 var instId = inst.Id;
                 var instType = inst.Expansion;
+                var instCrc = inst.ComputeCRC();
                 var instName = inst.Name;
                 serializer.Serialize(ref instId);
                 serializer.Serialize(ref instType);
+                serializer.Serialize(ref instCrc);
                 serializer.Serialize(ref instName);
             }
 
             foreach (var inst in instruments)
+            {
                 inst.Serialize(serializer);
+            }
         }
 
         private static void SaveSampleList(ProjectSaveBuffer serializer, HashSet<Instrument> instruments)
@@ -196,47 +234,76 @@ namespace FamiStudio
             foreach (var sample in samples)
             {
                 var sampleId = sample.Id;
+                var sampleCrc = sample.ComputeCRC();
                 var sampleName = sample.Name;
 
                 serializer.Serialize(ref sampleId);
+                serializer.Serialize(ref sampleCrc);
                 serializer.Serialize(ref sampleName);
+            }
 
+            foreach (var sample in samples)
+            {
                 sample.Serialize(serializer);
             }
         }
 
-        private static bool LoadAndMergeSampleList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
+        private static ClipboardContentFlags LoadAndMergeSampleList(ProjectLoadBuffer serializer, bool checkOnly = false, ClipboardImportFlags importFlags = ClipboardImportFlags.CreateMissing)
         {
-            int numSamples = 0;
+            var numSamples = 0;
             serializer.Serialize(ref numSamples);
 
-            bool needMerge = false;
+            var flags = ClipboardContentFlags.None;
             var dummySample = new DPCMSample();
+
+            var sampleList = new List<(int, uint, string)>();
+            for (int i = 0; i < numSamples; i++)
+            {
+                var sampleId = 0;
+                var sampleCrc = 0u;
+                var sampleName = "";
+
+                serializer.Serialize(ref sampleId);
+                serializer.Serialize(ref sampleCrc);
+                serializer.Serialize(ref sampleName);
+
+                sampleList.Add((sampleId, sampleCrc, sampleName));
+            }
 
             for (int i = 0; i < numSamples; i++)
             {
-                int sampleId = 0;
-                string sampleName = "";
-
-                serializer.Serialize(ref sampleId);
-                serializer.Serialize(ref sampleName);
+                var sampleId   = sampleList[i].Item1;
+                var sampleCrc  = sampleList[i].Item2;
+                var sampleName = sampleList[i].Item3;
 
                 var existingSample = serializer.Project.GetSample(sampleName);
+                var crcMatch = existingSample == null || existingSample.ComputeCRC() == sampleCrc;
 
-                if (existingSample != null)
+                if (existingSample != null && (checkOnly || importFlags.HasFlag(ClipboardImportFlags.MatchByName) || crcMatch))
                 {
+                    if (checkOnly && !crcMatch)
+                    {
+                        flags |= ClipboardContentFlags.NameConflict;
+                    }
+
                     serializer.RemapId(sampleId, existingSample.Id);
                     dummySample.Serialize(serializer); // Skip
                 }
                 else
                 {
-                    needMerge = true;
+                    flags |= ClipboardContentFlags.ContainsMissing;
 
-                    if (!checkOnly && createMissing)
+                    if (!checkOnly && (importFlags.HasFlag(ClipboardImportFlags.CreateMissing) || existingSample != null))
                     {
+                        if (existingSample != null)
+                        {
+                            sampleName = serializer.Project.GenerateUniqueDPCMSampleName(sampleName);
+                        }
+
                         var sample = serializer.Project.CreateDPCMSample(sampleName);
                         serializer.RemapId(sampleId, sample.Id);
                         sample.Serialize(serializer);
+                        sample.Name = sampleName;
                     }
                     else
                     {
@@ -249,111 +316,149 @@ namespace FamiStudio
             serializer.Project.EnsureAllFoldersExist(FolderType.Sample);
             serializer.Project.ConditionalSortSamples();
 
-            return needMerge;
+            return flags;
         }
 
-        private static bool LoadAndMergeInstrumentList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
+        private static ClipboardContentFlags LoadAndMergeInstrumentList(ProjectLoadBuffer serializer, bool checkOnly = false, ClipboardImportFlags importFlags = ClipboardImportFlags.CreateMissing)
         {
             int numInstruments = 0;
             serializer.Serialize(ref numInstruments);
 
-            var instrumentIdNameMap = new List<Tuple<int, int, string>>();
+            var instrumentList = new List<(int, int, uint, string)>();
             for (int i = 0; i < numInstruments; i++)
             {
                 var instId = 0;
                 var instType = 0;
+                var instCrc = 0u;
                 var instName = "";
                 serializer.Serialize(ref instId);
                 serializer.Serialize(ref instType);
+                serializer.Serialize(ref instCrc);
                 serializer.Serialize(ref instName);
-                instrumentIdNameMap.Add(new Tuple<int, int, string>(instId, instType, instName));
+                instrumentList.Add((instId, instType, instCrc, instName));
             }
 
             var dummyInstrument = new Instrument();
-            var needMerge = false;
+            var contentFlags = ClipboardContentFlags.None;
 
             // Match instruments by name, create missing ones and remap IDs.
             for (int i = 0; i < numInstruments; i++)
             {
-                var instId   = instrumentIdNameMap[i].Item1;
-                var instType = instrumentIdNameMap[i].Item2;
-                var instName = instrumentIdNameMap[i].Item3;
+                var instId   = instrumentList[i].Item1;
+                var instType = instrumentList[i].Item2;
+                var instCrc  = instrumentList[i].Item3;
+                var instName = instrumentList[i].Item4;
 
-                var existingInstrument = serializer.Project.GetInstrument(instName);
-
-                if (existingInstrument != null)
+                if (instType == ExpansionType.None || serializer.Project.UsesExpansionAudio(instType))
                 {
-                    if (existingInstrument.Expansion == instType)
-                        serializer.RemapId(instId, existingInstrument.Id);
-                    else
-                        serializer.RemapId(instId, -1); // Incompatible expansion type, skip.
+                    var existingInstrument = serializer.Project.GetInstrument(instName);
+                    var crcMatch = existingInstrument == null || instCrc == existingInstrument.ComputeCRC();
 
-                    dummyInstrument.Serialize(serializer); // Skip
+                    if (existingInstrument != null && (checkOnly || importFlags.HasFlag(ClipboardImportFlags.MatchByName) || crcMatch))
+                    {
+                        if (checkOnly && !crcMatch)
+                        {
+                            contentFlags |= ClipboardContentFlags.NameConflict;
+                        }
+
+                        if (existingInstrument.Expansion == instType)
+                            serializer.RemapId(instId, existingInstrument.Id);
+                        else
+                            serializer.RemapId(instId, -1); // Incompatible expansion type, skip.
+
+                        dummyInstrument.Serialize(serializer); // Skip
+                    }
+                    else
+                    {
+                        contentFlags |= ClipboardContentFlags.ContainsMissing;
+
+                        if (!checkOnly && (importFlags.HasFlag(ClipboardImportFlags.CreateMissing) || existingInstrument != null))
+                        {
+                            if (existingInstrument != null)
+                            {
+                                instName = serializer.Project.GenerateUniqueInstrumentName(instName);
+                            }
+
+                            var instrument = serializer.Project.CreateInstrument(instType, instName);
+                            serializer.RemapId(instId, instrument.Id);
+                            instrument.Serialize(serializer);
+                            instrument.Name = instName;
+                        }
+                        else
+                        {
+                            serializer.RemapId(instId, -1);
+                            dummyInstrument.Serialize(serializer); // Skip
+                        }
+                    }
                 }
                 else
                 {
-                    needMerge = true;
-
-                    if (!checkOnly && createMissing && (instType == ExpansionType.None || serializer.Project.UsesExpansionAudio(instType)))
-                    {
-                        var instrument = serializer.Project.CreateInstrument(instType, instName);
-                        serializer.RemapId(instId, instrument.Id);
-                        instrument.Serialize(serializer);
-                    }
-                    else
-                    {
-                        serializer.RemapId(instId, -1);
-                        dummyInstrument.Serialize(serializer); // Skip
-                    }
+                    serializer.RemapId(instId, -1);
+                    dummyInstrument.Serialize(serializer); // Skip
                 }
             }
 
             serializer.Project.EnsureAllFoldersExist(FolderType.Instrument);
             serializer.Project.ConditionalSortInstruments();
 
-            return needMerge;
+            return contentFlags;
         }
 
-        private static bool LoadAndMergeArpeggioList(ProjectLoadBuffer serializer, bool checkOnly = false, bool createMissing = true)
+        private static ClipboardContentFlags LoadAndMergeArpeggioList(ProjectLoadBuffer serializer, bool checkOnly = false, ClipboardImportFlags importFlags = ClipboardImportFlags.CreateMissing)
         {
             int numArpeggios = 0;
             serializer.Serialize(ref numArpeggios);
 
-            var arpeggioIdNameMap = new List<Tuple<int, string>>();
+            var arpeggioList = new List<(int, uint, string)>();
             for (int i = 0; i < numArpeggios; i++)
             {
                 var arpId = 0;
+                var arpCrc = 0u;
                 var arpName = "";
                 serializer.Serialize(ref arpId);
+                serializer.Serialize(ref arpCrc);
                 serializer.Serialize(ref arpName);
-                arpeggioIdNameMap.Add(new Tuple<int, string>(arpId, arpName));
+                arpeggioList.Add((arpId, arpCrc, arpName));
             }
 
             var dummyArpeggio = new Arpeggio();
-            var needMerge = false;
+            var flags = ClipboardContentFlags.None;
 
             // Match arpeggios by name, create missing ones and remap IDs.
             for (int i = 0; i < numArpeggios; i++)
             {
-                var arpId   = arpeggioIdNameMap[i].Item1;
-                var arpName = arpeggioIdNameMap[i].Item2;
+                var arpId   = arpeggioList[i].Item1;
+                var arpCrc  = arpeggioList[i].Item2;
+                var arpName = arpeggioList[i].Item3;
 
                 var existingArpeggio = serializer.Project.GetArpeggio(arpName);
+                var crcMatch = existingArpeggio == null || arpCrc == existingArpeggio.ComputeCRC();
 
-                if (existingArpeggio != null)
+                if (existingArpeggio != null && (checkOnly || importFlags.HasFlag(ClipboardImportFlags.MatchByName) || crcMatch))
                 {
+                    if (checkOnly && !crcMatch)
+                    {
+                        flags |= ClipboardContentFlags.NameConflict;
+                    }
+
                     serializer.RemapId(arpId, existingArpeggio.Id);
                     dummyArpeggio.Serialize(serializer); // Skip
                 }
                 else
                 {
-                    needMerge = true;
+                    flags |= ClipboardContentFlags.ContainsMissing;
 
-                    if (!checkOnly && createMissing)
+                    if (!checkOnly && (importFlags.HasFlag(ClipboardImportFlags.CreateMissing) || existingArpeggio != null))
                     {
-                        var instrument = serializer.Project.CreateArpeggio(arpName);
-                        serializer.RemapId(arpId, instrument.Id);
-                        instrument.Serialize(serializer);
+                        if (existingArpeggio != null)
+                        {
+                            arpName = serializer.Project.GenerateUniqueArpeggioName(arpName);
+                        }
+
+                        var arp = serializer.Project.CreateArpeggio(arpName);
+                        serializer.RemapId(arpId, arp.Id);
+                        arp.Serialize(serializer);
+                        arp.Name = arpName;
                     }
                     else
                     {
@@ -366,7 +471,7 @@ namespace FamiStudio
             serializer.Project.EnsureAllFoldersExist(FolderType.Arpeggio);
             serializer.Project.ConditionalSortArpeggios();
 
-            return needMerge;
+            return flags;
         }
 
         public static void SaveNotes(Project project, Note[] notes)
@@ -419,23 +524,37 @@ namespace FamiStudio
             return false;
         }
 
-        public static bool ContainsMissingInstrumentsOrSamples(Project project, bool notes, out bool missingArpeggios, out bool missingSamples)
+        public static bool GetClipboardContentFlags(Song song, bool notes, out ClipboardContentFlags instFlags, out ClipboardContentFlags arpFlags, out ClipboardContentFlags sampleFlags, out ClipboardContentFlags patternFlags)
         {
             var buffer = GetClipboardDataInternal(notes ? MagicNumberClipboardNotes : MagicNumberClipboardPatterns);
 
-            missingArpeggios = false;
-            missingSamples = false;
-            if (buffer == null)
+            instFlags    = ClipboardContentFlags.None;
+            arpFlags     = ClipboardContentFlags.None;
+            sampleFlags  = ClipboardContentFlags.None;
+            patternFlags = ClipboardContentFlags.None;
+
+            if (buffer != null)
+            {
+                var serializer = new ProjectLoadBuffer(song.Project, Compression.DecompressBytes(buffer, 4), Project.Version, ProjectBufferFlags.Clipboard);
+
+                sampleFlags = LoadAndMergeSampleList(serializer, true);
+                arpFlags    = LoadAndMergeArpeggioList(serializer, true);
+                instFlags   = LoadAndMergeInstrumentList(serializer, true);
+
+                if (!notes)
+                {
+                    patternFlags = LoadAndMergePatternList(serializer, song, true);
+                }
+
+                return true;
+            }
+            else
+            {
                 return false;
-
-            var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version, ProjectBufferFlags.Clipboard);
-
-            missingSamples = LoadAndMergeSampleList(serializer, true);
-            missingArpeggios = LoadAndMergeArpeggioList(serializer, true);
-            return LoadAndMergeInstrumentList(serializer, true);
+            }
         }
 
-        public static Note[] LoadNotes(Project project, bool createMissingInstruments, bool createMissingArpeggios, bool createMissingSamples)
+        public static Note[] LoadNotes(Project project, ClipboardImportFlags instImportFlags, ClipboardImportFlags arpImportFlags, ClipboardImportFlags sampleImportFlags)
         {
             var buffer = GetClipboardDataInternal(MagicNumberClipboardNotes);
 
@@ -444,9 +563,9 @@ namespace FamiStudio
 
             var serializer = new ProjectLoadBuffer(project, Compression.DecompressBytes(buffer, 4), Project.Version, ProjectBufferFlags.Clipboard);
 
-            LoadAndMergeSampleList(serializer, false, createMissingSamples);
-            LoadAndMergeArpeggioList(serializer, false, createMissingArpeggios);
-            LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
+            LoadAndMergeSampleList(serializer, false, sampleImportFlags);
+            LoadAndMergeArpeggioList(serializer, false, arpImportFlags);
+            LoadAndMergeInstrumentList(serializer, false, instImportFlags);
             
             int numNotes = 0;
             serializer.Serialize(ref numNotes);
@@ -584,7 +703,8 @@ namespace FamiStudio
             Platform.SetClipboardData(clipboardData.ToArray());
         }
 
-        public static Pattern[,] LoadPatterns(Project project, Song song, bool createMissingInstruments, bool createMissingArpeggios, bool createMissingSamples, out Song.PatternCustomSetting[] customSettings)
+        // MATTT : Need a flag for patterns too!
+        public static Pattern[,] LoadPatterns(Song song, ClipboardImportFlags instImportFlags, ClipboardImportFlags arpImportFlags, ClipboardImportFlags sampleImportFlags, ClipboardImportFlags patternImportFlags, out Song.PatternCustomSetting[] customSettings)
         {
             var buffer = GetClipboardDataInternal(MagicNumberClipboardPatterns);
 
@@ -595,12 +715,12 @@ namespace FamiStudio
             }
 
             var decompressedBuffer = Compression.DecompressBytes(buffer, 4);
-            var serializer = new ProjectLoadBuffer(project, decompressedBuffer, Project.Version, ProjectBufferFlags.Clipboard);
+            var serializer = new ProjectLoadBuffer(song.Project, decompressedBuffer, Project.Version, ProjectBufferFlags.Clipboard);
 
-            LoadAndMergeSampleList(serializer, false, createMissingSamples);
-            LoadAndMergeArpeggioList(serializer, false, createMissingArpeggios);
-            LoadAndMergeInstrumentList(serializer, false, createMissingInstruments);
-            LoadAndMergePatternList(serializer, song);
+            LoadAndMergeSampleList(serializer, false, sampleImportFlags);
+            LoadAndMergeArpeggioList(serializer, false, arpImportFlags);
+            LoadAndMergeInstrumentList(serializer, false, instImportFlags);
+            LoadAndMergePatternList(serializer, song, false, patternImportFlags);
 
             int numPatterns = 0;
             int numChannels = 0;
@@ -624,7 +744,7 @@ namespace FamiStudio
             serializer.Serialize(ref hasCustomSettings);
             serializer.Serialize(ref tempoMode);
 
-            if (hasCustomSettings && tempoMode == project.TempoMode)
+            if (hasCustomSettings && tempoMode == song.Project.TempoMode)
             {
                 customSettings = new Song.PatternCustomSetting[numPatterns];
                 for (int i = 0; i < numPatterns; i++)
@@ -650,5 +770,21 @@ namespace FamiStudio
         {
             Platform.SetClipboardData(null);
         }
+    }
+
+    [Flags]
+    public enum ClipboardImportFlags
+    {
+        None = 0,
+        CreateMissing = 1,
+        MatchByName = 2
+    }
+
+    [Flags]
+    public enum ClipboardContentFlags
+    {
+        None = 0,
+        ContainsMissing = 1,
+        NameConflict = 2
     }
 }

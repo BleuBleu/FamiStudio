@@ -25,6 +25,7 @@ namespace FamiStudio
 
         public Container()
         {
+            canFocus = false;
         }
 
         public virtual void OnContainerMouseWheelNotify(Control control, PointerEventArgs e)

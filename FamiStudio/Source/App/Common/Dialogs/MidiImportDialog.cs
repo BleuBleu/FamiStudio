@@ -260,7 +260,7 @@ namespace FamiStudio
             }
         }
 
-        public void ShowDialogAsync(FamiStudioWindow parent, Action<Project> action)
+        public void ShowDialogAsync(FamiStudioWindow parent, Action<Project, int> action)
         {
             if (dialog != null)
             {
@@ -275,18 +275,18 @@ namespace FamiStudio
                         var velocityAsVolume = dialog.Properties.GetPropertyValue<bool>(2);
                         var pal = expansionMask != ExpansionType.NoneMask ? false : dialog.Properties.GetPropertyValue<bool>(3);
 
-                        var project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern);
-                        action(project);
+                        var project = new MidiFileReader().Load(filename, expansionMask, pal, channelSources, velocityAsVolume, polyphony, measuresPerPattern, out var polyphonyWarningCount);
+                        action(project, polyphonyWarningCount);
                     }
                     else
                     {
-                        action(null);
+                        action(null, 0);
                     }
                 });
             }
             else
             {
-                action(null);
+                action(null, 0);
             }
         }
     }

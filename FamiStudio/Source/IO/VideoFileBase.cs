@@ -515,7 +515,7 @@ namespace FamiStudio
                     // Registers + watermark + artist.
                     DrawRegisterValues(frame);
                     videoGraphics.OverlayCommandList.DrawTexture(watermark, videoResX - watermark.Size.Width, videoResY - watermark.Size.Height);
-                    
+
                     var textY = videoResY - authorText.Count * fonts.FontMediumBold.LineHeight - TextMargin;
                     for (var i = 0; i < authorText.Count; i++, textY += fonts.FontMediumBold.LineHeight)
                     {

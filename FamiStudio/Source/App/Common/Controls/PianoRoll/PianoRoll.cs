@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Channels;
 
 namespace FamiStudio
 {
@@ -36,7 +37,7 @@ namespace FamiStudio
         const int DefaultReleaseNoteSizeY          = 8;
         const int DefaultEnvelopeSizeY             = Platform.IsMobile ? 4 : 9;
         const int DefaultPianoSizeX                = 94;
-        const int DefaultPianoSizeXMobile          = 40;
+        const int DefaultPianoSizeXMobile          = 44;
         const int DefaultWhiteKeySizeY             = 20;
         const int DefaultBlackKeySizeX             = 56;
         const int DefaultBlackKeySizeXMobile       = 20;
@@ -324,7 +325,6 @@ namespace FamiStudio
         bool captureRealTimeUpdate = false;
         bool panning = false;
         bool continuouslyFollowing = false;
-        bool deleteNotesToastShown = false;
         bool maximized = false;
         bool showEffectsPanel = false;
         bool snap = true;
@@ -596,6 +596,7 @@ namespace FamiStudio
         LocalizedString SlideNoteTooltip;
         LocalizedString ToggleAttackTooltip;
         LocalizedString InstrumentEyedropTooltip;
+        LocalizedString SetNoteInstrumentTooltip;
         LocalizedString DeleteNoteTooltip;
         LocalizedString AddStopNoteTooltip;
         LocalizedString SetEnvelopeValueTooltip;
@@ -668,7 +669,7 @@ namespace FamiStudio
 
             // Make sure the effect panel actually fit on screen on mobile.
             if (Platform.IsMobile && ParentWindow != null)
-                effectPanelSizeY = Math.Min(ParentWindowSize.Height / 2, DpiScaling.ScaleForWindow(DefaultEffectPanelSizeY));
+                effectPanelSizeY = height / 2 - headerSizeY;
             else
                 effectPanelSizeY = DpiScaling.ScaleForWindow(DefaultEffectPanelSizeY);
 
@@ -2281,34 +2282,21 @@ namespace FamiStudio
             SetSelection(startFrameIdx, startFrameIdx + notes.Length - 1);
         }
 
-        private void PasteNotes(bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false, int repeat = 1)
+        private void PasteNotes(bool pasteNotes, int pasteFxMask, bool mix, int repeat, ClipboardImportFlags instImportFlags, ClipboardImportFlags arpImportFlags, ClipboardImportFlags sampleImportFlags)
         {
             if (!IsSelectionValid())
                 return;
 
-            bool createMissingInstrument = false;
-            bool createMissingArpeggios  = false;
-            bool createMissingSamples    = false;
+            var createAnythingMissing =
+                instImportFlags.HasFlag(ClipboardImportFlags.CreateMissing) ||
+                arpImportFlags.HasFlag(ClipboardImportFlags.CreateMissing)  ||
+                sampleImportFlags.HasFlag(ClipboardImportFlags.CreateMissing);
 
-            if (pasteNotes)
-            {
-                var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, true, out var missingArpeggios, out var missingSamples);
-
-                if (missingInstruments)
-                    createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-                if (missingArpeggios)
-                    createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-                if (missingSamples && editChannel == ChannelType.Dpcm)
-                    createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-            }
-
-            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
+            App.UndoRedoManager.BeginTransaction(createAnythingMissing ? TransactionScope.Project : TransactionScope.Channel, Song.Id, editChannel);
 
             for (int i = 0; i < repeat && IsSelectionValid(); i++)
             {
-                var notes = ClipboardUtils.LoadNotes(App.Project, createMissingInstrument, createMissingArpeggios, createMissingSamples);
+                var notes = ClipboardUtils.LoadNotes(App.Project, instImportFlags, arpImportFlags, sampleImportFlags);
 
                 if (notes == null)
                 {
@@ -2327,6 +2315,36 @@ namespace FamiStudio
 
             NotesPasted?.Invoke();
             App.UndoRedoManager.EndTransaction();
+        }
+        
+        private void PasteNotesWithConflictDialog(bool pasteNotes = true, int pasteFxMask = Note.EffectAllMask, bool mix = false, int repeat = 1)
+        {
+            if (!ClipboardUtils.GetClipboardContentFlags(Song, true, out var instFlags, out var arpFlags, out var sampleFlags, out var patternFlags))
+            {
+                return;
+            }
+
+            var anyConflicts =
+                instFlags    != ClipboardContentFlags.None ||
+                arpFlags     != ClipboardContentFlags.None ||
+                sampleFlags  != ClipboardContentFlags.None ||
+                patternFlags != ClipboardContentFlags.None;
+
+            if (pasteNotes && anyConflicts)
+            {
+                var dlg = new PasteConflictDialog(window, instFlags, arpFlags, sampleFlags);
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        PasteNotes(pasteNotes, pasteFxMask, mix, repeat, dlg.InstrumentFlags, dlg.ArpeggioFlags, dlg.DPCMSampleFlags);
+                    }
+                });
+            }
+            else
+            {
+                PasteNotes(pasteNotes, pasteFxMask, mix, repeat, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName);
+            }
         }
 
         private sbyte[] GetSelectedEnvelopeValues()
@@ -2446,7 +2464,7 @@ namespace FamiStudio
             AbortCaptureOperation();
 
             if (editMode == EditionMode.Channel)
-                PasteNotes();
+                PasteNotesWithConflictDialog();
             else if (editMode == EditionMode.Envelope || editMode == EditionMode.Arpeggio)
                 PasteEnvelopeValues();
         }
@@ -2479,7 +2497,7 @@ namespace FamiStudio
                         if ((effectMask & Note.EffectVolumeMask) != 0 && Song.Channels[editChannel].SupportsEffect(Note.EffectVolumeSlide))
                             effectMask |= Note.EffectVolumeAndSlideMask;
 
-                        PasteNotes(dlg.PasteNotes, effectMask, dlg.PasteMix, dlg.PasteRepeat);
+                        PasteNotesWithConflictDialog(dlg.PasteNotes, effectMask, dlg.PasteMix, dlg.PasteRepeat);
 
                         lastPasteSpecialPasteMix = dlg.PasteMix;
                         lastPasteSpecialPasteNotes = dlg.PasteNotes;
@@ -2727,7 +2745,7 @@ namespace FamiStudio
                 var highlightLastInstrument = (Instrument)null;
                 var highlightAttackState = NoteAttackState.Attack;
 
-                if (editMode != EditionMode.VideoRecording && !ParentWindow.IsAsyncDialogInProgress)
+                if (editMode != EditionMode.VideoRecording)
                 {
                     if (Platform.IsMobile)
                     {
@@ -2737,7 +2755,7 @@ namespace FamiStudio
                             highlightNote = song.Channels[editChannel].GetNoteAt(highlightLocation);
                         }
                     }
-                    else
+                    else if (!ParentWindow.IsAsyncDialogInProgress)
                     {
                         if (HasHighlightedNote() && CaptureOperationRequiresNoteHighlight(captureOperation))
                         {
@@ -4560,13 +4578,6 @@ namespace FamiStudio
                 }
             }
 
-            if (Platform.IsMobile && !deleteNotesToastShown && captureOperation == CaptureOperation.DeleteNotes && ((Platform.TimeSeconds() - captureTime) > 0.5 || captureThresholdMet))
-            {
-                Platform.VibrateClick();
-                Platform.ShowToast(window, HoldFingersToEraseMessage);
-                deleteNotesToastShown = true;
-            }
-
             if (captureOperation != CaptureOperation.None && captureThresholdMet && (captureRealTimeUpdate || !realTime))
             {
                 x += captureOffsetX;
@@ -5939,6 +5950,7 @@ namespace FamiStudio
                     var slide   = Settings.SlideNoteShortcut.IsKeyDown(ParentWindow);
                     var attack  = Settings.AttackShortcut.IsKeyDown(ParentWindow);
                     var eyedrop = Settings.EyeDropNoteShortcut.IsKeyDown(ParentWindow);
+                    var setInst = Settings.SetNoteInstrumentShortcut.IsKeyDown(ParentWindow);
 
                     if (delete)
                     {
@@ -5953,6 +5965,10 @@ namespace FamiStudio
                     else if (attack && note != null)
                     {
                         ToggleNoteAttack(noteLocation, note);
+                    }
+                    else if (setInst && note != null)
+                    {
+                        SetNoteInstrument(noteLocation, note, App.SelectedInstrument);
                     }
                     else if (eyedrop && note != null)
                     {
@@ -6685,8 +6701,6 @@ namespace FamiStudio
                 {
                     AbortCaptureOperation();
                     DeleteSingleNote(noteLocation, mouseLocation, note);
-                    StartCaptureOperation(x, y, CaptureOperation.DeleteNotes);
-                    deleteNotesToastShown = false;
                 }
 
                 return true;
@@ -6928,6 +6942,15 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        private bool HandleDoubleTapLongPressChannelNote(int x, int y)
+        {
+            HandleTouchDoubleClickChannelNote(x, y);
+            StartCaptureOperation(x, y, CaptureOperation.DeleteNotes);
+            Platform.VibrateClick();
+            Platform.ShowToast(window, HoldFingersToEraseMessage);
+            return true;
         }
 
         private bool HandleTouchLongPressChannelNote(int x, int y)
@@ -7437,6 +7460,16 @@ namespace FamiStudio
             }
 
             AbortCaptureOperation();
+
+            if (e.IsDoubleTapLongPress)
+            {
+                if (editMode == EditionMode.Channel)
+                {
+                    if (HandleDoubleTapLongPressChannelNote(x, y)) goto Handled;
+                }
+
+                return;
+            }
 
             if (editMode == EditionMode.Channel)
             {
@@ -8165,6 +8198,25 @@ namespace FamiStudio
             App.UndoRedoManager.EndTransaction();
         }
 
+        public void SetNoteInstrument(NoteLocation location, Note note, Instrument instrument)
+        {
+            var channel = Song.Channels[editChannel];
+
+            if (channel.SupportsInstrument(instrument))
+            {
+                var pattern = channel.PatternInstances[location.PatternIndex];
+                App.UndoRedoManager.BeginTransaction(TransactionScope.Pattern, pattern.Id);
+                note.Instrument = instrument;
+                MarkPatternDirty(pattern);
+                App.UndoRedoManager.EndTransaction();
+                MarkDirty();
+            }
+            else
+            {
+                App.ShowInstrumentError(channel, true);
+            }
+        }
+
         public void ReplaceSelectionInstrument(Instrument instrument, Point pos, Instrument matchInstrument = null, bool forceInSelection = false)
         {
             if (editMode == EditionMode.Channel)
@@ -8498,6 +8550,8 @@ namespace FamiStudio
                                     tooltipList.Add($"{Settings.AttackShortcut.TooltipString}<MouseLeft> {ToggleAttackTooltip}");
                                 if (Settings.EyeDropNoteShortcut.IsShortcutValid(0))
                                     tooltipList.Add($"{Settings.EyeDropNoteShortcut.TooltipString}<MouseLeft> {InstrumentEyedropTooltip}");
+                                if (Settings.SetNoteInstrumentShortcut.IsShortcutValid(0))
+                                    tooltipList.Add($"{Settings.SetNoteInstrumentShortcut.TooltipString}<MouseLeft> {SetNoteInstrumentTooltip}");
                             }
                             tooltipList.Add($"<MouseLeft><MouseLeft> {OrTooltip} <Shift><MouseLeft> {DeleteNoteTooltip}");
                         }

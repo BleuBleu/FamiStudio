@@ -37,9 +37,11 @@ Another way to delete multiple notes is to use the **Eraser Mode** which is acce
 
 ![](images/EraserMode.gif#center)
 
-Similarly, on mobile, notes are created by a quick tap and deleted by **double-tapping**. **Eraser Mode** is activated by holding and dragging your finger after deleting the first note.
+Similarly, on mobile, notes are created by a quick tap.
 
 ![](images/MobileCreateNote.gif#center)
+
+You can delete a single notes by **double-tapping** on it. **Eraser Mode** is activated by **double-tapping**, **holding** (like a long press) and then dragging your finger once you get the prompt and see the white circle around your finger.
 
 ## Moving & resizing notes
 

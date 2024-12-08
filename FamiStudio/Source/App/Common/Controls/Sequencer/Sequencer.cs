@@ -13,7 +13,7 @@ namespace FamiStudio
     // associated icons needs to be made into real buttons, etc.
     public class Sequencer : Container
     {
-        const int DefaultChannelNameSizeX    = Platform.IsMobile ? 64 : 94;
+        const int DefaultChannelNameSizeX    = Platform.IsMobile ? 68 : 94;
         const int DefaultHeaderSizeY         = 17;
         const int DefaultPatternHeaderSizeY  = 13;
         const int DefaultBarTextPosY         = 2;
@@ -21,7 +21,7 @@ namespace FamiStudio
         const int DefaultChannelIconPosY     = 3;
         const int DefaultChannelNamePosX     = 21;
         const int DefaultGhostNoteOffsetX    = 16;
-        const int DefaultGhostNoteOffsetY    = 15;
+        const int DefaultGhostNoteOffsetY    = Platform.IsMobile ? 16 : 15;
         const int DefaultPatternNamePosX     = 2;
         const int DefaultHeaderIconPosX      = 3;
         const int DefaultHeaderIconPosY      = 3;
@@ -91,7 +91,6 @@ namespace FamiStudio
         PatternLocation selectionMin = PatternLocation.Invalid;
         PatternLocation selectionMax = PatternLocation.Invalid;
         PatternLocation highlightLocation = PatternLocation.Invalid;
-        DateTime lastPatternCreateTime = DateTime.Now;
 
         // Hover tracking
         int hoverRow = -1;
@@ -347,7 +346,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 verticalScoll = true;
-                channelSizeY = visibleChannelCount > 0 ? Math.Clamp(((int)Math.Ceiling(height / DpiScaling.Window) - DefaultHeaderSizeY) / visibleChannelCount, 20, 80) : 20;
+                channelSizeY = visibleChannelCount > 0 ? Math.Clamp(((int)Math.Ceiling(height / DpiScaling.Window) - DefaultHeaderSizeY) / visibleChannelCount, 21, 80) : 21;
                 return channelSizeY * channelCount + constantSize;
             }
             else
@@ -677,7 +676,7 @@ namespace FamiStudio
                     // Force display icon.
                     var ghostHoverOpacity = isHoverRow && (hoverIconMask & 2) != 0 ? 192 : 255;
                     var ghostFinalOpacity = Utils.ColorMultiply((App.ForceDisplayChannelMask & (1L << i)) != 0 ? 255 : 50, ghostHoverOpacity);
-                    c.DrawTextureAtlas(bmpForceDisplay, channelNameSizeX - ghostNoteOffsetX, y + channelSizeY - ghostNoteOffsetY - 1, bitmapScale, Theme.LightGreyColor1.Transparent(ghostFinalOpacity));
+                    c.DrawTextureAtlasCentered(bmpForceDisplay, GetRowGhostRect(channelToRow[i]).Offsetted(0, -headerSizeY + scrollY), channelBitmapScale, Theme.LightGreyColor1.Transparent(ghostFinalOpacity));
 
                     // Hover
                     if (isHoverRow)
@@ -1589,7 +1588,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownDragSeekBar(int x, int y)
         {
-            if (IsPointInHeader(x, y))
+            if (IsPointInHeader(x, y) && !IsPointInShyButton(x, y))
             {
                 var seekX = GetPixelForNote(App.CurrentFrame) + channelNameSizeX;
 
@@ -1687,7 +1686,6 @@ namespace FamiStudio
                 {
                     CreateNewPattern(location);
                     SetHighlightedPattern(location);
-                    lastPatternCreateTime = DateTime.Now;
                 }
                 else 
                 {
@@ -1718,21 +1716,35 @@ namespace FamiStudio
             return false;
         }
 
-        private bool HandleTouchClickChannelName(int x, int y)
+        private bool HandleTouchClickChannelName(int x, int y, bool doubleClick = false)
         {
             if (IsMouseInTrackName(x, y))
             {
                 var chanIdx = GetChannelIndexFromIconPos(x, y);
                 if (chanIdx >= 0)
                 {
-                    App.ToggleChannelActive(chanIdx);
+                    if (doubleClick)
+                    {
+                        App.ToggleChannelSolo(chanIdx, true);
+                    }
+                    else
+                    {
+                        App.ToggleChannelActive(chanIdx);
+                    }
                     return true;
                 }
 
                 chanIdx = GetChannelIndexFromGhostIconPos(x, y);
                 if (chanIdx >= 0)
                 {
-                    App.ToggleChannelForceDisplay(chanIdx);
+                    if (doubleClick) 
+                    { 
+                        App.ToggleChannelForceDisplayAll(chanIdx, true);
+                    }
+                    else
+                    {
+                        App.ToggleChannelForceDisplay(chanIdx);
+                    }
                     return true;
                 }
             }
@@ -1994,14 +2006,14 @@ namespace FamiStudio
             SetMouseLastPos(x, y);
 
             // Ignore double tap if we handled a single tap recently.
-            if (captureOperation != CaptureOperation.None || (DateTime.Now - lastPatternCreateTime).TotalMilliseconds < 500)
+            if (captureOperation != CaptureOperation.None/* || (DateTime.Now - lastPatternCreateTime).TotalMilliseconds < 500*/)
             {
                 return;
             }
 
             if (HandleTouchDoubleClickPatternArea(x, y)) goto Handled;
             if (HandleTouchClickShy(x, y)) goto Handled;
-            if (HandleTouchClickChannelName(x, y)) goto Handled;
+            if (HandleTouchClickChannelName(x, y, true)) goto Handled;
 
             return;
 
@@ -2013,6 +2025,11 @@ namespace FamiStudio
         {
             var x = e.X;
             var y = e.Y;
+
+            if (e.IsDoubleTapLongPress)
+            {
+                return;
+            }
 
             // Header:
             // - Context menu : seet loop point, custom settings
@@ -2085,26 +2102,17 @@ namespace FamiStudio
             }
         }
 
-        private void PasteInternal(bool insert, bool extend, int repeat)
+        private void PasteInternal(bool insert, bool extend, int repeat, ClipboardImportFlags instImportFlags, ClipboardImportFlags arpImportFlags, ClipboardImportFlags sampleImportFlags, ClipboardImportFlags patternImportFlags)
         {
-            var missingInstruments = ClipboardUtils.ContainsMissingInstrumentsOrSamples(App.Project, false, out var missingArpeggios, out var missingSamples);
+            var createAnythingMissing =
+                instImportFlags.HasFlag(ClipboardImportFlags.CreateMissing) ||
+                arpImportFlags.HasFlag(ClipboardImportFlags.CreateMissing)  ||
+                sampleImportFlags.HasFlag(ClipboardImportFlags.CreateMissing);
 
-            bool createMissingInstrument = false;
-            if (missingInstruments)
-                createMissingInstrument = Platform.MessageBox(ParentWindow, PasteMissingInstrumentsMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-            bool createMissingArpeggios = false;
-            if (missingArpeggios)
-                createMissingArpeggios = Platform.MessageBox(ParentWindow, PasteMissingArpeggiosMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-            bool createMissingSamples = false;
-            if (missingSamples)
-                createMissingSamples = Platform.MessageBox(ParentWindow, PasteMissingSamplesMessage, PasteTitle, MessageBoxButtons.YesNo) == DialogResult.Yes;
-
-            App.UndoRedoManager.BeginTransaction(createMissingInstrument || createMissingArpeggios || createMissingSamples ? TransactionScope.Project : TransactionScope.Song, Song.Id);
+            App.UndoRedoManager.BeginTransaction(createAnythingMissing ? TransactionScope.Project : TransactionScope.Song, Song.Id);
 
             var song = Song;
-            var patterns = ClipboardUtils.LoadPatterns(App.Project, song, createMissingInstrument, createMissingArpeggios, createMissingSamples, out var customSettings);
+            var patterns = ClipboardUtils.LoadPatterns(song, instImportFlags, arpImportFlags, sampleImportFlags, patternImportFlags, out var customSettings);
 
             if (patterns == null)
             {
@@ -2212,12 +2220,42 @@ namespace FamiStudio
             MarkDirty();
         }
 
+        private void PasteInternalWithConflictDialog(bool insert, bool extend, int repeat)
+        {
+            if (!ClipboardUtils.GetClipboardContentFlags(Song, false, out var instFlags, out var arpFlags, out var sampleFlags, out var patternFlags))
+            {
+                return;
+            }
+
+            var anyConflicts =
+                instFlags    != ClipboardContentFlags.None ||
+                arpFlags     != ClipboardContentFlags.None ||
+                sampleFlags  != ClipboardContentFlags.None ||
+                patternFlags != ClipboardContentFlags.None;
+
+            if (anyConflicts)
+            {
+                var dlg = new PasteConflictDialog(window, instFlags, arpFlags, sampleFlags, patternFlags);
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        PasteInternal(insert, extend, repeat, dlg.InstrumentFlags, dlg.ArpeggioFlags, dlg.DPCMSampleFlags, dlg.PatternFlags);
+                    }
+                });
+            }
+            else
+            {
+                PasteInternal(insert, extend, repeat, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName, ClipboardImportFlags.MatchByName);
+            }
+        }
+
         public void Paste()
         {
             if (!IsSelectionValid())
                 return;
 
-            PasteInternal(false, false, 1);
+            PasteInternalWithConflictDialog(false, false, 1);
         }
 
         public void PasteSpecial()
@@ -2237,7 +2275,7 @@ namespace FamiStudio
             {
                 if (r == DialogResult.OK)
                 {
-                    PasteInternal(
+                    PasteInternalWithConflictDialog(
                         dialog.Properties.GetPropertyValue<bool>(0),
                         dialog.Properties.GetPropertyValue<bool>(1),
                         dialog.Properties.GetPropertyValue<int> (2));
@@ -3120,7 +3158,7 @@ namespace FamiStudio
 
         protected bool HandleMouseDoubleClickChannelName(PointerEventArgs e)
         {
-            return e.Left && HandleTouchClickChannelName(e.X, e.Y);
+            return e.Left && HandleTouchClickChannelName(e.X, e.Y, true);
         }
 
         protected override void OnMouseDoubleClick(PointerEventArgs e)

@@ -183,10 +183,27 @@ namespace FamiStudio
             return new Point(pt.x + sz.Width, pt.y + sz.Height);
         }
 
+        public static Point operator+(Point p1, Point p2)
+        {
+            return new Point(p1.x + p2.x, p1.y + p2.y);
+        }
+
         public static Point operator-(Point p1, Point p2)
         {
             return new Point(p1.x - p2.x, p1.y - p2.y);
         }
+        
+        public static Point operator/(Point p1, int n)
+        {
+            return new Point(p1.x / n, p1.y / n);
+        }
+
+        public float DistanceTo(Point p)
+        {
+            return (this - p).Length;
+        }
+
+        public float Length => float.Sqrt(x * x + y * y);
 
         public Point Abs()
         {
@@ -218,6 +235,24 @@ namespace FamiStudio
         {
             this.x = x;
             this.y = y;
+        }
+
+        public PointF(Point p)
+        {
+            this.x = p.X;
+            this.y = p.Y;
+        }
+
+        public static PointF operator/(PointF p, float f)
+        {
+            return new PointF(p.x / f, p.y / f);
+        }
+
+        public static PointF Lerp(PointF p1, PointF p2, float alpha)
+        {
+            return new PointF(
+                float.Lerp(p1.x, p2.x, alpha),
+                float.Lerp(p1.y, p2.y, alpha));
         }
     }
 

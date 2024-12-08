@@ -121,6 +121,7 @@ namespace FamiStudio
         protected virtual void OnTextChanged()
         {
             TextChanged?.Invoke(this);
+            mouseSelecting = false;
         }
 
         protected void UpdateScrollParams()
@@ -142,6 +143,7 @@ namespace FamiStudio
                 SetAndMarkDirty(ref caretIndex, c);
                 SetAndMarkDirty(ref selectionStart, selMin);
                 SetAndMarkDirty(ref selectionLength, selMax - selMin);
+                Debug.Assert(selectionLength <= text.Length);
                 EnsureCaretVisible();
             }
         }
@@ -185,6 +187,7 @@ namespace FamiStudio
                 selectionStart  = c0;
                 selectionLength = c1 - c0;
                 caretIndex      = c1;
+                Debug.Assert(selectionLength <= text.Length);
 
                 MarkDirty();
             }
@@ -464,6 +467,7 @@ namespace FamiStudio
             selectionStart = 0;
             selectionLength = text.Length;
             caretIndex = text.Length;
+            Debug.Assert(selectionLength <= text.Length);
             MarkDirty();
         }
 

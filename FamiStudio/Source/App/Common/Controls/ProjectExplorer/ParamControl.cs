@@ -47,7 +47,7 @@ namespace FamiStudio
                 Platform.EditTextAsync(param.Name, param.GetValue().ToString(), (s) => 
                 {
                     InvokeValueChangeStart();
-                    param.SetValue(Utils.ParseIntWithTrailingGarbage(s));
+                    param.SetValue(param.SnapAndClampValue(Utils.ParseIntWithTrailingGarbage(s)));
                     InvokeValueChangeEnd();
                     MarkDirty();
                 });
@@ -60,7 +60,7 @@ namespace FamiStudio
                     if (r == DialogResult.OK)
                     {
                         InvokeValueChangeStart();
-                        param.SetValue(dlg.Value);
+                        param.SetValue(param.SnapAndClampValue(dlg.Value));
                         InvokeValueChangeEnd();
                         MarkDirty();
                     }

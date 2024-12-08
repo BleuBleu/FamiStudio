@@ -256,10 +256,17 @@ namespace FamiStudio
                 var ghost = CreateListButton("GhostSmall", i);
                 ghost.DimmedEvent += ChannelGhost_DimmedEvent;
                 ghost.Click += ChannelGhost_Click;
+                ghost.TouchDoubleClick += Ghost_TouchDoubleClick;
+                ghost.SetSupportsDoubleClick(true);
                 ghostButtons[i] = ghost;
             }
 
             StartExpandingList(buttonChannel, channelButtons, ghostButtons, App.SelectedChannelIndex);
+        }
+
+        private void Ghost_TouchDoubleClick(Control sender, PointerEventArgs e)
+        {
+            App.ToggleChannelForceDisplayAll((int)sender.UserData, true);
         }
 
         private void Channel_TouchDoubleClick(Control sender, PointerEventArgs e)

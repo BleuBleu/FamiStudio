@@ -15,6 +15,7 @@ namespace FamiStudio
         private byte[] tmp = new byte[4];
         private Project project;
         private Song song;
+        private int polyphonyWarningCount;
 
         private int ticksPerQuarterNote = 96;
         private int songDuration;
@@ -998,6 +999,7 @@ namespace FamiStudio
                         if (activeNote > 0)
                         {
                             Log.LogMessage(LogSeverity.Warning, $"Polyphony detected on MIDI channel {evt.channel}, at MIDI tick {evt.tick} ({Note.GetFriendlyName(activeNote)} -> {Note.GetFriendlyName(evt.note)}).");
+                            polyphonyWarningCount++;
 
                             if (polyphony == MidiPolyphonyBehavior.KeepOldNote)
                                 continue;
@@ -1135,7 +1137,7 @@ namespace FamiStudio
             project.ValidateIntegrity();
         }
 
-        public Project Load(string filename, int expansionMask, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony, int measuresPerPattern)
+        public Project Load(string filename, int expansionMask, bool pal, MidiSource[] channelSources, bool velocityAsVolume, int polyphony, int measuresPerPattern, out int polyphonyCount)
         {
 #if !DEBUG
             try
@@ -1145,6 +1147,7 @@ namespace FamiStudio
 
                 idx = 0;
                 bytes = File.ReadAllBytes(filename);
+                polyphonyCount = 0;
 
                 if (!ReadHeaderChunk())
                     return null;
@@ -1161,6 +1164,7 @@ namespace FamiStudio
 
                 Cleanup();
 
+                polyphonyCount = polyphonyWarningCount;
                 return project;
             }
 #if !DEBUG
@@ -1169,6 +1173,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Error, "Please contact the developer on GitHub!");
                 Log.LogMessage(LogSeverity.Error, e.Message);
                 Log.LogMessage(LogSeverity.Error, e.StackTrace);
+                polyphonyCount = 0;
                 return null;
             }
 #endif

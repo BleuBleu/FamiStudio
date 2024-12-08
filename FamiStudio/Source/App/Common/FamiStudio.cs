@@ -131,6 +131,7 @@ namespace FamiStudio
         LocalizedString MobileOpenProjectTitle;
         LocalizedString MobileSaveProjectTitle;
         LocalizedString MobileFamiTrackerImportWarning;
+        LocalizedString MobileMidiPolyphonyWarning;
         LocalizedString WarningTitle;
         LocalizedString ProjectSaveSuccess;
         LocalizedString ProjectSaveError;
@@ -752,9 +753,9 @@ namespace FamiStudio
             }
         }
 
-        public void DisplayNotification(string msg, bool beep = true, bool forceLongDuration = false)
+        public void DisplayNotification(string msg, bool beep = true, bool forceLongDuration = false, bool forceShortDuration = false)
         {
-            Platform.ShowToast(window, msg, forceLongDuration || msg.Length > 60);
+            Platform.ShowToast(window, msg, forceShortDuration ? false : (forceLongDuration || msg.Length > 60));
 
             if (beep)
                 Platform.Beep();
@@ -1081,7 +1082,15 @@ namespace FamiStudio
                 if (mid)
                 {
                     var dlg = new MidiImportDialog(window, filename);
-                    dlg.ShowDialogAsync(window, ClearTemporaryProjectAndInvokeAction);
+                    dlg.ShowDialogAsync(window, (p, e) => 
+                    {
+                        if (Platform.IsMobile && e > 0)
+                        {
+                            Platform.DelayedMessageBoxAsync(MobileMidiPolyphonyWarning.Format(e), WarningTitle);
+                        }
+
+                        ClearTemporaryProjectAndInvokeAction(p);
+                    });
                 }
                 else if (nsf)
                 {
@@ -1559,7 +1568,7 @@ namespace FamiStudio
                 if (channel.IsExpansionChannel)
                     message += $"\n{IncompatibleExpRequiredError}";
             }
-            DisplayNotification(message, beep);
+            DisplayNotification(message, beep, false, Platform.IsMobile);
         }
 
         public void PlayInstrumentNote(int n, bool showWarning, bool allowRecording, bool custom = false, Instrument customInstrument = null, Arpeggio customArpeggio = null, float stopDelay = 0.0f)

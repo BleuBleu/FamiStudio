@@ -10,7 +10,7 @@ All releases are available in the [Releases](https://github.com/BleuBleu/FamiStu
 
 ## Compiling
 FamiStudio is composed of a few projects:
-- The main FamiStudio application is written in C#. We currently target .NET 7.0 on all platforms.
+- The main FamiStudio application is written in C#. We currently target .NET 8.0 on all platforms.
 - NesSndEmu, NotSoFatso, ShineMp3, Vorbis & GifDec are C++ DLLs and binaries are provided since they rarely change. 
 - The Setup project (Windows only)
 
