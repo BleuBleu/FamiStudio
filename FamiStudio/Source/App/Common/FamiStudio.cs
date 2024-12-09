@@ -2457,6 +2457,14 @@ namespace FamiStudio
             CheckStopInstrumentNote(deltaTime);
         }
 
+        public void TickAsyncDialog(float deltaTime)
+        {
+            lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
+            averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
+
+            ConditionalMarkControlsDirty();
+        }
+
         private void Sequencer_PatternClicked(int channelIdx, int patternIdx, bool setActive)
         {
             selectedChannelIndex = channelIdx;

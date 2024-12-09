@@ -406,7 +406,13 @@ namespace FamiStudio
                     CacheViewRect();
 
                     if (!IsAsyncDialogInProgress)
+                    {
                         famistudio.Tick(deltaTime);
+                    }
+                    else
+                    {
+                        famistudio.TickAsyncDialog(deltaTime);
+                    }
 
                     container.TickWithChildren(deltaTime);
                 }
