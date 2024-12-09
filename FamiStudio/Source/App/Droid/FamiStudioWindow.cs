@@ -16,6 +16,7 @@ using AndroidX.Core.Content;
 using AndroidX.Core.Graphics;
 using AndroidX.Core.View;
 using Javax.Microedition.Khronos.Opengles;
+using Xamarin.Essentials;
 
 namespace FamiStudio
 {
@@ -244,7 +245,7 @@ namespace FamiStudio
             Debug.Assert(currentFileActivity == null && pendingFinishFileActivity == null);
             currentFileActivity = new ShareActivity(callback);
 
-            var uri = FileProvider.GetUriForFile(this, "org.famistudio.fileprovider", new Java.IO.File(filename), filename); 
+            var uri = AndroidX.Core.Content.FileProvider.GetUriForFile(this, "org.famistudio.fileprovider", new Java.IO.File(filename), filename); 
 
             Intent shareIntent = new Intent(Intent.ActionSend);
             shareIntent.SetType("*/*");
@@ -300,6 +301,17 @@ namespace FamiStudio
                 lock (renderLock) { }; // Extra safety.
                 glThreadIsRunning = false;
             }
+        }
+
+        public void InvokeOnMainThread(System.Action action)
+        {
+            MainThread.InvokeOnMainThreadAsync(() => 
+            {
+                lock (renderLock)
+                {
+                    action();
+                }
+            });
         }
 
         // For debugging property pages.

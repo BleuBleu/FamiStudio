@@ -68,7 +68,7 @@ namespace FamiStudio
 
         public static void InvokeOnMainThread(System.Action action)
         {
-            MainThread.InvokeOnMainThreadAsync(action);
+            FamiStudioWindow.Instance.InvokeOnMainThread(action);
         }
 
         public static string UserProjectsDirectory => Path.Combine(Application.Context.FilesDir.AbsolutePath, "Projects");
