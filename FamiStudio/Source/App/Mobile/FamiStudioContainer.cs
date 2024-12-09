@@ -330,6 +330,8 @@ namespace FamiStudio
             var dlg = new ContextMenuDialog(window, options);
             dlg.ShowDialogAsync();
 
+            toast.Dismiss(); // Toast draws on top, remove.
+
             Platform.VibrateClick();
         }
 
