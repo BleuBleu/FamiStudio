@@ -8021,7 +8021,6 @@ namespace FamiStudio
                 dlg.Properties.AddDropDownList(SelectSampleToAssignLabel.Colon, sampleNames.ToArray(), sampleNames[0], null, PropertyFlags.ForceFullWidth); // 0
                 dlg.Properties.AddDropDownList(PitchLabel.Colon, pitchStrings, pitchStrings[pitchStrings.Length - 1]); // 1
                 dlg.Properties.AddCheckBox(LoopLabel.Colon, false); // 2
-                dlg.Properties.SetPropertyVisible(0, Platform.IsDesktop);
                 dlg.Properties.Build();
 
                 dlg.ShowDialogAsync((r) =>
