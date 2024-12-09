@@ -1157,14 +1157,14 @@ namespace FamiStudio
                 Platform.StartMobileSaveFileOperationAsync($"{songName}.mid", (f) =>
                 {
                     ExportMidiAction(f);
-                    Platform.FinishMobileSaveFileOperationAsync(true, () => ShowExportResultToast(FormatAudioMessage, true));
+                    Platform.FinishMobileSaveFileOperationAsync(true, () => ShowExportResultToast(FormatMidiMessage, true));
                 });
             }
             else
             {
                 var filename = lastExportFilename != null ? lastExportFilename  : Platform.ShowSaveFileDialog("Export MIDI File", "MIDI Files (*.mid)|*.mid", ref Settings.LastExportFolder);
                 ExportMidiAction(filename);
-                ShowExportResultToast(FormatAudioMessage);
+                ShowExportResultToast(FormatMidiMessage);
             }
         }
 
