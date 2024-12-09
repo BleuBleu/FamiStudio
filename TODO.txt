@@ -1,9 +1,6 @@
 4.3.0 Beta Bbugs
 ===============
-- Piano release thing 
-	https://discord.com/channels/747649221879922840/1315173481234567178/1315181743908589611
-- Mobile switches channel icons
-	https://discord.com/channels/747649221879922840/1315173481234567178/1315182827549229126
+- Turn off follow mode on pan?
 - Create "Beta tester of the year" role
 
 4.3.0

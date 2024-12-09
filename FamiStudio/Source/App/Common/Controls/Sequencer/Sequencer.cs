@@ -1693,6 +1693,10 @@ namespace FamiStudio
                         ClearHighlightedPatern();
                     else
                         SetHighlightedPattern(location);
+
+                    // Tapping inside the selection toggles highlight, but doesnt clear selection.
+                    if (IsPatternSelected(location))
+                        return true;
                 }
 
                 // CreateNewPattern clears the selection. Ugh, call after.
