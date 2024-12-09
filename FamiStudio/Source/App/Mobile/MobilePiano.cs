@@ -62,6 +62,7 @@ namespace FamiStudio
         public MobilePiano()
         {
             SetTickEnabled(true);
+            supportsLongPress = true; // Only to prevent longpress as right-click.
         }
 
         protected override void OnAddedToContainer()
