@@ -1988,7 +1988,7 @@ namespace FamiStudio
                 }
                 else if (Platform.IsDesktop && !inside)
                 {
-                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(ControlToScreen(p), out var instrument);
+                    var mappingNote = App.GetDPCMSampleMappingNoteAtPos(screenPos, out var instrument);
                     if (instrument != null)
                     {
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Instrument, instrument.Id, -1, TransactionFlags.StopAudio);
