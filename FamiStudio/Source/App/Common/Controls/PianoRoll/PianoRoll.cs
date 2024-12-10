@@ -9892,9 +9892,22 @@ namespace FamiStudio
             buffer.Serialize(ref editSample);
             buffer.Serialize(ref envelopeValueZoom);
             buffer.Serialize(ref envelopeValueOffset);
-            buffer.Serialize(ref scrollX);
-            buffer.Serialize(ref scrollY);
-            buffer.Serialize(ref zoom);
+
+            if (Settings.RestoreViewOnUndoRedo || buffer.IsWriting)
+            {
+                buffer.Serialize(ref scrollX);
+                buffer.Serialize(ref scrollY);
+                buffer.Serialize(ref zoom);
+            }
+            else
+            {
+                var dummyScroll = 0;
+                var dummyZoom = 0.0f;
+                buffer.Serialize(ref dummyScroll);
+                buffer.Serialize(ref dummyScroll);
+                buffer.Serialize(ref dummyZoom);
+            }
+
             buffer.Serialize(ref selectedEffectIdx);
             buffer.Serialize(ref showEffectsPanel);
             buffer.Serialize(ref maximized);

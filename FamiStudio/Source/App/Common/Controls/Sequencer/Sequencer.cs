@@ -3336,8 +3336,19 @@ namespace FamiStudio
 
         public void Serialize(ProjectBuffer buffer)
         {
-            buffer.Serialize(ref scrollX);
-            buffer.Serialize(ref zoom);
+            if (Settings.RestoreViewOnUndoRedo || buffer.IsWriting)
+            {
+                buffer.Serialize(ref scrollX);
+                buffer.Serialize(ref zoom);
+            }
+            else
+            {
+                var dummyScroll = 0;
+                var dummyZoom = 0.0f;
+                buffer.Serialize(ref dummyScroll);
+                buffer.Serialize(ref dummyZoom);
+            }
+
             buffer.Serialize(ref selectionMin.ChannelIndex);
             buffer.Serialize(ref selectionMax.ChannelIndex);
             buffer.Serialize(ref selectionMin.PatternIndex);
