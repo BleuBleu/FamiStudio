@@ -1,7 +1,7 @@
 4.3.0 Beta Bbugs
 ===============
 - Turn off follow mode on pan?
-- Create "Beta tester of the year" role
+- Add option to not move camera on undo/redo.
 
 4.3.0
 =====
