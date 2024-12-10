@@ -471,17 +471,18 @@ namespace FamiStudio
                 return;
 
             var project = App.Project;
-            var buttons = new Button[project.Arpeggios.Count + 1];
+            var buttons = new Button[project.Arpeggios.Count + (App.IsEditingArpeggio ? 0 : 1)];
             var arpeggios = project.Arpeggios;
             var icon = EnvelopeType.Icons[EnvelopeType.Arpeggio];
             var selIdx = -1;
+            var idx = 0;
 
             if (!App.IsEditingArpeggio)
             {
                 var btn = CreateListButton(icon, null, NoneLabel);
                 btn.Click += Arpeggio_Click;
                 btn.Font = App.SelectedArpeggio == null ? fonts.FontMediumBold : fonts.FontMedium;
-                buttons[0] = btn;
+                buttons[idx++] = btn;
             }
 
             for (int i = 0; i < arpeggios.Count; i++)
@@ -493,11 +494,11 @@ namespace FamiStudio
                 btn.Click += Arpeggio_Click;
                 btn.RightClick += Arpeggio_RightClick;
                 btn.ForegroundColor = arp.Color;
-                buttons[i + 1] = btn;
+                buttons[idx++] = btn;
                 
                 if (selected)
                 {
-                    selIdx = i + 1;
+                    selIdx = idx;
                 }
             }
 

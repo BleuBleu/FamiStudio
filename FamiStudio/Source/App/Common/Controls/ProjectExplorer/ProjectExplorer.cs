@@ -1024,8 +1024,14 @@ namespace FamiStudio
         {
             noneArpPanel = CreateGradientPanel(Theme.LightGreyColor1);
             noneArpPanel.ToolTip = $"<MouseLeft> {SelectArpeggioTooltip}";
-            noneArpPanel.PointerUp += (s, e) => Arpeggio_PointerUp(e, null);
-            noneArpPanel.ContainerPointerUpNotify += (s, e) => Arpeggio_PointerUp(e, null);
+            if (Platform.IsDesktop)
+            {
+                noneArpPanel.ContainerPointerDownNotify += NoneArpeggio_PointerDown;
+            }
+            else
+            {
+                noneArpPanel.ContainerTouchClickNotify += NoneArpeggio_PointerDown;
+            }
 
             var icon = CreateImageBox(noneArpPanel, marginX + expandSizeX, EnvelopeType.Icons[EnvelopeType.Arpeggio], true);
             var label = CreateLabel(noneArpPanel, ArpeggioNoneLabel, true, icon.Right + marginX, 0, noneArpPanel.Width - icon.Right - marginX);
@@ -1063,6 +1069,23 @@ namespace FamiStudio
             var label = CreateLabel(panel, arp.Name, true, icon.Right + marginX, 0, edit.Left - icon.Right - marginX * 2);
             label.Font = App.SelectedArpeggio == arp ? fonts.FontMediumBold : fonts.FontMedium;
         }
+        
+        private void NoneArpeggio_PointerDown(Control sender, PointerEventArgs e)
+        {
+            if (!e.Handled && e.Left)
+            {
+                App.SelectedArpeggio = null;
+                MarkDirty();
+            }
+        }
+
+        //private void NoneArpeggio_TouchClick(Control sender, PointerEventArgs e)
+        //{
+        //    if (!e.Handled)
+        //    {
+        //        App.SelectedArpeggio = null;
+        //    }
+        //}
 
         private void Arpeggio_PointerDown(Control sender, PointerEventArgs e, Arpeggio arp, bool values = false, TextureAtlasRef image = null)
         {
