@@ -58,6 +58,7 @@ In other words:
 Do not blindly translate without testing. In some cases, the UI doesnt adjust to the size of labels, so you will need to be sure they are not truncated. 
 Be especially mindful of mobile, where space is limited. 
 
-## Hotfix/updates will remove strings
-- What's the workflow here?
+## Hotfix/Updates
+When I add new string or rephrase existing ones, I will usually keep all other translations aligned and add a `#TODO!` comment next to the strings that requires your attention. Simply scan the file for these comments, translate, and remove the `#TODO!` when done. 
+
 
