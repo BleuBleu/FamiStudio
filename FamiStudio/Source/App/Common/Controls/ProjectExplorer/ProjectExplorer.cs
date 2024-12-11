@@ -1075,17 +1075,13 @@ namespace FamiStudio
             if (!e.Handled && e.Left)
             {
                 App.SelectedArpeggio = null;
+                draggedArpeggio = null;
+                envelopeDragIdx = -1;
+                StartCaptureOperation(sender, e.Position, DragArpeggio);
                 MarkDirty();
+                e.MarkHandled();
             }
         }
-
-        //private void NoneArpeggio_TouchClick(Control sender, PointerEventArgs e)
-        //{
-        //    if (!e.Handled)
-        //    {
-        //        App.SelectedArpeggio = null;
-        //    }
-        //}
 
         private void Arpeggio_PointerDown(Control sender, PointerEventArgs e, Arpeggio arp, bool values = false, TextureAtlasRef image = null)
         {
@@ -1776,6 +1772,7 @@ namespace FamiStudio
                 else
                 {
                     var lineColor = Theme.LightGreyColor2;
+                    var drawLine = true;
 
                     if (captureOperation == DragSong)
                     {
@@ -1789,16 +1786,26 @@ namespace FamiStudio
                     {
                         lineColor = draggedSample.Color;
                     }
-                    else if (captureOperation == DragArpeggio && draggedArpeggio != null)
+                    else if (captureOperation == DragArpeggio)
                     {
-                        lineColor = draggedArpeggio.Color;
+                        if (draggedArpeggio != null)
+                        {
+                            lineColor = draggedArpeggio.Color;
+                        }
+                        else
+                        {
+                            drawLine = false;
+                        }
                     }
 
-                    GetDragInsertLocation(mainContainerPos, out var draggedInFolder, out var insertY);
-                    insertY -= mainContainer.ScrollY;
+                    if (drawLine)
+                    {
+                        GetDragInsertLocation(mainContainerPos, out var draggedInFolder, out var insertY);
+                        insertY -= mainContainer.ScrollY;
 
-                    var margin = draggedInFolder != null ? expandSizeX : 0;
-                    c.DrawLine(margin, insertY, mainContainer.Width - margin, insertY, lineColor, dragLineSizeY);
+                        var margin = draggedInFolder != null ? expandSizeX : 0;
+                        c.DrawLine(margin, insertY, mainContainer.Width - margin, insertY, lineColor, dragLineSizeY);
+                    }
                 }
             }
         }
