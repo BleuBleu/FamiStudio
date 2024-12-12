@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Channels;
 
 namespace FamiStudio
@@ -1240,7 +1241,34 @@ namespace FamiStudio
 
                         if (noteEndLocation >= EndLocation)
                         {
-                            lastNotes[c] = it.Note.Clone();
+                            var noteWillStop = true;
+                            var releasesBeforeEndOfSong = it.Note.Release > 0 ? it.Location.Advance(this, it.Note.Release) < EndLocation : false;
+                            var instrument = it.Note.Instrument;
+
+                            // See if the note will naturally stop because of the volume envelope.
+                            if (instrument == null || instrument.VolumeEnvelope.Length == 0)
+                            {
+                                noteWillStop = false;
+                            }
+                            else
+                            {
+                                var env = instrument.VolumeEnvelope;
+
+                                if (env.Loop >= 0 && (env.Release < 0 || !releasesBeforeEndOfSong || env.Values[env.Length - 1] != 0))
+                                {
+                                    noteWillStop = false;
+                                }
+                                else if (env.Loop < 0 && env.Values[env.Length - 1] != 0)
+                                {
+                                    noteWillStop = false;
+                                }
+                            }
+
+                            if (!noteWillStop)
+                            {
+                                lastNotes[c] = it.Note.Clone();
+                            }
+
                             break;
                         }
                     }
