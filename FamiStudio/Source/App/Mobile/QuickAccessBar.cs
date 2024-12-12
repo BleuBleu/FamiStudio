@@ -681,7 +681,7 @@ namespace FamiStudio
             var noneButton = CreateListButton("MobileEffectNone", -1, NoneLabel); ;
             noneButton.Click += DPCMEffect_Click;
             var volButton  = CreateListButton("Mobile" + EffectType.Icons[Note.EffectVolume], Note.EffectVolume, VolumeEnvelopeLabel);
-            noneButton.Click += DPCMEffect_Click;
+            volButton.Click += DPCMEffect_Click;
 
             var buttons = new Button[2] { noneButton, volButton };
             buttons[App.EffectPanelExpanded ? 1 : 0].Font = fonts.FontMediumBold;
