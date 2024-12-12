@@ -390,7 +390,7 @@ namespace FamiStudio
                     page.AddGrid(ChannelsLabel, new[] { 
                         new ColumnDesc("", 0.0f, ColumnType.CheckBox), 
                         new ColumnDesc(ChannelColumn, 0.4f), 
-                        new ColumnDesc(PanColumn, 0.6f, 0, 100, (o) => FormattableString.Invariant($"{o} %")) 
+                        new ColumnDesc(PanColumn, 0.6f, 0, 100, (o) => FormattableString.Invariant($"{(int)o} %")) 
                     }, GetDefaultChannelsGridData(false, false, app.SelectedSong, out _), 7, ChannelGridTooltip); // 11
                     page.SetPropertyEnabled( 3, false);
                     page.SetPropertyEnabled( 6, false);
@@ -427,7 +427,7 @@ namespace FamiStudio
                         page.AddGrid(ChannelsLabel, new[] {
                             new ColumnDesc("", 0.0f, ColumnType.CheckBox),
                             new ColumnDesc(ChannelColumn, 0.3f),
-                            new ColumnDesc(PanColumn, 0.2f, 0, 100, (o) => FormattableString.Invariant($"{o} %")),
+                            new ColumnDesc(PanColumn, 0.2f, 0, 100, (o) => FormattableString.Invariant($"{(int)o} %")),
                             new ColumnDesc(TransposeColumn, 0.2f, -8, 8),
                             new ColumnDesc(TriggerColumn, 0.2f, new string[] { EmulationOption, PeakSpeedOption })
                         }, channelsGridData, project.GetActiveChannelCount() + 1, ChannelGridTooltipVid); // 18
