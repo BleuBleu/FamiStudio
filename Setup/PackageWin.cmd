@@ -16,14 +16,14 @@ msbuild ..\FamiStudio\FamiStudio.csproj /t:Rebuild /p:Configuration=Release /p:P
 
 :: This is needed to build setup project, well know visual studio issue.
 cd "C:\Program Files\Microsoft Visual Studio\2022\%VSVERSION%\Common7\IDE\CommonExtensions\Microsoft\VSI\DisableOutOfProcBuild\"
-@call DisableOutOfProcBuild.exe
+@call C:DisableOutOfProcBuild.exe
 
 :: Build setup.
 cd "%~dp0"
 devenv ..\FamiStudio.sln /Project Setup /rebuild Release
 
 cd "C:\Program Files\Microsoft Visual Studio\2022\%VSVERSION%\Common7\IDE\CommonExtensions\Microsoft\VSI\DisableOutOfProcBuild\"
-@call DisableOutOfProcBuild.exe undo
+@call C:DisableOutOfProcBuild.exe undo
 
 :: Zip and create 3 versions (zipped installer, installer, portable exe)
 cd "%~dp0"
