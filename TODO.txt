@@ -1,6 +1,8 @@
 4.3.0 Beta Bbugs
 ===============
 - Turn off follow mode on pan?
+- Piano roll long notes issues.
+- Update desktop Beta before weekend + get more testers.
 
 4.3.0
 =====
