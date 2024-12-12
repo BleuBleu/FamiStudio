@@ -15,6 +15,7 @@ namespace FamiStudio
         public DropDownOptionsDialog(FamiStudioWindow win, string title, string[] items, int idx) : base(win, title, false)
         {
             selectedIndex = idx;
+            AcceptButtonVisible = false;
 
             var buttonHeight = DpiScaling.ScaleForWindow((int)Utils.Lerp(20, 14, Utils.Saturate((items.Length - 4) / 20.0f)));
             var virtualSizeY = buttonHeight * items.Length;
