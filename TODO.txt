@@ -27,7 +27,7 @@
 - PAL expansion audio support (Thanks Steo!)
 - Minor adjustment to NES APU volumes (Thanks Steo!)
 - SDAS/GBDK support (Thanks Michel Iwaniec!)
-- Russian translation (Thanks Alex and Furmilion!)
+- Russian translation (Thanks Alex, Mkliukang1 and Furmilion!)
 - Korean translation (Thanks Nyaongi and Ospaggi!)
 - Upgrade all platforms to .NET 8.0
 - Behavior/Breaking changes:
