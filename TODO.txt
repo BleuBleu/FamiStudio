@@ -1,8 +1,8 @@
 4.3.0 Beta Bbugs
 ===============
+- Volgona slide note N163
 - Turn off follow mode on pan?
-- Piano roll long notes issues.
-- Update desktop Beta before weekend + get more testers.
+/ Piano roll long notes issues.
 
 4.3.0
 =====
