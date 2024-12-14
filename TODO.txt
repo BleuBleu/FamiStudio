@@ -1,44 +1,15 @@
 4.3.0 Beta Bbugs
 ===============
-- Doc update:
-	- N163
-	- Copy paste
-	- Tuning
-	- Export to HTML + add teaser banner code.
 - Volgona slide note N163
 - Turn off follow mode on pan?
 / Piano roll long notes issues.
 
 4.3.0
 =====
+- Export doc to HTML + add teaser banner code.
 - Look at that ffmpeg change PR #342
 - Merge new flatpak ffmpeg PR. 
 	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
-
-4.3.0
-=====
-- Support for custom tuning per project (ex: where A is not 440Hz)
-- N163 wave auto position assignment
-- Improve conflict resolution when copy-pasting between songs/projects
-- New in-app font (Noto Sans) : More readable at low resolution and supports international characters
-- Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
-- Making more features available on mobile:
-	- Shy mode
-	- MIDI import
-	- MIDI export
-	- Ability to import songs from storage
-	- Ability to import instruments from storage
-	- Ability to import DPCM samples from other FMS projects on device storage
-- PAL expansion audio support (Thanks Steo!)
-- Minor adjustment to NES APU volumes (Thanks Steo!)
-- SDAS/GBDK support (Thanks Michel Iwaniec!)
-- Russian translation (Thanks Alex, Mkliukang1 and Furmilion!)
-- Korean translation (Thanks Nyaongi and Ospaggi!)
-- Upgrade all platforms to .NET 8.0
-- Behavior/Breaking changes:
-	- Default bass cutoff and filter frequencies where changed to better match the hardware
-	- NES APU volumes have been adjusted slightly to better match the hardware
-	- Most "Select All" / "Select None" buttons have been replace by context menus (right-click on desktop, long press on mobile).
 
 Linux notes 
 =========== 

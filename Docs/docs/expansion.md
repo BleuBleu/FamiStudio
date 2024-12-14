@@ -111,6 +111,12 @@ When changing the values of the sliders with huge values (such as the Mod Speed)
 
 N163 instrument can have custom user-drawn waveforms. The size of the waveform is configurable, but limited by the amount of N163 RAM available, which decreases as more N163 channels are added. Waveforms can also be resampled from a WAV file, see the [resampling section](#resampling-wav-files-for-n163-and-fds) for more details.
 
+Since the amount of RAM is limited, and there can be up to 8 channels playing at the same time, it is the user's responsability to make sure waves do not overlap. For example, if 2 N163 channels are playing 2 different instruments at the same time, a sine wave and a triangle wave, they will have to occupy different RAM locations. Both cannot be a RAM position 0, for example. If using a wave size of 32, we could place one at offset 0, and the second at offset 32. 
+
+The register viewer can be used to dianose wave overlap issues. Look for error message in the RAM diagram if you think there are issues.
+
+![](images/N163Overlap.png#center)
+
 FamiStudio also supports cycling through multiple waveform in time. All the waveforms are presented visually as a single massive waveform, and each individual waveform can be repeated for a number of frames by setting the value of the "Repeat" effect in the effect panel. Moreover, both Loop and Release points can be configured. The current maximum number of wave data is currently 1024 bytes per instrument. So a wave size of 32 will be limited to 32 individual waves, where as a wave size of 16 will be able to have twice that amount.
 
 In the example below, 4 waveforms are setup and the number of repeats for each increases over time.
@@ -129,6 +135,7 @@ The parameters are:
 
 * **Wave Preset** : A few preset that you can use to set the waveform envelope.
 * **Wave Size** : The N163 chip had only 128 of RAM to store all the waveforms used at any given time. For example, if you use waveforms of size 32, you can only use 4 unique instrument at any given time. Using more will result in channels using wrong instruments.
+* **Wave Auto-Position** : Let FamiStudio automatically position the waves to try to avoid overlap. When this is active, every time you press Play, FamiStudio will scan all songs and all notes and try to assign a position to all the N163 instruments that have this option enabled. Note that this can fail if using too many large waves. When the auto-assignment algorithm fails, you will get no error message and will need to use the register viewer to diagnose issues, as mentioned above. 
 * **Wave Position** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms don't overlap.
 * **Wave Count** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms don't overlap.
 * **Resample Period**, **Offset** and **Normalize** : See the [resampling section](#resampling-wav-files-for-n163-and-fds)

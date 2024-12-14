@@ -10,6 +10,8 @@ Clicking on the little gear icon or selecting the "Project Properties..." option
 
 ![](images/EditProject.png#center)
 
+It is also possible to set the tuning to something other than A = 440Hz.
+
 ## Tempo modes
 
 FamiStudio supports two tempo modes : **FamiStudio** and **FamiTracker**. 

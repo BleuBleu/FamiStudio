@@ -245,11 +245,13 @@ Much like the sequencer, selected notes can be copy (or cut) by pressing **Ctrl+
 
 ### Copying & pasting notes between projects 
 
-It is possible to copy notes from one project to another. When doing so, FamiStudio will first look to make sure the instruments used by these notes exist in the other project. It will look for instruments having _the same name_. If some instruments are not found in the second project, it will offer you to create them for you, thus bringing the instrument from one project to another.
+It is possible to copy notes from one song to another, or one project to another. When doing so, FamiStudio will first look for possible conflicts such as items (instruments, arpeggios, samples or patterns) with the same names, or missing items. If conflicts are detected, you will have to choose how to resolve those.
 
-For example, if you copy a note from project 1 using an instrument called "Piano", FamiStudio will look for an instrument named "Piano" in the second. If it finds one, it will assume it is the same (even though it might not be). If no "Piano" instrument is found, it will offer you to create it for you.
+More specifically, FamiStudio will be able to identify if the pasted data contains data that is not present in the current project. For example, if you are pasting notes refering to a "Piano" instrument, but no such instrument exist in the project, you will have the option to bring it over in your project. 
 
-This can be used as a way of transferring instruments from one project to another. Place a few notes using all the instruments you can to transfer. Copy them and paste them in the second project.
+Also, FamiStudio may detect that some of the items in the pasted data have the same name as existing items, but appear to be different. For example, if you pasting data containing a "Pattern 1", but the current song also has a "Pattern 1", but it does not contain the same exact notes. For each of those, you will be given the option to assume it is the same, or to rename the incoming data and preserve both ("Pattern 1" would be renamed to "Pattern 2" for example, or any number that is not in used).
+
+![](images/CopyPasteConflicts.png#center)
 
 ## Special paste
 
