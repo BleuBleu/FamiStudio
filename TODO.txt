@@ -1,5 +1,10 @@
 4.3.0 Beta Bbugs
 ===============
+- Doc update:
+	- N163
+	- Copy paste
+	- Tuning
+	- Export to HTML + add teaser banner code.
 - Volgona slide note N163
 - Turn off follow mode on pan?
 / Piano roll long notes issues.
