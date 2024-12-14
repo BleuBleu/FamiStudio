@@ -4,6 +4,37 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.3.0
+
+[![](releases/430/Thumbnail430.png#center)](releases/430.md)
+
+Changes/Fixes:
+
+* Support for custom tuning per project (ex: where A is not 440Hz)
+* N163 wave auto position assignment
+* Improve conflict resolution when copy-pasting between songs/projects
+* New in-app font (Noto Sans) : More readable at low resolution and supports international characters
+* Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
+* Making more features available on mobile:
+	* Shy mode
+	* MIDI import
+	* MIDI export
+	* Ability to import songs from storage
+	* Ability to import instruments from storage
+	* Ability to import DPCM samples from other FMS projects on device storage
+* PAL expansion audio support (Thanks Steo!)
+* Minor adjustment to NES APU volumes (Thanks Steo!)
+* SDAS/GBDK support (Thanks Michel Iwaniec!)
+* Russian translation (Thanks Alex, Mkliukang1 and Furmilion!)
+* Korean translation (Thanks Nyaongi and Ospaggi!)
+* Upgrade all platforms to .NET 8.0
+
+Breaking/Behavior changes:
+
+* Default bass cutoff and filter frequencies where changed to better match the hardware
+* NES APU volumes have been adjusted slightly to better match the hardware
+* Most "Select All" / "Select None" buttons have been replace by context menus (right-click on desktop, long press on mobile).
+
 ## Version 4.2.1 (Hotfix)
 
 Changes/Fixes:

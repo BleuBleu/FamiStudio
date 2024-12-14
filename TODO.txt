@@ -14,7 +14,7 @@
 =====
 - Support for custom tuning per project (ex: where A is not 440Hz)
 - N163 wave auto position assignment
-- Improve conflict resolution when pasting between songs/projects
+- Improve conflict resolution when copy-pasting between songs/projects
 - New in-app font (Noto Sans) : More readable at low resolution and supports international characters
 - Unifying UI code between desktop/mobile, mobile dialogs will now look and feel more like the desktop version
 - Making more features available on mobile:
@@ -130,7 +130,11 @@ MkDocs
 - pip install mkdocs 
 - pip install mkdocs-bootswatch 
 - pip install mkdocs-meta-descriptions-plugin
-- Modify "%localappdata%\Programs\Python\Python311\Lib\site-packages\mkdocs\themes\mkdocs\base.html"
+- Modify "%localappdata%\Programs\Python\Python313\Lib\site-packages\mkdocs\themes\mkdocs\base.html"
+	
+	- Remove:
+		{% if page and page.is_homepage %}<meta name="description" content="{{ config.site_description }}">{% endif %}
+	- Replace by:
 		{% if page.meta and page.meta.description %}
 		<meta name="description" content="{{ page.meta.description }}">
 		{% elif config.site_description %}
