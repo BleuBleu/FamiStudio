@@ -726,7 +726,7 @@ namespace FamiStudio
             var repeatButton = CreateListButton("MobileEffectRepeat", 0, RepeatEnvelopeLabel);
             repeatButton.Click += WaveformEffect_Click;
 
-            var buttons = new Button[2];
+            var buttons = new Button[2] { noneButton, repeatButton };
             buttons[App.EffectPanelExpanded ? 1 : 0].Font = fonts.FontMediumBold;
 
             StartExpandingList(buttonWaveformEffect, buttons);
