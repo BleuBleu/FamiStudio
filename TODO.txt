@@ -123,6 +123,8 @@ Discord
 
 Backlog: 
 =========
+- Multiple slide notes edition when selection.
+	https://discord.com/channels/@me/819772561940152321/983179855589949470
 - "Open With..." on Android https://stackoverflow.com/questions/18577860/creating-app-which-opens-a-custom-file-extension
 - Review all "UpdateRenderCoords", a lot of this can be done at initialization now.
 - Raw FDS modulation table envelope. 
