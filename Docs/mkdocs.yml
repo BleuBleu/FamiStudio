@@ -24,7 +24,9 @@ nav:
   - "FamiStudio 4.3.0 Highlights": releases/430.md
 extra_css:
     - css/extra.css    
-theme: slate
+theme: 
+  name: slate
+  color_mode: dark
 plugins:
   - search
   - meta-descriptions
