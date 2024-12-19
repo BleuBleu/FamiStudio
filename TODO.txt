@@ -1,15 +1,6 @@
-4.3.0 Beta Bbugs
+4.3.0 Beta Bugs
 ===============
 - Volgona slide note N163
-- Turn off follow mode on pan?
-/ Piano roll long notes issues.
-
-4.3.0
-=====
-- Export doc to HTML + add teaser banner code.
-- Look at that ffmpeg change PR #342
-- Merge new flatpak ffmpeg PR. 
-	https://discord.com/channels/747649221879922840/798008185977176074/1274967608688508959
 
 Linux notes 
 =========== 
