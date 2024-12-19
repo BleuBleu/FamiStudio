@@ -269,7 +269,7 @@ namespace FamiStudio
 
         protected override void OnPointerEnter(EventArgs e)
         {
-            SetAndMarkDirty(ref hover, true);
+            SetAndMarkDirty(ref hover, Platform.IsDesktop);
         }
 
         protected override void OnPointerLeave(EventArgs e)

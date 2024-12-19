@@ -336,6 +336,8 @@ namespace FamiStudio
 
         public void StartEditDPCMMapping(Instrument instrument)
         {
+            if (Platform.IsMobile)
+                SelectedInstrument = instrument;
             PianoRoll.StartEditDPCMMapping(instrument);
             ConditionalSwitchToPianoRoll();
         }

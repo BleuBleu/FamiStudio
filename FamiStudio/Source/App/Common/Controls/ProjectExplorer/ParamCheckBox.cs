@@ -47,7 +47,7 @@ namespace FamiStudio
 
         protected override void OnPointerMove(PointerEventArgs e)
         {
-            SetAndMarkDirty(ref hover, true);
+            SetAndMarkDirty(ref hover, Platform.IsDesktop);
         }
 
         protected override void OnPointerLeave(System.EventArgs e)
