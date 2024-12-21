@@ -2,6 +2,8 @@
 =====
 - Steo MMC5 volume PR
 - Follow up on flathub video issues
+- Type negative effect value : https://discord.com/channels/747649221879922840/1254494599255425188
+- Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
 - 
 
 Linux notes 
