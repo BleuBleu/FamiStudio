@@ -10,6 +10,8 @@
 	https://discord.com/channels/747649221879922840/1092593281688424569/1320411428246781963
 - Tempo doesnt match DAWS (50/60 + rounding).
 	https://discord.com/channels/747649221879922840/747649222354010173/1320574976490999920
+- Android unified piano roll filtering. T7F4 #bug-report.
+	https://discord.com/channels/747649221879922840/1320696943521038467/1320696943521038467
 
 Linux notes 
 =========== 
