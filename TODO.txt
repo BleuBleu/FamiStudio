@@ -6,6 +6,10 @@
 - Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
 - Arp issue alex : https://discord.com/channels/747649221879922840/1319347249884430368/1319347249884430368
 - Missing vibrate on click proj explorer buttons?
+- Korean typos: 
+	https://discord.com/channels/747649221879922840/1092593281688424569/1320411428246781963
+- Tempo doesnt match DAWS (50/60 + rounding).
+	https://discord.com/channels/747649221879922840/747649222354010173/1320574976490999920
 
 Linux notes 
 =========== 
