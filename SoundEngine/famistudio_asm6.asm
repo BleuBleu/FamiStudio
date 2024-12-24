@@ -1757,9 +1757,13 @@ famistudio_music_pause:
     beq @unpause
     
 @pause:
-
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+    lda famistudio_dpcm_effect
+    bne @no_stop_samples ; pausing music should not stop sampled sfx
+.endif
     jsr famistudio_sample_stop
-    
+
+@no_stop_samples:
     lda #0
     sta famistudio_env_value+FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
     sta famistudio_env_value+FAMISTUDIO_CH1_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
