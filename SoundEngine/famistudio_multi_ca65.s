@@ -246,6 +246,17 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 ; Must be enabled if your project uses the "Phase Reset" effect.
 ; FAMISTUDIO_USE_PHASE_RESET = 1
 
+; Allows sound effects on the 2A03 pulse channels to use hardware sweeps.
+; Only makes sense if sound effects are enabled (FAMISTUDIO_CFG_SFX_SUPPORT),
+; and is primarily geared towards a single sfx stream (FAMISTUDIO_CFG_SFX_STREAMS).
+; Will disable smooth vibrato on those channels (FAMISTUDIO_CFG_SMOOTH_VIBRATO) to avoid sweep conflicts, 
+; although this may change in the future.
+; Also enables sound effect precedence (FAMISTUDIO_ALWAYS_PLAY_SFX) for similar reasons.
+; FAMISTUDIO_USE_HARDWARE_SWEEP  = 1
+
+; Prevents sound effects from being interrupted by music.
+; FAMISTUDIO_ALWAYS_PLAY_SFX   = 1
+
 ; Must be enabled if your project uses the FDS expansion and at least one instrument with FDS Auto-Mod enabled.
 ; FAMISTUDIO_USE_FDS_AUTOMOD  = 1
 
@@ -363,6 +374,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
     FAMISTUDIO_CFG_SFX_STREAMS = 1
 .endif
 
+.ifndef FAMISTUDIO_ALWAYS_PLAY_SFX
+    FAMISTUDIO_ALWAYS_PLAY_SFX = 0
+.endif
+
 .ifndef FAMISTUDIO_CFG_C_BINDINGS
     FAMISTUDIO_CFG_C_BINDINGS = 0
 .endif
@@ -425,6 +440,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 .ifndef FAMISTUDIO_USE_PHASE_RESET
     FAMISTUDIO_USE_PHASE_RESET = 0
+.endif
+
+.ifndef FAMISTUDIO_USE_HARDWARE_SWEEP
+    FAMISTUDIO_USE_HARDWARE_SWEEP = 0
 .endif
 
 .ifndef FAMISTUDIO_USE_FDS_AUTOMOD
@@ -791,7 +810,11 @@ FAMISTUDIO_EPSM_PITCH_SHIFT = 3
 .endif
 
 .if FAMISTUDIO_CFG_SFX_SUPPORT
-    FAMISTUDIO_SFX_STRUCT_SIZE = 15
+    .if FAMISTUDIO_USE_HARDWARE_SWEEP
+        FAMISTUDIO_SFX_STRUCT_SIZE = 17
+    .else
+        FAMISTUDIO_SFX_STRUCT_SIZE = 15
+    .endif
 
     FAMISTUDIO_SFX_CH0 = FAMISTUDIO_SFX_STRUCT_SIZE * 0
     FAMISTUDIO_SFX_CH1 = FAMISTUDIO_SFX_STRUCT_SIZE * 1
@@ -963,6 +986,10 @@ famistudio_dpcm_list_hi:          .res 1 ; TODO: Not needed if DPCM support is d
 famistudio_dpcm_effect:           .res 1 ; TODO: Not needed if DPCM support is disabled.
 famistudio_pulse1_prev:           .res 1
 famistudio_pulse2_prev:           .res 1
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+famistudio_sweep1_prev:           .res 1
+famistudio_sweep2_prev:           .res 1
+.endif
 famistudio_song_speed:            .res 1
 
 .if FAMISTUDIO_EXP_MMC5
@@ -997,7 +1024,11 @@ famistudio_exp_instrument_hi:     .res 1
 
 .if FAMISTUDIO_CFG_SFX_SUPPORT
 
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+famistudio_output_buf:     .res 13
+.else
 famistudio_output_buf:     .res 11
+.endif
 famistudio_sfx_addr_lo:    .res 1
 famistudio_sfx_addr_hi:    .res 1
 famistudio_sfx_base_addr:  .res (FAMISTUDIO_CFG_SFX_STREAMS * FAMISTUDIO_SFX_STRUCT_SIZE)
@@ -1276,6 +1307,10 @@ FAMISTUDIO_FDS_ENV_SPEED  = $408A
     FAMISTUDIO_ALIAS_TRI_HI     = famistudio_output_buf + 8
     FAMISTUDIO_ALIAS_NOISE_VOL  = famistudio_output_buf + 9
     FAMISTUDIO_ALIAS_NOISE_LO   = famistudio_output_buf + 10
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+    FAMISTUDIO_ALIAS_PL1_SWEEP  = famistudio_output_buf + 11
+    FAMISTUDIO_ALIAS_PL2_SWEEP  = famistudio_output_buf + 12
+.endif
 .endif
 
 ; [MULTI] BEGIN : Special initialization function for multi-expansion engine.
@@ -1349,6 +1384,14 @@ famistudio_init:
     lda #$80 ; Previous pulse period MSB, to not write it when not changed
     sta famistudio_pulse1_prev
     sta famistudio_pulse2_prev
+
+    .if FAMISTUDIO_USE_HARDWARE_SWEEP
+        lda #$80 ; Previous hardware sweep values, to keep track of state transitions
+        sta famistudio_sweep1_prev
+        sta famistudio_sweep2_prev
+    .endif
+
+
 
     lda #$0f ; Enable channels, stop DMC
     sta FAMISTUDIO_APU_SND_CHN
@@ -4285,9 +4328,13 @@ famistudio_update:
 
 ;----------------------------------------------------------------------------------------------------------------------
 @update_sound:
-
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+    famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, famistudio_pulse1_prev, FAMISTUDIO_ALIAS_PL1_HI, FAMISTUDIO_ALIAS_PL1_LO, FAMISTUDIO_ALIAS_PL1_VOL, FAMISTUDIO_ALIAS_PL1_SWEEP
+    famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, famistudio_pulse2_prev, FAMISTUDIO_ALIAS_PL2_HI, FAMISTUDIO_ALIAS_PL2_LO, FAMISTUDIO_ALIAS_PL2_VOL, FAMISTUDIO_ALIAS_PL2_SWEEP
+.else
     famistudio_update_channel_sound 0, FAMISTUDIO_CH0_ENVS, famistudio_pulse1_prev, FAMISTUDIO_ALIAS_PL1_HI, FAMISTUDIO_ALIAS_PL1_LO, FAMISTUDIO_ALIAS_PL1_VOL, FAMISTUDIO_APU_PL1_SWEEP
     famistudio_update_channel_sound 1, FAMISTUDIO_CH1_ENVS, famistudio_pulse2_prev, FAMISTUDIO_ALIAS_PL2_HI, FAMISTUDIO_ALIAS_PL2_LO, FAMISTUDIO_ALIAS_PL2_VOL, FAMISTUDIO_APU_PL2_SWEEP
+.endif
     famistudio_update_channel_sound 2, FAMISTUDIO_CH2_ENVS, , FAMISTUDIO_ALIAS_TRI_HI, FAMISTUDIO_ALIAS_TRI_LO, FAMISTUDIO_ALIAS_TRI_LINEAR
     famistudio_update_channel_sound 3, FAMISTUDIO_CH3_ENVS, , FAMISTUDIO_ALIAS_NOISE_LO, , FAMISTUDIO_ALIAS_NOISE_VOL
 
@@ -4440,6 +4487,11 @@ famistudio_update:
 ;----------------------------------------------------------------------------------------------------------------------
 .if FAMISTUDIO_CFG_SFX_SUPPORT
 
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+    lda #$08 ; turn off sweeps (sfx can reenable them later)
+    sta famistudio_output_buf+11
+    sta famistudio_output_buf+12
+.endif
     ; Process all sound effect streams
     .if FAMISTUDIO_CFG_SFX_STREAMS > 0
     ldx #FAMISTUDIO_SFX_CH0
@@ -4458,39 +4510,99 @@ famistudio_update:
     jsr famistudio_sfx_update
     .endif
 
-    ; Send data from the output buffer to the APU
+ ; Send data from the output buffer to the APU
+    .if FAMISTUDIO_USE_HARDWARE_SWEEP
+        lda famistudio_output_buf      ; Pulse 1 volume
+        sta FAMISTUDIO_APU_PL1_VOL
+        lda famistudio_output_buf+11   ; Pulse 1 sweep
+        cmp #$7f                       ; special 'continue' value
+        beq @no_pulse1_upd             
+        cmp #$00                       ; a fresh sweep value should always write the full period
+        bmi @pulse1_period_no_cmp      ; active sweeps have their 7th bit set
+        lda famistudio_sweep1_prev
+        bmi @pulse1_period_no_cmp      ; always write the full pitch if coming from an active sweep
 
-    lda famistudio_output_buf      ; Pulse 1 volume
-    sta FAMISTUDIO_APU_PL1_VOL
-    lda famistudio_output_buf+1    ; Pulse 1 period LSB
-    sta FAMISTUDIO_APU_PL1_LO
-    lda famistudio_output_buf+2    ; Pulse 1 period MSB, only applied when changed
-
-    .if FAMISTUDIO_CFG_SMOOTH_VIBRATO
-        famistudio_smooth_vibrato famistudio_output_buf+1, famistudio_pulse1_prev, FAMISTUDIO_APU_PL1_HI, FAMISTUDIO_APU_PL1_LO, FAMISTUDIO_APU_PL1_SWEEP
-    .else
+        lda famistudio_output_buf+1    ; Pulse 1 period LSB
+        sta FAMISTUDIO_APU_PL1_LO
+        lda famistudio_output_buf+2    ; Pulse 1 period MSB, only applied when changed
         cmp famistudio_pulse1_prev
-        beq @no_pulse1_upd
+        beq @sweep1_update
         sta famistudio_pulse1_prev
         sta FAMISTUDIO_APU_PL1_HI
-    .endif        
+        jmp @sweep1_update
+    @pulse1_period_no_cmp:
+        lda famistudio_output_buf+1    ; Pulse 1 period LSB
+        sta FAMISTUDIO_APU_PL1_LO
+        lda famistudio_output_buf+2    ; Pulse 1 period MSB
+        sta famistudio_pulse1_prev
+        sta FAMISTUDIO_APU_PL1_HI
+    @sweep1_update:
+        lda famistudio_output_buf+11   ; Pulse 1 sweep
+        sta famistudio_sweep1_prev
+        sta FAMISTUDIO_APU_PL1_SWEEP
 
-@no_pulse1_upd:
-    lda famistudio_output_buf+3    ; Pulse 2 volume
-    sta FAMISTUDIO_APU_PL2_VOL
-    lda famistudio_output_buf+4    ; Pulse 2 period LSB
-    sta FAMISTUDIO_APU_PL2_LO
-    lda famistudio_output_buf+5    ; Pulse 2 period MSB, only applied when changed
+    @no_pulse1_upd:
+        lda famistudio_output_buf+3    ; Pulse 2 volume
+        sta FAMISTUDIO_APU_PL2_VOL
+        lda famistudio_output_buf+12   ; Pulse 2 sweep
+        cmp #$7f                       ; special 'continue' value
+        beq @no_pulse2_upd             
+        cmp #$00                       ; a fresh sweep value should always write the full period
+        bmi @pulse2_period_no_cmp      ; active sweeps have their 7th bit set
+        lda famistudio_sweep2_prev
+        bmi @pulse2_period_no_cmp      ; always write the full pitch if coming from an active sweep
 
-    .if FAMISTUDIO_CFG_SMOOTH_VIBRATO
-        famistudio_smooth_vibrato famistudio_output_buf+4, famistudio_pulse2_prev, FAMISTUDIO_APU_PL2_HI, FAMISTUDIO_APU_PL2_LO, FAMISTUDIO_APU_PL2_SWEEP
-    .else
+        lda famistudio_output_buf+4    ; Pulse 2 period LSB
+        sta FAMISTUDIO_APU_PL2_LO
+        lda famistudio_output_buf+5    ; Pulse 2 period MSB, only applied when changed
         cmp famistudio_pulse2_prev
-        beq @no_pulse2_upd
+        beq @sweep2_update
         sta famistudio_pulse2_prev
         sta FAMISTUDIO_APU_PL2_HI
-    .endif
+        jmp @sweep2_update
+    @pulse2_period_no_cmp:
+        lda famistudio_output_buf+4    ; Pulse 2 period LSB
+        sta FAMISTUDIO_APU_PL2_LO
+        lda famistudio_output_buf+5    ; Pulse 2 period MSB
+        sta famistudio_pulse2_prev
+        sta FAMISTUDIO_APU_PL2_HI
+    @sweep2_update:
+        lda famistudio_output_buf+12   ; Pulse 1 sweep
+        sta famistudio_sweep2_prev
+        sta FAMISTUDIO_APU_PL2_SWEEP
 
+    .else
+        lda famistudio_output_buf      ; Pulse 1 volume
+        sta FAMISTUDIO_APU_PL1_VOL
+        lda famistudio_output_buf+1    ; Pulse 1 period LSB
+        sta FAMISTUDIO_APU_PL1_LO
+        lda famistudio_output_buf+2    ; Pulse 1 period MSB, only applied when changed
+
+        .if FAMISTUDIO_CFG_SMOOTH_VIBRATO
+            famistudio_smooth_vibrato famistudio_output_buf+1, famistudio_pulse1_prev, FAMISTUDIO_APU_PL1_HI, FAMISTUDIO_APU_PL1_LO, FAMISTUDIO_APU_PL1_SWEEP
+        .else
+            cmp famistudio_pulse1_prev
+            beq @no_pulse1_upd
+            sta famistudio_pulse1_prev
+            sta FAMISTUDIO_APU_PL1_HI
+        .endif        
+
+    @no_pulse1_upd:
+        lda famistudio_output_buf+3    ; Pulse 2 volume
+        sta FAMISTUDIO_APU_PL2_VOL
+        lda famistudio_output_buf+4    ; Pulse 2 period LSB
+        sta FAMISTUDIO_APU_PL2_LO
+        lda famistudio_output_buf+5    ; Pulse 2 period MSB, only applied when changed
+
+        .if FAMISTUDIO_CFG_SMOOTH_VIBRATO
+            famistudio_smooth_vibrato famistudio_output_buf+4, famistudio_pulse2_prev, FAMISTUDIO_APU_PL2_HI, FAMISTUDIO_APU_PL2_LO, FAMISTUDIO_APU_PL2_SWEEP
+        .else
+            cmp famistudio_pulse2_prev
+            beq @no_pulse2_upd
+            sta famistudio_pulse2_prev
+            sta FAMISTUDIO_APU_PL2_HI
+        .endif
+    .endif
 @no_pulse2_upd:
     lda famistudio_output_buf+6    ; Triangle volume (plays or not)
     sta FAMISTUDIO_APU_TRI_LINEAR
@@ -6758,6 +6870,20 @@ famistudio_sfx_update:
 
     lda famistudio_sfx_repeat,x ; Check if repeat counter is not zero
     beq @no_repeat
+    .if FAMISTUDIO_USE_HARDWARE_SWEEP
+        lda famistudio_sfx_buffer+11, x ; no need to handle sweeps if no sweeps
+        cmp #$7f
+        bcc @no_pul1_sweep_continue
+        lda #$7f ; special 'continue' flag for the sweep state
+        sta famistudio_sfx_buffer+11, x
+    @no_pul1_sweep_continue:
+        lda famistudio_sfx_buffer+12, x
+        cmp #$7f
+        bcc @no_pul2_sweep_continue
+        lda #$7f
+        sta famistudio_sfx_buffer+12, x ; sweep writes should not repeat
+    @no_pul2_sweep_continue:
+    .endif
     dec famistudio_sfx_repeat,x ; Decrement and return
     bne @update_buf ; Just mix with output buffer
 
@@ -6810,13 +6936,29 @@ famistudio_sfx_update:
     sta famistudio_sfx_ptr_hi,x ; Mark channel as inactive
 
 @update_buf:
-    lda famistudio_output_buf ; Compare effect output buffer with main output buffer
-    and #$0f ; If volume of pulse 1 of effect is higher than that of the main buffer, overwrite the main buffer value with the new one
-    sta @tmp 
+    .if FAMISTUDIO_USE_HARDWARE_SWEEP
+        lda famistudio_sfx_buffer+11,x ; A sweeping effect should always play
+        cmp #$7f
+        bcs @write_pulse1
+    .endif
+    .if FAMISTUDIO_ALWAYS_PLAY_SFX || FAMISTUDIO_USE_HARDWARE_SWEEP
+        lda #$01 ; Check if the effect volume is active
+    .else
+        lda famistudio_output_buf ; Compare effect output buffer with main output buffer
+        and #$0f ; If volume of pulse 1 is higher than that of the main buffer, overwrite the main buffer value with the new one
+    .endif
+    sta @tmp ; If volume of pulse 1 of effect is high enough, overwrite the main buffer value with the new one
     lda famistudio_sfx_buffer+0,x
     and #$0f
     cmp @tmp
     bcc @no_pulse1
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+    lda famistudio_sfx_buffer+11,x
+.endif
+@write_pulse1:
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+    sta famistudio_output_buf+11
+.endif
     lda famistudio_sfx_buffer+0,x
     sta famistudio_output_buf+0
     lda famistudio_sfx_buffer+1,x
@@ -6825,13 +6967,29 @@ famistudio_sfx_update:
     sta famistudio_output_buf+2
 
 @no_pulse1:
-    lda famistudio_output_buf+3
-    and #$0f
+    .if FAMISTUDIO_USE_HARDWARE_SWEEP
+        lda famistudio_sfx_buffer+12,x
+        cmp #$7f
+        bcs @write_pulse2
+    .endif
+    .if FAMISTUDIO_ALWAYS_PLAY_SFX || FAMISTUDIO_USE_HARDWARE_SWEEP
+        lda #$01
+    .else
+        lda famistudio_output_buf+3 ; Compare effect output buffer with main output buffer
+        and #$0f
+    .endif
     sta @tmp
     lda famistudio_sfx_buffer+3,x
     and #$0f
     cmp @tmp
     bcc @no_pulse2
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+    lda famistudio_sfx_buffer+12,x
+.endif
+@write_pulse2:
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
+    sta famistudio_output_buf+12
+.endif
     lda famistudio_sfx_buffer+3,x
     sta famistudio_output_buf+3
     lda famistudio_sfx_buffer+4,x
