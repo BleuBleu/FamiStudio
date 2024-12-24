@@ -6846,6 +6846,7 @@ famistudio_sfx_update:
 
 .endif
 
+.if FAMISTUDIO_CFG_MUTING_SUPPORT
 ;======================================================================================================================
 ; FAMISTUDIO_SET_MUTING (public)
 ;
@@ -6865,6 +6866,7 @@ famistudio_sfx_update:
 famistudio_set_muting:
     sta famistudio_mute_mask
     rts
+.endif
 
 ; Dummy envelope used to initialize all channels with silence
 famistudio_dummy_envelope:
