@@ -35,6 +35,7 @@
 ;   - famistudio_sfx_init        : Initialize SFX engine with SFX data.
 ;   - famistudio_sfx_play        : Play a SFX.
 ;   - famistudio_sfx_sample_play : Play a DPCM SFX.
+;   - famistudio_sfx_stop_all    : Stop currently playing SFX.
 ;   - famistudio_update          : Updates the music/SFX engine, call once per frame, ideally from NMI.
 ;
 ; You can check the demo ROM to see how they are used or check out the online documentation for more info.
@@ -1048,6 +1049,7 @@ famistudio_ptr1_hi = famistudio_ptr1+1
 .endif
 .export famistudio_sfx_init
 .export famistudio_sfx_play
+.export famistudio_sfx_stop_all
 .exportzp FAMISTUDIO_SFX_CH0
 .exportzp FAMISTUDIO_SFX_CH1
 .exportzp FAMISTUDIO_SFX_CH2
@@ -6627,6 +6629,36 @@ famistudio_sfx_play:
     rts
 
 ;======================================================================================================================
+; FAMISTUDIO_SFX_STOP_ALL (public)
+;
+; Stops all playing sound effects.
+;
+; [in] no input params.
+;
+;======================================================================================================================
+
+famistudio_sfx_stop_all:
+
+    ; Stop all sound effect streams
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 0
+    ldx #FAMISTUDIO_SFX_CH0
+    jsr famistudio_sfx_clear_channel
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+    ldx #FAMISTUDIO_SFX_CH1
+    jsr famistudio_sfx_clear_channel
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+    ldx #FAMISTUDIO_SFX_CH2
+    jsr famistudio_sfx_clear_channel
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+    ldx #FAMISTUDIO_SFX_CH3
+    jsr famistudio_sfx_clear_channel
+    .endif
+    rts 
+
+;======================================================================================================================
 ; FAMISTUDIO_SFX_UPDATE (internal)
 ;
 ; Updates a single sound effect stream.
@@ -7489,6 +7521,9 @@ _famistudio_sfx_play:
 
 ; A = sample_index; So we can safely re-export the symbol
 .export _famistudio_sfx_sample_play=famistudio_sfx_sample_play
+
+; No parameters so its safe to re-export
+.export _famistudio_sfx_stop_all=famistudio_sfx_stop_all
 
 .endif
 .endif
