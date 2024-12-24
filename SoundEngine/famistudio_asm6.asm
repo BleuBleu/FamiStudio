@@ -6654,6 +6654,14 @@ famistudio_sfx_stop_all:
     ldx #FAMISTUDIO_SFX_CH3
     jsr famistudio_sfx_clear_channel
     .endif
+    .if FAMISTUDIO_CFG_DPCM_SUPPORT
+    lda famistudio_dpcm_effect ; Check if a sampled sfx is playing
+    beq @no_sample_sfx
+    lda #%00001111 ; Stop DPCM
+    sta FAMISTUDIO_APU_SND_CHN
+    rts
+    @no_sample_sfx:
+    .endif
     rts
 
 ;======================================================================================================================
