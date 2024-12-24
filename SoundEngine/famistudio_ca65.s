@@ -6721,7 +6721,7 @@ famistudio_sfx_stop_all:
     lda #%00001111 ; Stop DPCM
     sta FAMISTUDIO_APU_SND_CHN
     rts
-    @no_sample_sfx
+    @no_sample_sfx:
     .endif
     rts 
 
