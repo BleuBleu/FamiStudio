@@ -135,4 +135,29 @@ void __fastcall__ famistudio_sfx_sample_play(unsigned char sample_index);
 void __fastcall__ famistudio_sfx_stop_all(void);
 
 #endif
+
+#ifdef FAMISTUDIO_CFG_MUTING_SUPPORT
+
+/**
+ * ======================================================================================================================
+ * famistudio_sfx_set_muting (public)
+ *
+ * Sets the muting mask for each channel, according to the following bit values:
+ * Bit 0 : Pulse 1 on
+ * Bit 1 : Pulse 2 on
+ * Bit 2 : Triangle on
+ * Bit 3 : Noise on
+ * Bit 4 : DPCM on
+ * Bit 5 : MMC5 Pulse 1/VRC6 Pulse 1 on
+ * Bit 6 : MMC5 Pulse 2/VRC6 Pulse 2 on
+ * Bit 7 : VRC6 Sawtooth on
+ * Note that the new mask will not take effect until the next time famistudio_update is called
+ *
+ * [in] mask: New mute mask value
+ * ======================================================================================================================
+ */
+
+void __fastcall__ famistudio_set_muting(unsigned char mute_mask);
+
+#endif
 #endif
