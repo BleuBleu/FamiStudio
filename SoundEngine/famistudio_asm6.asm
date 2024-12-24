@@ -36,6 +36,7 @@
 ;   - famistudio_sfx_play        : Play a SFX.
 ;   - famistudio_sfx_sample_play : Play a DPCM SFX.
 ;   - famistudio_sfx_stop_all    : Stop currently playing SFX.
+;   - famistudio_set_muting      : Updates which music channels are muted.
 ;   - famistudio_update          : Updates the music/SFX engine, call once per frame, ideally from NMI.
 ;
 ; You can check the demo ROM to see how they are used or check out the online documentation for more info.
@@ -151,6 +152,9 @@ FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 
 ; Enables DPCM playback support.
 FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
+
+; Enables support for per-channel muting.
+FAMISTUDIO_CFG_MUTING_SUPPORT = 1
 
 ; Must be enabled if you are calling sound effects from a different thread than the sound engine update.
 ; FAMISTUDIO_CFG_THREAD         = 1     
@@ -363,6 +367,10 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 .ifndef FAMISTUDIO_CFG_DPCM_SUPPORT
     FAMISTUDIO_CFG_DPCM_SUPPORT = 0
+.endif
+
+.ifndef FAMISTUDIO_CFG_MUTING_SUPPORT
+    FAMISTUDIO_CFG_MUTING_SUPPORT = 0
 .endif
 
 .ifndef FAMISTUDIO_CFG_EQUALIZER
@@ -1007,6 +1015,12 @@ famistudio_sfx_buffer = famistudio_sfx_base_addr + 4
 
 .endif 
 
+.if FAMISTUDIO_CFG_MUTING_SUPPORT
+; Muting is currently only supported for the 2A03, MMC5 and VRC6,
+; but could theoretically be extended to other expansion chips.
+famistudio_mute_mask:     .dsb 1
+.endif
+
 .ende
 
 ;======================================================================================================================
@@ -1310,6 +1324,12 @@ famistudio_init:
         lda (music_data_ptr),y
         sta famistudio_exp_instrument_hi
         iny
+    .endif
+
+    ; If muting is enabled, initialize all channels to on
+    .if FAMISTUDIO_CFG_MUTING_SUPPORT
+        lda #$ff
+        sta famistudio_mute_mask
     .endif
 
     ; Sample list address
@@ -2116,6 +2136,21 @@ no_noise_slide:
 
 compute_volume:
 
+    .if FAMISTUDIO_CFG_MUTING_SUPPORT
+        .if (idx < 5) || (FAMISTUDIO_EXP_MMC5 && (idx < 7)) || (FAMISTUDIO_EXP_VRC6 && (idx < 8)) ; Make sure channel is within muting parameters
+            .if (idx = 2)
+                ldy #$80 ; Triangle mute
+            .elseif (idx = 7)
+                ldy #$00 ; Sawtooth mute
+            .else
+                ldy #$30 ; Pulse/noise mute
+            .endif
+            lda famistudio_mute_mask
+            and #(1 << idx) ; Check if the channel bit is on
+            beq @write_volume ; Skip volume calculations and just cut the volume if not
+        .endif
+    .endif
+
     .if FAMISTUDIO_USE_VOLUME_TRACK    
         lda famistudio_chn_volume_track+idx
         .if FAMISTUDIO_USE_VOLUME_SLIDES
@@ -2156,7 +2191,13 @@ set_volume:
     ora #$f0
 .endif
 
+.if FAMISTUDIO_CFG_MUTING_SUPPORT
+    tay ; Needed since the muting check uses y for the volume register
+@write_volume:
+    sty reg_vol
+.else
     sta reg_vol
+.endif
 
 .endm
 
@@ -6466,7 +6507,14 @@ start_dmc:
 ;======================================================================================================================
 
 famistudio_music_sample_play:
-
+    .if FAMISTUDIO_CFG_MUTING_SUPPORT
+        tay
+        lda famistudio_mute_mask
+        and #(1 << 4) ; DMC channel bit
+        ora famistudio_dpcm_effect ; Do not mute the channel if a sound effect is playing
+        beq @stop_sample 
+        tya
+    .endif
     ldx famistudio_dpcm_effect
     beq sample_play
     tax
@@ -6474,6 +6522,12 @@ famistudio_music_sample_play:
     and #16
     beq @not_busy
     rts
+    .if FAMISTUDIO_CFG_MUTING_SUPPORT
+    @stop_sample:
+        lda #%00001111 ; Stop DPCM
+        sta FAMISTUDIO_APU_SND_CHN
+        rts
+    .endif
 
 @not_busy:
     sta famistudio_dpcm_effect
@@ -6729,6 +6783,28 @@ famistudio_sfx_update:
     inc famistudio_sfx_ptr_hi,x
     rts
 
+.endif
+
+.if FAMISTUDIO_CFG_MUTING_SUPPORT
+;======================================================================================================================
+; FAMISTUDIO_SET_MUTING (public)
+;
+; Sets the muting mask for each channel, according to the following bit values:
+; Bit 0 : Pulse 1 on
+; Bit 1 : Pulse 2 on
+; Bit 2 : Triangle on
+; Bit 3 : Noise on
+; Bit 4 : DPCM on
+; Bit 5 : MMC5 Pulse 1/VRC6 Pulse 1 on
+; Bit 6 : MMC5 Pulse 2/VRC6 Pulse 2 on
+; Bit 7 : VRC6 Sawtooth on
+; Note that the new mask will not take effect until the next time famistudio_update is called
+;
+; [in] a: New mute mask value
+;======================================================================================================================
+famistudio_set_muting:
+    sta famistudio_mute_mask
+    rts
 .endif
 
 ; Dummy envelope used to initialize all channels with silence
