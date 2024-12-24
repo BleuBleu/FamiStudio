@@ -1780,6 +1780,7 @@ famistudio_music_pause:
     bne @no_stop_samples ; pausing music should not stop sampled sfx
 .endif
     jsr famistudio_sample_stop
+
 @no_stop_samples:
     lda #0
     sta famistudio_env_value+FAMISTUDIO_CH0_ENVS+FAMISTUDIO_ENV_VOLUME_OFF
