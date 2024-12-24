@@ -35,6 +35,7 @@
 ;   - famistudio_sfx_init        : Initialize SFX engine with SFX data.
 ;   - famistudio_sfx_play        : Play a SFX.
 ;   - famistudio_sfx_sample_play : Play a DPCM SFX.
+;   - famistudio_sfx_stop_all    : Stop currently playing SFX.
 ;   - famistudio_update          : Updates the music/SFX engine, call once per frame, ideally from NMI.
 ;
 ; You can check the demo ROM to see how they are used or check out the online documentation for more info.
@@ -6578,6 +6579,27 @@ famistudio_sfx_play:
     lda (effect_data_ptr),y
     sta famistudio_sfx_ptr_hi,x ; This write enables the effect
 
+    rts
+
+famistudio_sfx_stop_all:
+
+    ; Stop all sound effect streams
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 0
+    ldx #FAMISTUDIO_SFX_CH0
+    jsr famistudio_sfx_clear_channel
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 1
+    ldx #FAMISTUDIO_SFX_CH1
+    jsr famistudio_sfx_clear_channel
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 2
+    ldx #FAMISTUDIO_SFX_CH2
+    jsr famistudio_sfx_clear_channel
+    .endif
+    .if FAMISTUDIO_CFG_SFX_STREAMS > 3
+    ldx #FAMISTUDIO_SFX_CH3
+    jsr famistudio_sfx_clear_channel
+    .endif
     rts
 
 ;======================================================================================================================
