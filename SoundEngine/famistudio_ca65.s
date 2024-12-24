@@ -6834,9 +6834,13 @@ famistudio_sfx_update:
     and #$0f
     cmp @tmp
     bcc @no_pulse1
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
     lda famistudio_sfx_buffer+11,x
+.endif
 @write_pulse1:
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
     sta famistudio_output_buf+11
+.endif
     lda famistudio_sfx_buffer+0,x
     sta famistudio_output_buf+0
     lda famistudio_sfx_buffer+1,x
@@ -6861,9 +6865,13 @@ famistudio_sfx_update:
     and #$0f
     cmp @tmp
     bcc @no_pulse2
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
     lda famistudio_sfx_buffer+12,x
+.endif
 @write_pulse2:
+.if FAMISTUDIO_USE_HARDWARE_SWEEP
     sta famistudio_output_buf+12
+.endif
     lda famistudio_sfx_buffer+3,x
     sta famistudio_output_buf+3
     lda famistudio_sfx_buffer+4,x
