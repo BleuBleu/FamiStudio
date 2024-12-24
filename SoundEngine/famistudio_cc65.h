@@ -122,5 +122,17 @@ void __fastcall__ famistudio_sfx_play(unsigned char sfx_index, unsigned char cha
 
 void __fastcall__ famistudio_sfx_sample_play(unsigned char sample_index);
 
+/**
+ * ======================================================================================================================
+ * famistudio_sfx_stop_all (public)
+ *
+ * Stop all currently playing sound effects.
+ *
+ * [in] no input params.
+ * ======================================================================================================================
+ */
+
+void __fastcall__ famistudio_sfx_stop_all(void);
+
 #endif
 #endif
