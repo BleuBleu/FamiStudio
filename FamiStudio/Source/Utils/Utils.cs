@@ -558,6 +558,7 @@ namespace FamiStudio
         public static void NonBlockingParallelFor(int numItems, int maxThreads, ThreadSafeCounter counter, Func<int, int, bool> action)
         {
             var queue = new ConcurrentQueue<int>();
+            var keepGoing = true;
 
             for (int i = 0; i < numItems; i++)
                 queue.Enqueue(i);
@@ -572,13 +573,13 @@ namespace FamiStudio
                         if (!queue.TryDequeue(out var itemIndex))
                             break;
 
-                        var keepGoing = action(itemIndex, threadIndex);
+                        // When aborting, still consume all the tasks and increment, this way the 
+                        // launching thread can at least know when the threads are done.
+                        if (keepGoing)
+                            keepGoing = action(itemIndex, threadIndex);
                         
                         Thread.MemoryBarrier(); // Extra safety, the increment below should generate a barrier tho.
                         counter.Increment();
-                        
-                        if (!keepGoing)
-                            break;
                     }
                     
                 }).Start();

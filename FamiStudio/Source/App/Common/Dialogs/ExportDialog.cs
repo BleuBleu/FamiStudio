@@ -590,14 +590,17 @@ namespace FamiStudio
 
             if (Platform.IsMobile)
             {
-                new Thread(() => LaunchVideoEncoding(null, true, previewDialog)).Start();
+                new Thread(() =>
+                {
+                    LaunchVideoEncoding(null, true, previewDialog);
+                    Log.ClearLogOutput();
+                }).Start();
             }
             else
             {
                 LaunchVideoEncoding(null, true, previewDialog);
+                Log.ClearLogOutput();
             }
-
-            Log.ClearLogOutput();
         }
 
         private void Dialog_PageCustomActionActivated(int page)
@@ -733,7 +736,7 @@ namespace FamiStudio
                         pan[i] = props.GetPropertyValue<int>(11, i, 2) / 100.0f;
                     }
 
-                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, delay, Platform.IsMobile || project.UsesEPSMExpansion,
+                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, delay, Platform.IsMobile || project.UsesEPSMExpansion, false,
                          (samples, samplesChannels, fn) =>
                          {
                              switch (format)

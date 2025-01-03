@@ -1,17 +1,25 @@
 4.3.1
 =====
-- Steo MMC5 volume + PAL PR
-- Follow up on flathub video issues
-- Type negative effect value : https://discord.com/channels/747649221879922840/1254494599255425188
+/ Follow up on flathub video issues
+	=> Revert the flatpak changes as well.
 - Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
 - Arp issue alex : https://discord.com/channels/747649221879922840/1319347249884430368/1319347249884430368
 - Missing vibrate on click proj explorer buttons?
-- Korean typos: 
-	https://discord.com/channels/747649221879922840/1092593281688424569/1320411428246781963
-- Tempo doesnt match DAWS (50/60 + rounding).
-	https://discord.com/channels/747649221879922840/747649222354010173/1320574976490999920
+- Korean typos: (FILE IS BAD)
+	https://discord.com/channels/747649221879922840/1092593281688424569/1323517773808144435
 - Android unified piano roll filtering. T7F4 #bug-report.
 	https://discord.com/channels/747649221879922840/1320696943521038467/1320696943521038467
+- Steo MMC5 change (Contained a ton of rancom shit).
+- The '-' on the numpad doesnt work to type negative values?
+
+Change log:
+==========
+- Fixed MMC5 volume being too quiet
+- Fixed crash when entering '-' in numeric up-down
+- Fixed MIDI channel 10 drum key map
+- Fixed undo/redo not working properly on instrument parameter sliders
+- Fixed crash when exporting video after cancelling a preview on mobile
+- 
 
 Linux notes 
 =========== 
@@ -125,6 +133,8 @@ Discord
 
 Backlog: 
 =========
+- Tempo doesnt match DAWS (50/60 + rounding).
+	https://discord.com/channels/747649221879922840/747649222354010173/1320574976490999920
 - Volgona slide note N163
 	https://discord.com/channels/@me/1312660867082620968/1316925295995125801
 - Multiple slide notes edition when selection.

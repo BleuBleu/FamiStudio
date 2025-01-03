@@ -214,7 +214,7 @@ namespace FamiStudio
 
             // Save audio to temporary file.
             tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
-            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, -1, false, false, settings.Stereo, settings.ChannelPan, settings.AudioDelay, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
+            AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, -1, false, false, settings.Stereo, settings.ChannelPan, settings.AudioDelay, true, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
             if (Log.ShouldAbortOperation)
                 return false;
@@ -279,10 +279,10 @@ namespace FamiStudio
             {
                 Log.ReportProgress(counter.Value / (float)channelStates.Length);
                 Thread.Sleep(10);
-
-                if (Log.ShouldAbortOperation)
-                    return false;
             }
+
+            if (Log.ShouldAbortOperation)
+                return false;
 
             var globalMaxAbsSample = maxAbsSamples.Max();
 
