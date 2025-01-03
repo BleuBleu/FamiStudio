@@ -569,12 +569,12 @@ namespace FamiStudio
             i = new S5BRegisterIntepreter(r);
             RegisterRows = new[]
             {
-                new RegisterViewerRow("$00", 0xE000, 0x00, 0x01),
-                new RegisterViewerRow("$02", 0xE000, 0x02, 0x03),
-                new RegisterViewerRow("$04", 0xE000, 0x04, 0x05),
-                new RegisterViewerRow("$06", 0xE000, 0x06, 0x07),
-                new RegisterViewerRow("$08", 0xE000, 0x08, 0x0a),
-                new RegisterViewerRow("$0B", 0xE000, 0x0B, 0x0D),
+                new RegisterViewerRow("$00", 0xE001, 0x00, 0x01),
+                new RegisterViewerRow("$02", 0xE001, 0x02, 0x03),
+                new RegisterViewerRow("$04", 0xE001, 0x04, 0x05),
+                new RegisterViewerRow("$06", 0xE001, 0x06, 0x07),
+                new RegisterViewerRow("$08", 0xE001, 0x08, 0x0a),
+                new RegisterViewerRow("$0B", 0xE001, 0x0B, 0x0D),
             };
             InterpeterRows = new RegisterViewerRow[5][];
             for (int j = 0; j < 3; j++)
