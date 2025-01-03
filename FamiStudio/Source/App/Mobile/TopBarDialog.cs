@@ -57,11 +57,13 @@ namespace FamiStudio
 
             buttonCancel = new Button("No");
             buttonCancel.Transparent = true;
+            buttonCancel.VibrateOnClick = true;
             buttonCancel.Click += ButtonCancel_Click;
             topBarContainer.AddControl(buttonCancel);
 
             buttonAccept = new Button("Yes");
             buttonAccept.Transparent = true;
+            buttonAccept.VibrateOnClick = true;
             buttonAccept.Click += ButtonAccept_Click;
             topBarContainer.AddControl(buttonAccept);
 

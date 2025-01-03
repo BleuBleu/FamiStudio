@@ -120,6 +120,7 @@ namespace FamiStudio
             var btn = new Button(image, text);
             btn.Resize(window.Width, buttonHeight);
             btn.ImageScale = DpiScaling.Window * 0.5f;
+            btn.VibrateOnClick = true;
             btn.Border = true;
             btn.Click += Btn_Click;
             return btn;

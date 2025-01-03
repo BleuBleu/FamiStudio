@@ -4,11 +4,8 @@
 	=> Revert the flatpak changes as well.
 - Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
 - Arp issue alex : https://discord.com/channels/747649221879922840/1319347249884430368/1319347249884430368
-- Missing vibrate on click proj explorer buttons?
 - Korean typos: (FILE IS BAD)
 	https://discord.com/channels/747649221879922840/1092593281688424569/1323517773808144435
-- Android unified piano roll filtering. T7F4 #bug-report.
-	https://discord.com/channels/747649221879922840/1320696943521038467/1320696943521038467
 - Steo MMC5 change (Contained a ton of rancom shit).
 - The '-' on the numpad doesnt work to type negative values?
 

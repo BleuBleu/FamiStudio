@@ -449,6 +449,7 @@ namespace FamiStudio
             var button = new Button(image, null);
             button.Transparent = true;
             button.ImageScale = iconImageScale;
+            button.VibrateOnClick = true;
             if (black)
                 button.ForegroundColor = Color.Black;
             panel.AddControl(button);
@@ -529,6 +530,7 @@ namespace FamiStudio
                 {
                     var button = new Button(null, TabNames[i]);
                     button.Border = true;
+                    button.VibrateOnClick = true;
                     if ((int)selectedTab == i)
                         button.Font = fonts.FontMediumBold;
                     else
