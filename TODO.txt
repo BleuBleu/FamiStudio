@@ -4,19 +4,19 @@
 	=> Revert the flatpak changes as well.
 - Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
 - Arp issue alex : https://discord.com/channels/747649221879922840/1319347249884430368/1319347249884430368
-- Korean typos: (FILE IS BAD)
-	https://discord.com/channels/747649221879922840/1092593281688424569/1323517773808144435
-- Steo MMC5 change (Contained a ton of rancom shit).
 - The '-' on the numpad doesnt work to type negative values?
 
 Change log:
 ==========
+*** RECOMPILE NESSNDEMU ON ALL PLATFORMS FOR MMC5 FIX!
 - Fixed MMC5 volume being too quiet
 - Fixed crash when entering '-' in numeric up-down
 - Fixed MIDI channel 10 drum key map
 - Fixed undo/redo not working properly on instrument parameter sliders
 - Fixed crash when exporting video after cancelling a preview on mobile
-- 
+- Fixed PAL toggling for ROM files
+- Fixed DPCM preview button playing the audio more times than intended
+- Updated Korean translation
 
 Linux notes 
 =========== 
