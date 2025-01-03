@@ -80,17 +80,17 @@ namespace FamiStudio
                         else
                         {
                             changing = true;
+                            InvokeValueChangeStart();
                             ChangeValue(e.X);
                             CapturePointer();
-                            InvokeValueChangeStart();
                         }
                     }
                     else
                     {
                         changing = true;
+                        InvokeValueChangeStart();
                         IncrementValue(buttonIndex, 0.0);
                         SetTickEnabled(true);
-                        InvokeValueChangeStart();
                     }
                 }
             }
