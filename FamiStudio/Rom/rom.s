@@ -99,10 +99,10 @@ INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
     .byte INES_MIRROR | ((INES_MAPPER & $f) << 4)
 .if FAMISTUDIO_EXP_EPSM    
     .byte (INES_MAPPER & %11110000) | (%00001011) ; ines v2 + extended console type.
-    .byte $0, $0, $0, $0, $0, $4, $0, $0 ; padding
+    .byte $0, $0, $0, $0, FAMISTUDIO_CFG_PAL_SUPPORT, $4, $0, $0 ; padding & TV system
 .else
     .byte (INES_MAPPER & %11110000)
-    .byte $0, $0, $0, $0, $0, $0, $0, $0 ; padding
+    .byte $0, FAMISTUDIO_CFG_PAL_SUPPORT, $0, $0, $0, $0, $0, $0 ; padding & TV system
 .endif    
 .endif
 
