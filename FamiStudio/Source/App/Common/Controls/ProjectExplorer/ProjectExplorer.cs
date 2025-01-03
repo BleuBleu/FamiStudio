@@ -971,6 +971,7 @@ namespace FamiStudio
             play.Click += (s) => App.PreviewDPCMSample(sample, false);
             play.RightClick += (s) => App.PreviewDPCMSample(sample, true);
             play.ClickOnMouseUp = true;
+            play.SetSupportsDoubleClick(true);
 
             CreateLabel(panel, sample.Name, true, icon.Right + marginX, 0, play.Left - icon.Right - marginX * 2, true);
         }
