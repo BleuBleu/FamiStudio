@@ -169,7 +169,7 @@ namespace FamiStudio
                     break;
             }
 
-            return idx == 0 ? 0 : int.Parse(s.Substring(start, idx - start)) * sign;
+            return idx == 0 || (idx - start) == 0 ? 0 : int.Parse(s.Substring(start, idx - start)) * sign;
         }
 
         public static int ParseIntWithLeadingAndTrailingGarbage(string s)
