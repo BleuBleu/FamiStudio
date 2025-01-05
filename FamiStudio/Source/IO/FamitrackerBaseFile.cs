@@ -417,7 +417,7 @@ namespace FamiStudio
                 Log.LogMessage(LogSeverity.Warning, $"Unknown effect code ({fx.fx}) and will be ignored. {GetPatternString(pattern, n)}");
         }
 
-        private string GetPatternString(Pattern pattern, int n)
+        protected string GetPatternString(Pattern pattern, int n)
         {
             return $"(Song={pattern.Song.Name}, Channel={ChannelType.InternalNames[pattern.ChannelType]}, Location={pattern.Name}:{n:X2})";
         }
@@ -793,7 +793,7 @@ namespace FamiStudio
                                 s.AdvanceNumberOfFrames(ref nextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
 
                                 // Still to see if there is a note between the current one and the 
-                                // next note, this could append if you add a note before the slide 
+                                // next note, this could happen if you add a note before the slide 
                                 // is supposed to finish.
                                 if (FindNextEffect(c, location, out var nextLocation2, patternFxData, IsValidNote, IsSlideEffect))
                                 {

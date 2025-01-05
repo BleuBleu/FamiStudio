@@ -477,8 +477,10 @@ namespace FamiStudio
 
                                 if (project.UsesFdsExpansion && FdsTextToEffectLookup.TryGetValue(fxStr[0], out var fdsFx))
                                     fx.fx = (byte)fdsFx;
-                                else
-                                    fx.fx = TextToEffectLookup[fxStr[0]];
+                                else {
+                                    if (!TextToEffectLookup.TryGetValue(fxStr[0], out fx.fx))
+                                        Log.LogMessage(LogSeverity.Warning, $"Unknown effect code ({fxStr[0]}) and will be ignored. {GetPatternString(pattern, n)}");
+                                }
 
                                 fx.param = Convert.ToByte(fxStr.Substring(1), 16);
                                 patternFxData[pattern][n, k] = fx;
