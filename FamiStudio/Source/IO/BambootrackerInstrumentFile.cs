@@ -105,7 +105,7 @@ namespace FamiStudio
 
             if (!(bytes[offset] == 0))
             {
-                Log.LogMessage(LogSeverity.Error, "Only FM channels possible to import");
+                Log.LogMessage(LogSeverity.Error, "Only FM channels possible to import.");
                 return null;
             }
             offset += 12;

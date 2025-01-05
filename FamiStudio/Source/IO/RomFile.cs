@@ -45,7 +45,7 @@ namespace FamiStudio
 
                 if (originalProject.UsesMultipleExpansionAudios)
                 {
-                    Log.LogMessage(LogSeverity.Error, "ROM export does not support multiple audio expansions");
+                    Log.LogMessage(LogSeverity.Error, "ROM export does not support multiple audio expansions.");
                     return false;
                 }
 

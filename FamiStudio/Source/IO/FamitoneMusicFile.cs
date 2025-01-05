@@ -179,7 +179,7 @@ namespace FamiStudio
 
                                 if (sampleMappingIndices.Count >= maxMappings)
                                 {
-                                    Log.LogMessage(LogSeverity.Error, $"Limit of {maxMappings} unique DPCM samples mappings reached. Some samples will not play correctly.");
+                                    Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
                                     break;
                                 }
                             }
@@ -649,7 +649,7 @@ namespace FamiStudio
             }
 
             if (instrumentCount > instrumentLimit)
-                Log.LogMessage(LogSeverity.Error, $"Number of instrument ({instrumentCount}) exceeds the limit of {instrumentLimit}, song will not sound correct.");
+                Log.LogMessage(LogSeverity.Error, $"The amount of instruments ({instrumentCount}) exceeds the limit of {instrumentLimit}, songs will not sound correct.");
 
             lines.Add("");
 
@@ -762,7 +762,7 @@ namespace FamiStudio
                 }
 
                 if (instrumentCountExp > instrumentLimitExp)
-                    Log.LogMessage(LogSeverity.Error, $"Number of expansion instrument ({instrumentCountExp}) exceeds the limit of {instrumentLimitExp}, song will not sound correct.");
+                    Log.LogMessage(LogSeverity.Error, $"Number of expansion instruments ({instrumentCountExp}) exceeds the limit of {instrumentLimitExp}, songs will not sound correct.");
 
                 lines.Add("");
             }
@@ -963,7 +963,7 @@ namespace FamiStudio
             {
                 if (project.SoundEngineUsesDpcmBankSwitching)
                 {
-                    Log.LogMessage(LogSeverity.Info, "Project uses DPCM bank switching, separate DMC files will be generated for each banks.");
+                    Log.LogMessage(LogSeverity.Info, "Project uses DPCM bank switching, separate DMC files will be generated for each bank.");
                 }
 
                 var maxBank = project.SoundEngineUsesDpcmBankSwitching ? Project.MaxDPCMBanks : 1;

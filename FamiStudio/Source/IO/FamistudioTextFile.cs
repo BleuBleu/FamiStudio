@@ -85,9 +85,9 @@ namespace FamiStudio
                 if (sample.HasAnyProcessingOptions)
                 {
                     if (sample.SourceDataIsWav)
-                        Log.LogMessage(LogSeverity.Warning, $"Sample {sample.Name} has WAV data as source. Only the final processed DMC data will be exported.");
+                        Log.LogMessage(LogSeverity.Warning, $"The sample {sample.Name} has WAV data as source. Only the final processed DMC data will be exported.");
                     else
-                        Log.LogMessage(LogSeverity.Warning, $"Sample {sample.Name} has processing option(s) enabled. Only the final processed DMC data will be exported.");
+                        Log.LogMessage(LogSeverity.Warning, $"The sample {sample.Name} has processing option(s) enabled. Only the final processed DMC data will be exported.");
                 }
 
                 sample.PermanentlyApplyAllProcessing();
@@ -103,7 +103,7 @@ namespace FamiStudio
                 if (instrument.IsN163 && instrument.N163WavePreset == WavePresetType.Resample && instrument.N163ResampleWaveData != null ||
                     instrument.IsFds  && instrument.FdsWavePreset  == WavePresetType.Resample && instrument.FdsResampleWaveData  != null)
                 {
-                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instrument.Name} is resampled from WAV data. Discarding WAV data.");
+                    Log.LogMessage(LogSeverity.Warning, $"The instrument {instrument.Name} is resampled from WAV data. Discarding WAV data.");
                     instrument.DeleteFdsResampleWavData();
                     instrument.DeleteN163ResampleWavData();
                 }
@@ -465,7 +465,7 @@ namespace FamiStudio
 
                             if (!version.StartsWith(currentVersion.Substring(0, 3)))
                             {
-                                Log.LogMessage(LogSeverity.Error, "File was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
+                                Log.LogMessage(LogSeverity.Error, "The text file was created with an incompatible version of FamiStudio. The text format is only compatible with the current version.");
                                 return null;
                             }
                             break;

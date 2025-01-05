@@ -518,7 +518,7 @@ namespace FamiStudio
                         var dpcmFilename = Path.Combine(filename, Utils.MakeNiceAsmName(formattedDpcmName) + ".dmc");
                         var includeFilename = generateInclude ? Path.ChangeExtension(songFilename, null) + "_songlist.inc" : null;
 
-                        Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as separate assembly files.");
+                        Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as a separate assembly file.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
                         f.Save(project, new int[] { songId }, format, -1, true, songFilename, dpcmFilename, includeFilename, MachineType.Dual); 

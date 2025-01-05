@@ -1307,7 +1307,7 @@ namespace FamiStudio
 
             // Print messages.
             foreach (var kv in inconsistentDurationStopNotes)
-                Log.LogMessage(LogSeverity.Warning, $"Iconsistent note duration, orphan stop note added. (Song={song.Name}, Channel={NameWithExpansion}, Pattern={kv.Value.Name})");
+                Log.LogMessage(LogSeverity.Warning, $"Inconsistent note duration, orphan stop note added. (Song={song.Name}, Channel={NameWithExpansion}, Pattern={kv.Value.Name})");
 
             if (loopPointStopNote != null)
                 Log.LogMessage(LogSeverity.Warning, $"Stop note found at beginning of loop point, orphan stop note added. (Song={song.Name}, Channel={NameWithExpansion}, Pattern={loopPointStopNotePattern.Name})");

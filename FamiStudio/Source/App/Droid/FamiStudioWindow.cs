@@ -1132,7 +1132,7 @@ namespace FamiStudio
                 if (lastSaveTempFile != null && File.Exists(lastSaveTempFile))
                 {
                     Log.ReportProgress(1.0f);
-                    Log.LogMessage(LogSeverity.Info, "Copying file to storage...");
+                    Log.LogMessage(LogSeverity.Info, "Copying the file to storage...");
 
                     var buffer = new byte[256 * 1024];
 

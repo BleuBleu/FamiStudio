@@ -284,7 +284,7 @@ namespace FamiStudio
 
             if (val < min || val > max)
             {
-                Log.LogMessage(LogSeverity.Warning, $"Value {val} for effect '{EffectToTextLookup[fxFT]}' is out of range. Clamping. {GetPatternString(pattern, n)}");
+                Log.LogMessage(LogSeverity.Warning, $"The value {val} of effect '{EffectToTextLookup[fxFT]}' is out of range. Clamping. {GetPatternString(pattern, n)}");
                 val = Utils.Clamp(val, min, max);
             }
 
@@ -412,9 +412,9 @@ namespace FamiStudio
             }
 
             if (EffectToTextLookup.ContainsKey(fx.fx))
-                Log.LogMessage(LogSeverity.Warning, $"Effect '{EffectToTextLookup[fx.fx]}' is not supported and will be ignored. {GetPatternString(pattern, n)}");
+                Log.LogMessage(LogSeverity.Warning, $"The effect '{EffectToTextLookup[fx.fx]}' is not supported and will be ignored. {GetPatternString(pattern, n)}");
             else
-                Log.LogMessage(LogSeverity.Warning, $"Unknown effect code ({fx.fx}) and will be ignored. {GetPatternString(pattern, n)}");
+                Log.LogMessage(LogSeverity.Warning, $"The effect code ({fx.fx}) is unknown and will be ignored. {GetPatternString(pattern, n)}");
         }
 
         protected string GetPatternString(Pattern pattern, int n)
@@ -862,7 +862,7 @@ namespace FamiStudio
                                                 var newNextLocation = location;
                                                 s.AdvanceNumberOfFrames(ref newNextLocation, numFrames, note.HasNoteDelay ? -note.NoteDelay : 0, songSpeed, s.Project.PalMode);
                                                 nextLocation = NoteLocation.Min(nextLocation, newNextLocation);
-                                                Log.LogMessage(LogSeverity.Warning, $"Effect 1xx on noise channel may not song correct due to the massive differences in how both app handle those. {GetPatternString(c.PatternInstances[location.PatternIndex], location.NoteIndex)}");
+                                                Log.LogMessage(LogSeverity.Warning, $"The 1xx/2xx effect on the noise channel may not sound correct due to the massive differences in how FamiTracker and FamiStudio handle those. {GetPatternString(c.PatternInstances[location.PatternIndex], location.NoteIndex)}");
                                                 clearSlide = true;
                                                 break;
                                             }
@@ -1109,7 +1109,7 @@ namespace FamiStudio
 
             if (project.UsesVrc6Expansion)
             {
-                Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio is not affected by the duty cycle and is instead controlled by a 'Saw Master Volume' on this instrument. You will likely have to adjust this to get the correct volume.");
+                Log.LogMessage(LogSeverity.Warning, $"VRC6 Saw volumes in FamiStudio are not affected by the duty cycle and are instead controlled by a 'Saw Master Volume' on the instrument. You will likely have to adjust this to get the correct volume.");
             }
 
             var mappedSamplesSize = project.GetTotalMappedSampleSize();
@@ -1206,7 +1206,7 @@ namespace FamiStudio
                     var env = inst.Envelopes[i];
                     if (env != null && !env.ValuesInValidRange(inst, i))
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"Envelope '{EnvelopeType.LocalizedNames[i]}' of instrument '{inst.Name}' have values outside of the supported range, clamping.");
+                        Log.LogMessage(LogSeverity.Warning, $"Envelope '{EnvelopeType.LocalizedNames[i]}' of instrument '{inst.Name}' has values outside of the supported range, clamping.");
                         env.ClampToValidRange(inst, i);
                     }
                 }
@@ -1252,7 +1252,7 @@ namespace FamiStudio
                 if (songDurations.TryGetValue(s, out var duration) && duration < s.Length)
                 {
                     s.SetLength(duration);
-                    Log.LogMessage(LogSeverity.Warning, $"Patterns at end of song '{s.Name}' are unreachable due to a previous jump (Bxx), truncating.");
+                    Log.LogMessage(LogSeverity.Warning, $"Patterns at the end of the song '{s.Name}' are unreachable due to a previous jump (Bxx), truncating.");
                 }
 
                 s.DeleteNotesPastMaxInstanceLength();

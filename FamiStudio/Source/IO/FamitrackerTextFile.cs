@@ -77,7 +77,7 @@ namespace FamiStudio
             }
             else
             {
-                Log.LogMessage(LogSeverity.Warning, $"Missing header, file is likely not a FamiTracker text export.");
+                Log.LogMessage(LogSeverity.Warning, $"Missing header, the file is likely not a FamiTracker text export.");
                 return null;
             }
 
@@ -157,7 +157,7 @@ namespace FamiStudio
                             SetFamiTrackerEnvelope(expansion, type, idx, env);
 
                             if (famistudioType == EnvelopeType.Arpeggio && arp != 0)
-                                Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {idx} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
+                                Log.LogMessage(LogSeverity.Warning, $"The arpeggio envelope {idx} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
                         }
                         else
                         {
@@ -248,12 +248,12 @@ namespace FamiStudio
                             var arp = instrument.Envelopes[EnvelopeType.Arpeggio];
                             if (arp.IsEmpty(EnvelopeType.Arpeggio) && arp.Length > 0 && arp.Loop >= 0)
                             {
-                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses a looping null arpeggio envelope and a pitch envelopes. Assuming envelope should be 'Absolute'.");
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses a looping null arpeggio envelope and a pitch envelope. Assuming envelope should be 'Absolute'.");
                                 instrument.Envelopes[EnvelopeType.Pitch].Relative = false;
                             }
                             else
                             {
-                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different way FamiTracker/FamiStudio handles those.");
+                                Log.LogMessage(LogSeverity.Warning, $"Instrument '{instrument.Name}' uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different handling of those between FamiTracker and FamiStudio.");
                             }
                         }
 
@@ -479,7 +479,7 @@ namespace FamiStudio
                                     fx.fx = (byte)fdsFx;
                                 else {
                                     if (!TextToEffectLookup.TryGetValue(fxStr[0], out fx.fx))
-                                        Log.LogMessage(LogSeverity.Warning, $"Unknown effect code ({fxStr[0]}) and will be ignored. {GetPatternString(pattern, n)}");
+                                        Log.LogMessage(LogSeverity.Warning, $"The effect code ({fxStr[0]}) is unknown and will be ignored. {GetPatternString(pattern, n)}");
                                 }
 
                                 fx.param = Convert.ToByte(fxStr.Substring(1), 16);
@@ -877,7 +877,7 @@ namespace FamiStudio
                         !instrument.IsEnvelopeEmpty(EnvelopeType.Pitch)  ||
                         !instrument.IsEnvelopeEmpty(EnvelopeType.Arpeggio))
                     {
-                        Log.LogMessage(LogSeverity.Warning, $"VRC7 Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
+                        Log.LogMessage(LogSeverity.Warning, $"The VRC7 Instrument '{instrument.Name}' uses a volume, pitch or arpeggio envelope. FamiTracker does not support this. Ignoring.");
                     }
                 }
                 else if (instrument.IsN163)

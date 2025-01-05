@@ -156,12 +156,12 @@ namespace FamiStudio
                 var arp = instrument.Envelopes[EnvelopeType.Arpeggio];
                 if (arp.IsEmpty(EnvelopeType.Arpeggio) && arp.Length > 0 && arp.Loop >= 0)
                 {
-                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses a looping null arpeggio envelope and a pitch envelopes. Assuming envelope should be 'Absolute'.");
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses a looping null arpeggio envelope and a pitch envelope. Assuming envelope should be 'Absolute'.");
                     instrument.Envelopes[EnvelopeType.Pitch].Relative = false;
                 }
                 else
                 {
-                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different way FamiTracker/FamiStudio handles those.");
+                    Log.LogMessage(LogSeverity.Warning, $"Instrument {instIdx:X2} uses both an arpeggio envelope and a pitch envelope. This instrument will likely require manual corrections due to the vastly different handling of those between FamiTracker and FamiStudio.");
                 }
             }
         }
@@ -433,7 +433,7 @@ namespace FamiStudio
                 env.Relative = type == 2 /* SEQ_PITCH */;
 
                 if (type == 1 /*SEQ_ARPEGGIO*/ && setting != 0)
-                    Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
+                    Log.LogMessage(LogSeverity.Warning, $"The arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
             }
 
             return true;
@@ -512,7 +512,7 @@ namespace FamiStudio
                 }
 
                 if (type == 1 /*SEQ_ARPEGGIO*/ && setting != 0)
-                    Log.LogMessage(LogSeverity.Warning, $"Arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
+                    Log.LogMessage(LogSeverity.Warning, $"The arpeggio envelope {indices[i]} uses 'Fixed' or 'Relative' mode. FamiStudio only supports the default 'Absolute' mode.");
            }
 
             return true;
