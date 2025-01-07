@@ -143,7 +143,7 @@ namespace FamiStudio
                             {
                                 if (existingPattern != null)
                                 {
-                                    patName = song.Channels[patChannel].GenerateUniquePatternNameSmart(patName);
+                                    patName = song.GetChannelByType(patChannel).GenerateUniquePatternNameSmart(patName);
                                 }
 
                                 var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
