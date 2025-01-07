@@ -141,12 +141,14 @@ namespace FamiStudio
                         {
                             if (!checkOnly)
                             {
+                                var chan = song.GetChannelByType(patChannel);
+
                                 if (existingPattern != null)
                                 {
-                                    patName = song.GetChannelByType(patChannel).GenerateUniquePatternNameSmart(patName);
+                                    patName = chan.GenerateUniquePatternNameSmart(patName);
                                 }
 
-                                var pattern = song.GetChannelByType(patChannel).CreatePattern(patName);
+                                var pattern = chan.CreatePattern(patName);
                                 serializer.RemapId(patId, pattern.Id);
                                 pattern.Serialize(serializer);
                                 pattern.Name = patName;
