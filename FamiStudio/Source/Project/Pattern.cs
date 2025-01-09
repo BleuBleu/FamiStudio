@@ -311,7 +311,16 @@ namespace FamiStudio
             {
                 var note = vals[i];
                 if (note == null || note.IsEmpty || note.IsUseless)
+                {
+                #if DEBUG
+                    if (note != null && note.IsUseless)
+                    {
+                        Debug.WriteLine($"Removing useless note : {note}");
+                    }
+                #endif
+
                     notes.Remove(keys[i]);
+                }
             }
         }
 

@@ -2260,6 +2260,11 @@ namespace FamiStudio
 
                             note.Duration = 1;
                         }
+                        else if (!note.IsValid)
+                        {
+                            // This will ensure the note is considered "Useless" and may therefore be deleted.
+                            note.Instrument = null;
+                        }
                     }
                 }
 

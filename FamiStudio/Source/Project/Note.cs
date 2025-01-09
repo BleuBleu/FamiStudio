@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Text;
 
 namespace FamiStudio
 {
@@ -548,7 +549,39 @@ namespace FamiStudio
 
         public override string ToString()
         {
-            return IsMusical ? FriendlyName : base.ToString();
+            if (IsMusical)
+            {
+                return FriendlyName + (instrument != null ? $" ({instrument.Name})" : "");
+            }
+            else if (IsRelease)
+            {
+                return "Release";
+            }
+            else if (IsStop)
+            {
+                return "Stop";
+            }
+            else if (effectMask != 0)
+            {
+                var n = new StringBuilder();
+                for (var i = 0; i < EffectCount; i++)
+                {
+                    if (HasValidEffectValue(i))
+                    {
+                        if (n.Length > 0)
+                        {
+                            n.Append("|");
+                        }
+
+                        n.Append($"{EffectType.LocalizedNames[i]}={GetEffectValue(i)}");
+                    }
+                }
+                return n.ToString();
+            }
+            else
+            {
+                return "Empty";
+            }
         }
 
         public bool IsEmpty => Value == Note.NoteInvalid && Flags == 0 && SlideNoteTarget == 0 && EffectMask == 0;
@@ -556,7 +589,8 @@ namespace FamiStudio
 
         // To fix some bad data from old versions.
         // NOTE : Keeping notes if they have jumps/skips since they will be cleaned up once the file is completely loaded.
-        public bool IsUseless => (IsSlideNote || instrument != null) && !IsValid && Flags == 0 && EffectMask == 0;
+        public bool IsUseful  => instrument != null || IsValid || IsStop || IsRelease || effectMask != 0 || HasJumpOrSkip;
+        public bool IsUseless => !IsUseful;
 
         public bool MatchesFilter(NoteFilter filter)
         {
