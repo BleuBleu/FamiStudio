@@ -37,7 +37,7 @@ namespace FamiStudio
 
             if (!project.UsesExpansionAudio(instType))
             {
-                Log.LogMessage(LogSeverity.Error, "OPNI import only supported by EPSM expansion");
+                Log.LogMessage(LogSeverity.Error, "OPNI import only supported by EPSM expansion.");
                 return null;
             }
 

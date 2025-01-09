@@ -19,7 +19,7 @@ The engine, as well as a demo project, is available for all 4 major assemblers:
 
 The engine has a basic set of features, as well as a few extra toggeable features that you may wish to disable to same CPU/RAM. If you disable a feature, you need to make sure that you definitely are not using it in any of your songs. Using a feature in a song without enabling it in the song engine may lead to crashes (BRK) or undefined behaviors.
 
-The basic feature set that is always available in engine is:
+The basic feature set that is always available in the engine is:
 
 * Support for the first four 2A03 channels (2 squares, triangle and noise channel).
 * Support for the full 96 notes (C0 to B7).

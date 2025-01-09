@@ -188,13 +188,13 @@ namespace FamiStudio
                 // These checks are done in famitracker too..
                 if (waveSize <= 0 || waveSize > 32)
                 {
-                    Log.LogMessage(LogSeverity.Error, "Invalid N163 wave size. Make sure the instrument came from the original Famitracker 0.4.6.");
+                    Log.LogMessage(LogSeverity.Error, "Invalid N163 wave size. Make sure the instrument came from the original FamiTracker 0.4.6.");
                     return null;
                 }
 
                 if (waveCount <= 0 || waveCount > 16)
                 {
-                    Log.LogMessage(LogSeverity.Error, "Invalid N163 wave count. Make sure the instrument came from the original Famitracker 0.4.6.");
+                    Log.LogMessage(LogSeverity.Error, "Invalid N163 wave count. Make sure the instrument came from the original FamiTracker 0.4.6.");
                     return null;
                 }
 

@@ -11,10 +11,10 @@ Great little NES sound emulation library created by [Blargg](http://www.slack.ne
 Originally a Winamp plugin to play NSF created by [Disch](http://www.vgmpf.com/Wiki/index.php/Not_So,_Fatso!), it was stripped down to only keep the audio emulation core and is used for the NSF import.
 
 ### emu2149
-Small library that emulates the YM2149 chip (aka PSG), created by by [Mitsutaka Okazaki](https://github.com/okaxaki). It is used for the EPSM emulation.
+Small library that emulates the YM2149 chip (aka PSG), created by by [Mitsutaka Okazaki](https://github.com/okaxaki). It is used for EPSM SSG and S5B emulation.
 
 ### emu2413
-Very similar to emu2149 and also created by [Mitsutaka Okazaki](https://github.com/okaxaki), but used for the VRC7 emulation. 
+Very similar to emu2149 and also created by [Mitsutaka Okazaki](https://github.com/okaxaki), but used for VRC7 emulation.
 
 ### Nuked-OPN2
 [OPN2](https://github.com/nukeykt/Nuked-OPN2) is a high-accuracy YM3438 emulator. FamiStudio uses a slightly modified version of this library from [BambooTracker](https://github.com/BambooTracker/BambooTracker/tree/master/BambooTracker/chip/nuked) for EPSM emulation.
@@ -39,9 +39,11 @@ Created by the [Xiph.Org Foundation](https://xiph.org/). Used for the OGG/Vorbis
 A few demo songs are also provided with FamiStudio. Unless mentioned, the demo songs are my re-creations, done by reverse-engineering the NSF. Many thanks to the contributors.
 
 * Another Winter - Anamanaguchi (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
+* Breaking Through - Zabutom (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Castlevania 2 - Bloody Tears
 * Dedrecil - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * DuckTales! - The Moon
+* Evil Clockwork - Original (by <a href='https://www.youtube.com/@kawashin7427'>Kawashin</a>)
 * Gimmick - Strange Memories of Death (Improvements contributed by [marklincadet](https://youtube.com/@marklincadet))
 * Gradius II - Farewell
 * Gyruss - Stage 2
@@ -54,7 +56,9 @@ A few demo songs are also provided with FamiStudio. Unless mentioned, the demo s
 * Megami Tensei II - Explorer (Contributed by [marklincadet](https://youtube.com/@marklincadet))
 * Mina the Hollower - Crypt Road (cover by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
 * Nice - Full Soundtrack (by <a href='https://www.youtube.com/c/How2Bboss'>How2Bboss</a>)
-* Ochame Kinou - (cover by <a href='https://www.youtube.com/channel/UC5ttIE37dv2BFPzbaSBdrXQ'>Kawashin</a>)
+* Ochame Kinou - (cover by <a href='https://www.youtube.com/@kawashin7427'>Kawashin</a>)
+* Pressure Burst - Original (by <a href='https://www.youtube.com/@kawashin7427'>Kawashin</a> and <a href='https://www.youtube.com/@HMister'>H-Mister</a>)
+* Terraria Calamity Mod - Roar of The Jungle Dragon (DM DOKUROM, cover by <a href='https://www.youtube.com/@NicolARark'>NicolARark</a>)
 * SCAT - Stage 1 (Contributed by [marklincadet](https://youtube.com/@marklincadet))
 * Seashell Searching - Original (by Rei8bit)
 * Shatterhand - Final Stage
