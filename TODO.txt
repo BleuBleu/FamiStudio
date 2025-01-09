@@ -10,21 +10,22 @@
 	https://discord.com/channels/747649221879922840/798008185977176074/1325678412135661679
 - Another steo assert
 	https://discord.com/channels/747649221879922840/798008185977176074/1325985898877423748
-- Paste PR Steo
 - Include linux executable to package.
 
 Change log:
 ==========
 *** RECOMPILE NESSNDEMU ON ALL PLATFORMS FOR MMC5 FIX!
-- Fixed MMC5 volume being too quiet
+- Fixed MMC5 volume being too quiet (Thanks Steo!)
 - Fixed crash when entering '-' in numeric up-down
+- Fixed crash when pasting patterns between projects with different expansions (Thanks Steo!)
 - Fixed MIDI channel 10 drum key map
 - Fixed undo/redo not working properly on instrument parameter sliders
 - Fixed crash when exporting video after cancelling a preview on mobile
-- Fixed PAL toggling for ROM files
-- Fixed DPCM preview button playing the audio more times than intended
-- Fixed multiple typos and localization issues
+- Fixed PAL toggling for ROM files (Thanks Steo!)
+- Fixed DPCM preview button playing the audio more times than intended (Thanks Steo!)
+- Fixed multiple typos and localization issues (Thanks Alex and Nyaongi!)
 - Added missing note tables in the sound engine zip distribution
+- Added Linux executable
 
 Linux notes 
 =========== 
