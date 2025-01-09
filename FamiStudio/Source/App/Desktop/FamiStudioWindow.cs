@@ -411,10 +411,7 @@ namespace FamiStudio
                 return;
             }
 
-            if (famistudio.TryClosing())
-            {
-                Quit();
-            }
+            famistudio.TryClosingAsync(Quit);
         }
 
         public static void GLFWToWindow(double dx, double dy, out int x, out int y)

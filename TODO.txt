@@ -1,15 +1,14 @@
 4.3.1
 =====
+- TEST MORE DIALOGS (note resize, etc.)
+- TEST MORE COPY PASTE (between project, special, special del, etc.)
+
 / Follow up on flathub video issues
 	=> Revert the flatpak changes as well.
 - Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
 - Arp issue alex : https://discord.com/channels/747649221879922840/1319347249884430368/1319347249884430368
 / Merge latest KOR (contains alex fixes.)
 	=> Latest KOR is misaligned.
-- DPCM Steo transaction issue:
-	https://discord.com/channels/747649221879922840/798008185977176074/1325678412135661679
-- Another steo assert
-	https://discord.com/channels/747649221879922840/798008185977176074/1325985898877423748
 
 Change log:
 ==========

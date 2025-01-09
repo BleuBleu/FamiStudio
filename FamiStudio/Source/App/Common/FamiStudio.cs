@@ -1290,7 +1290,7 @@ namespace FamiStudio
             Sequencer.InvalidatePatternCache();
         }
 
-        public bool TryClosing()
+        public void TryClosingAsync(Action closeAction)
         {
             var close = false;
 
@@ -1306,10 +1306,8 @@ namespace FamiStudio
                 ShutdownAudioPlayers(true);
                 SaveSettings();
 
-                close = true;
+                closeAction();
             });
-
-            return close;
         }
 
         private void ApplySettings()
@@ -1980,8 +1978,7 @@ namespace FamiStudio
             }
             else if (Platform.IsMacOS && e.Control && e.Key == Keys.Q)
             {
-                if (TryClosing())
-                    window.Quit();
+                TryClosingAsync(window.Quit);
             }
             else if (!recordingMode)
             {
