@@ -414,13 +414,13 @@ namespace FamiStudio
                         page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000", "20000", "30000" }, "8000", VideoBitRateTooltip); // 5
                         page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 6
                         page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, DelayTooltip); // 7
-                        page.AddNumericUpDown(OscColumnsLabel.Colon, Utils.DivideAndRoundUp(numActiveChannels, 8), 1, 5, 1, OscColumnsTooltip); // 8
+                        page.AddNumericUpDown(OscColumnsLabel.Colon, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), 1, 5, 1, OscColumnsTooltip); // 8
                         page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 9
                         page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
                         page.AddDropDownList(PianoRollNoteWidthLabel.Colon, new[] { "Auto", "50%", "75%", "100%", "125%", "150%", "175%", "200%" }, "Auto", PianoRollNoteWidthTooltip); // 12
                         page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "6.25%", "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTooltip); // 13
-                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, Utils.DivideAndRoundUp(numActiveChannels, 8), 1, 16, 1, PianoRollNumRowsTooltip); // 14
+                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), 1, 16, 1, PianoRollNumRowsTooltip); // 14
                         page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "30°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 15
                         page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 16
                         page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 17
