@@ -1,6 +1,6 @@
 4.3.1
 =====
-- TEST MORE DIALOGS (note resize, etc.)
+/ TEST MORE DIALOGS (note resize, etc.)
 - TEST MORE COPY PASTE (between project, special, special del, etc.)
 
 / Follow up on flathub video issues
@@ -12,7 +12,6 @@
 
 Change log:
 ==========
-*** RECOMPILE NESSNDEMU ON ALL PLATFORMS FOR MMC5 FIX!
 - Fixed MMC5 volume being too quiet (Thanks Steo!)
 - Fixed crash when entering '-' in numeric up-down
 - Fixed crash when pasting patterns between projects with different expansions (Thanks Steo!)
