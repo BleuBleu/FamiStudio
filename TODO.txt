@@ -13,7 +13,6 @@
 Change log:
 ==========
 - Fixed MMC5 volume being too quiet (Thanks Steo!)
-- Fixed crash when entering '-' in numeric up-down
 - Fixed crash when pasting patterns between projects with different expansions (Thanks Steo!)
 - Fixed MIDI channel 10 drum key map
 - Fixed undo/redo not working properly on instrument parameter sliders
@@ -21,7 +20,8 @@ Change log:
 - Fixed PAL toggling for ROM files (Thanks Steo!)
 - Fixed DPCM preview button playing the audio more times than intended (Thanks Steo!)
 - Fixed multiple typos and localization issues (Thanks Alex and Nyaongi!)
-- Fixed issue where some undo/redo operations could be lost when using non-native OS dialogs
+- Fixed multiple issues when using non-native OS dialogs
+- Fixed crash when entering '-' in numeric up-down
 - Added missing note tables in the sound engine zip distribution
 - Added Linux executable
 
