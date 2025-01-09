@@ -2,6 +2,7 @@ set /p Version=<Version.txt
 if not exist ..\FamiStudio%Version%-SoundEngine mkdir ..\FamiStudio%Version%-SoundEngine
 robocopy ..\SoundEngine\ ..\FamiStudio%Version%-SoundEngine *.h *.asm *.nes *.s *.txt
 robocopy ..\SoundEngine\DemoSource\ ..\FamiStudio%Version%-SoundEngine\DemoSource *.c *.asm *.s *.cfg *.chr *.dmc *.pal *.rle build*.bat demo_ca65.inc export_from_famistudio.bat
+robocopy ..\SoundEngine\NoteTables\ ..\FamiStudio%Version%-SoundEngine\NoteTables *.bin
 ..\Tools\fart --remove ..\FamiStudio%Version%-SoundEngine\DemoSource\*.bat ..\..\Tools\
 ..\Tools\fart --remove ..\FamiStudio%Version%-SoundEngine\DemoSource\build_demo_asm6.bat ..\Tools\
 del ..\FamiStudio%Version%-SoundEngine\DemoSource\*_cc65.s
