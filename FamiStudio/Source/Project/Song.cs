@@ -784,6 +784,8 @@ namespace FamiStudio
 
         private void ConvertJumpSkipEffects()
         {
+            var notesToClear = new HashSet<Note>();
+
             for (int i = 0; i < songLength; i++)
             {
                 foreach (var channel in channels)
@@ -796,23 +798,32 @@ namespace FamiStudio
                         {
                             var note = kv.Value;
 
-                            // Converts old Jump effects to loop points.
-                            // The first Jump effect will give us our loop point.
-                            if (loopPoint == 0 && note.Jump != 0xff)
+                            if (note.HasJumpOrSkip)
                             {
-                                SetLoopPoint(note.Jump);
-                            }
 
-                            // Converts old Skip effects to custom pattern instances lengths.
-                            if (note.Skip != 0xff)
-                            {
-                                SetPatternCustomSettings(i, kv.Key + 1, BeatLength);
-                            }
+                                // Converts old Jump effects to loop points.
+                                // The first Jump effect will give us our loop point.
+                                if (loopPoint == 0 && note.Jump != 0xff)
+                                {
+                                    SetLoopPoint(note.Jump);
+                                }
 
-                            note.ClearJumpSkip();
+                                // Converts old Skip effects to custom pattern instances lengths.
+                                if (note.Skip != 0xff)
+                                {
+                                    SetPatternCustomSettings(i, kv.Key, BeatLength);
+                                }
+
+                                notesToClear.Add(note);
+                            }
                         }
                     }
                 }
+            }
+
+            foreach (var note in notesToClear)
+            {
+                note.ClearJumpSkip();
             }
         }
 
