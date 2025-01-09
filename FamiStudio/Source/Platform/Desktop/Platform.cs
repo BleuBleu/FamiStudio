@@ -182,8 +182,16 @@ namespace FamiStudio
 
         public static void MessageBoxAsync(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons, Action<DialogResult> callback = null)
         {
-            var res = MessageBox(win, text, title, buttons);
-            callback?.Invoke(res);
+            if (Settings.UseOSDialogs || win == null)
+            {
+                var res = PlatformMessageBox(win, text, title, buttons);
+                callback?.Invoke(res);
+            }
+            else
+            {
+                var dlg = new MessageDialog(win, text, title, buttons);
+                dlg.ShowDialogAsync(callback);
+            }
         }
 
         public static void DelayedMessageBoxAsync(string text, string title)

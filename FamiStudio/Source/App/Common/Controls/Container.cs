@@ -260,7 +260,7 @@ namespace FamiStudio
                 {
                     if (ctrl.Visible)
                     {
-                        if (ctrl.TickEnabled)
+                        if (ctrl.TickEnabled && ShouldTickChild(ctrl))
                             controlsToTick.Add(ctrl);
                         if (ctrl is Container cont)
                             cont.GatherChildrenToTick(delta, ref controlsToTick);
@@ -288,6 +288,11 @@ namespace FamiStudio
                 //Debug.WriteLine($"Ticking {ctrl}");
                 ctrl.Tick(delta);
             }
+        }
+
+        protected virtual bool ShouldTickChild(Control c)
+        {
+            return true;
         }
 
         protected void RenderChildControlsAndContainers(Graphics g)

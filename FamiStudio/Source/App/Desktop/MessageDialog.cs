@@ -17,6 +17,8 @@ namespace FamiStudio
         private Button[] buttons;
         private DialogResult[] results;
 
+        public override bool Modal => true;
+
         private static readonly string[] ButtonLabels = new []
         {
             "",       // None

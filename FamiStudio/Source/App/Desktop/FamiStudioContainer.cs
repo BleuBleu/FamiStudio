@@ -95,6 +95,13 @@ namespace FamiStudio
             return true;
         }
 
+        protected override bool ShouldTickChild(Control c)
+        {
+            // Dont allow ticking the main controls (piano roll, etc.) if the top dialog is "modal".
+            // This fixes issue where the main controls still tick when using non-OS native dialog such as message boxes.
+            return !IsDialogActive || !TopDialog.Modal || c.ParentDialog == TopDialog;
+        }
+
         public List<Control> GetControlsForKeyboard(out bool isMainFamistudioControls)
         {
             var keyControls = new List<Control>();

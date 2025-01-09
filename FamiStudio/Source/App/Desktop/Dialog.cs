@@ -26,6 +26,7 @@ namespace FamiStudio
         protected int titleBarSizeY;
 
         public DialogResult DialogResult => result;
+        public virtual bool Modal => false;
 
         public Control FocusedControl
         {

@@ -10,7 +10,6 @@
 	https://discord.com/channels/747649221879922840/798008185977176074/1325678412135661679
 - Another steo assert
 	https://discord.com/channels/747649221879922840/798008185977176074/1325985898877423748
-- Include linux executable to package.
 
 Change log:
 ==========
@@ -24,6 +23,7 @@ Change log:
 - Fixed PAL toggling for ROM files (Thanks Steo!)
 - Fixed DPCM preview button playing the audio more times than intended (Thanks Steo!)
 - Fixed multiple typos and localization issues (Thanks Alex and Nyaongi!)
+- Fixed issue where some undo/redo operations could be lost when using non-native OS dialogs
 - Added missing note tables in the sound engine zip distribution
 - Added Linux executable
 
