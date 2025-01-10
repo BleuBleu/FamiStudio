@@ -111,7 +111,8 @@ namespace FamiStudio
                     if (c == 0 && mergeCheckboxAndLabel)
                     {
                         var checkBox = new CheckBox((bool)data[r, c], (string)data[r, c + 1]);
-                        checkBox.Move(0, y, width, rowHeight); 
+                        checkBox.Move(0, y, width, rowHeight);
+                        checkBox.CheckedChanged += CheckBox_CheckedChanged;
                         checkBox.Enabled = !gridDisabled[r, 0] && enabled;
                         AddControl(checkBox);
 
