@@ -22,6 +22,7 @@ Change log:
 - Fixed multiple typos and localization issues (Thanks Alex and Nyaongi!)
 - Fixed multiple issues when using non-native OS dialogs
 - Fixed crash when entering '-' in numeric up-down
+- Fixed checkboxes resettings on mobile when the screen was resized
 - Added missing note tables in the sound engine zip distribution
 - Added Linux executable
 
