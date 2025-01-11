@@ -2264,6 +2264,8 @@ namespace FamiStudio
                         {
                             // This will ensure the note is considered "Useless" and may therefore be deleted.
                             note.Instrument = null;
+                            note.Duration = 0;
+                            note.Release = 0;
                         }
                     }
                 }

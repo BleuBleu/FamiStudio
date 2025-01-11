@@ -206,6 +206,10 @@ namespace FamiStudio
                     release = (ushort)Utils.Clamp(value, 0, (int)ushort.MaxValue);
                     ClearReleaseIfPastDuration();
                 }
+                else
+                {
+                    release = 0;
+                }
             }
         }
 
