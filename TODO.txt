@@ -1,31 +1,3 @@
-4.3.1
-=====
-/ TEST MORE DIALOGS (note resize, etc.)
-- TEST MORE COPY PASTE (between project, special, special del, etc.)
-
-/ Follow up on flathub video issues
-	=> Revert the flatpak changes as well.
-- Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
-- Arp issue alex : https://discord.com/channels/747649221879922840/1319347249884430368/1319347249884430368
-/ Merge latest KOR (contains alex fixes.)
-	=> Latest KOR is misaligned.
-
-Change log:
-==========
-- Fixed MMC5 volume being too quiet (Thanks Steo!)
-- Fixed crash when pasting patterns between projects with different expansions (Thanks Steo!)
-- Fixed MIDI channel 10 drum key map
-- Fixed undo/redo not working properly on instrument parameter sliders
-- Fixed crash when exporting video after cancelling a preview on mobile
-- Fixed PAL toggling for ROM files (Thanks Steo!)
-- Fixed DPCM preview button playing the audio more times than intended (Thanks Steo!)
-- Fixed multiple typos and localization issues (Thanks Alex and Nyaongi!)
-- Fixed multiple issues when using non-native OS dialogs
-- Fixed crash when entering '-' in numeric up-down
-- Fixed checkboxes resettings on mobile when the screen was resized
-- Added missing note tables in the sound engine zip distribution
-- Added Linux executable
-
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
@@ -138,6 +110,8 @@ Discord
 
 Backlog: 
 =========
+- Cant set slider to zero : https://discord.com/channels/747649221879922840/1281239636743688255
+- Arp issue alex : https://discord.com/channels/747649221879922840/1319347249884430368/1319347249884430368
 - Tempo doesnt match DAWS (50/60 + rounding).
 	https://discord.com/channels/747649221879922840/747649222354010173/1320574976490999920
 - Volgona slide note N163
