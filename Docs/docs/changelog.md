@@ -4,6 +4,25 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.3.1 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed MMC5 volume being too quiet (Thanks Steo!)
+* Fixed crash when pasting patterns between projects with different expansions (Thanks Steo!)
+* Fixed MIDI channel 10 drum key map
+* Fixed undo/redo not working properly on instrument parameter sliders
+* Fixed crash when exporting video after cancelling a preview on mobile
+* Fixed PAL toggling for ROM files (Thanks Steo!)
+* Fixed DPCM preview button playing the audio more times than intended (Thanks Steo!)
+* Fixed multiple typos and localization issues (Thanks Alex and Nyaongi!)
+* Fixed multiple issues when using non-native OS dialogs
+* Fixed crash when entering multiple '-' in numeric up-down
+* Fixed checkboxes resettings on mobile when the screen was resized
+* Reverted non-functional flatpak video changes
+* Added missing note tables in the sound engine zip distribution
+* Added Linux executable
+
 ## Version 4.3.0
 
 [![](releases/430/Thumbnail430.png#center)](releases/430.md)
