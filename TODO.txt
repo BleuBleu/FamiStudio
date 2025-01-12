@@ -1,3 +1,8 @@
+4.4.0
+=====
+- Blip buffer accuracy stuff + make everything 32-bit in NesSndEmu on all platforms.
+- 
+
 Linux notes 
 =========== 
 - When slow startup in VM : dbus-launch --exit-with-session mono FamiStudio.exe 
