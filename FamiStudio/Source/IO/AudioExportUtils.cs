@@ -230,7 +230,7 @@ namespace FamiStudio
                 if ((channelBit & channelMask) != 0)
                 {
                     var player = new WavPlayer(sampleRate, pal, outputsStereo, loopCount, channelBit, threadIndex, NesApu.TND_MODE_SEPARATE);
-                    channelSamples[channelIdx] = player.GetSongSamples(song, duration, log, allowAbort);
+                    channelSamples[channelIdx] = player.GetSongSamples(song, duration, false, allowAbort); // Cannot log, we are not on main thread.
 
                     if (Log.ShouldAbortOperation)
                         return false;

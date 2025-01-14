@@ -282,6 +282,7 @@ namespace FamiStudio
 
         public void RunEventLoop(bool allowSleep = false)
         {
+            Debug.Assert(Platform.IsInMainThread());
             RunIteration(allowSleep);
         }
 
