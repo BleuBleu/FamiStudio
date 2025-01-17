@@ -4,6 +4,12 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.3.2 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed crash when exporting audio/video 
+
 ## Version 4.3.1 (Hotfix)
 
 Changes/Fixes:

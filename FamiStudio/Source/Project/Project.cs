@@ -1970,175 +1970,180 @@ namespace FamiStudio
                 return true;
             }
 
-            var numN163Instruments = instruments.Count(i => i.IsN163);
-            var numN163AutoPos = instruments.Count(i => i.IsN163 && i.N163WaveAutoPos);
+            // HACK : Last minute hack, when exporting we spawn multiple WavPlayer threads and 
+            // those may end up all in this functions.
+            lock (this)
+            { 
+                var numN163Instruments = instruments.Count(i => i.IsN163);
+                var numN163AutoPos = instruments.Count(i => i.IsN163 && i.N163WaveAutoPos);
 
-            if (numN163AutoPos == 0)
-            {
-                wavePositions = null;
-                return true;
-            }
-
-            //var A = Platform.TimeSeconds();
-
-            const int numBitsPerLong = sizeof(ulong) * 8;
-
-            var instrumentOverlaps = new Dictionary<Instrument, HashSet<Instrument>>(numN163AutoPos);
-            
-            foreach (var song in songs)
-            {
-                var numFrames = song.EndLocation.ToAbsoluteNoteIndex(song);
-                var numLongs = Utils.DivideAndRoundUp(numFrames, numBitsPerLong);
-                var instrumentMasks = new Dictionary<Instrument, N163Mask>(numN163Instruments);
-
-                // Buld a huge bitmask that tells us which frame each instrument is used.
-                // This is a bit overkill, but is very simple.
-                for (var i = 0; i < expansionNumN163Channels; i++)
+                if (numN163AutoPos == 0)
                 {
-                    var channel = song.GetChannelByType(ChannelType.N163Wave1 + i);
+                    wavePositions = null;
+                    return true;
+                }
 
-                    // TODO : This ignores FamiTracker delayed cuts, so it may generate sub-optimal results when they are used.
-                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                //var A = Platform.TimeSeconds();
+
+                const int numBitsPerLong = sizeof(ulong) * 8;
+
+                var instrumentOverlaps = new Dictionary<Instrument, HashSet<Instrument>>(numN163AutoPos);
+            
+                foreach (var song in songs)
+                {
+                    var numFrames = song.EndLocation.ToAbsoluteNoteIndex(song);
+                    var numLongs = Utils.DivideAndRoundUp(numFrames, numBitsPerLong);
+                    var instrumentMasks = new Dictionary<Instrument, N163Mask>(numN163Instruments);
+
+                    // Buld a huge bitmask that tells us which frame each instrument is used.
+                    // This is a bit overkill, but is very simple.
+                    for (var i = 0; i < expansionNumN163Channels; i++)
                     {
-                        var note = it.Note;
+                        var channel = song.GetChannelByType(ChannelType.N163Wave1 + i);
 
-                        if (note.Instrument != null)
+                        // TODO : This ignores FamiTracker delayed cuts, so it may generate sub-optimal results when they are used.
+                        for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
                         {
-                            if (!instrumentMasks.TryGetValue(note.Instrument, out var mask))
+                            var note = it.Note;
+
+                            if (note.Instrument != null)
                             {
-                                mask = new N163Mask(numLongs);
-                                instrumentMasks.Add(note.Instrument, mask);
-                            }
+                                if (!instrumentMasks.TryGetValue(note.Instrument, out var mask))
+                                {
+                                    mask = new N163Mask(numLongs);
+                                    instrumentMasks.Add(note.Instrument, mask);
+                                }
 
-                            // Start + end of this note, in frame.
-                            var idx1 = it.Location.ToAbsoluteNoteIndex(song);
-                            var idx2 = Math.Min(idx1 + Math.Min(note.Duration, it.DistanceToNextNote), numFrames - 1);
+                                // Start + end of this note, in frame.
+                                var idx1 = it.Location.ToAbsoluteNoteIndex(song);
+                                var idx2 = Math.Min(idx1 + Math.Min(note.Duration, it.DistanceToNextNote), numFrames - 1);
 
-                            var long1 = idx1 / numBitsPerLong;
-                            var long2 = idx2 / numBitsPerLong;
-                            var bit1  = idx1 % numBitsPerLong;
-                            var bit2  = idx2 % numBitsPerLong;
+                                var long1 = idx1 / numBitsPerLong;
+                                var long2 = idx2 / numBitsPerLong;
+                                var bit1  = idx1 % numBitsPerLong;
+                                var bit2  = idx2 % numBitsPerLong;
 
-                            var mask1 = ~((1ul << bit1) - 1ul);
-                            var mask2 =  ((1ul << bit2) - 1ul);
+                                var mask1 = ~((1ul << bit1) - 1ul);
+                                var mask2 =  ((1ul << bit2) - 1ul);
 
-                            mask.MinIndex = Math.Min(long1, mask.MinIndex);
-                            mask.MaxIndex = Math.Max(long2, mask.MaxIndex);
+                                mask.MinIndex = Math.Min(long1, mask.MinIndex);
+                                mask.MaxIndex = Math.Max(long2, mask.MaxIndex);
 
-                            if (long1 == long2)
-                            {
-                                mask.Bits[long1] |= (mask1 & mask2);
-                            }
-                            else
-                            {
-                                mask.Bits[long1] |= mask1;
-                                mask.Bits[long2] |= mask2;
+                                if (long1 == long2)
+                                {
+                                    mask.Bits[long1] |= (mask1 & mask2);
+                                }
+                                else
+                                {
+                                    mask.Bits[long1] |= mask1;
+                                    mask.Bits[long2] |= mask2;
 
-                                for (var j = long1 + 1; j < long2; j++)
-                                    mask.Bits[j] = ulong.MaxValue;
+                                    for (var j = long1 + 1; j < long2; j++)
+                                        mask.Bits[j] = ulong.MaxValue;
+                                }
                             }
                         }
                     }
-                }
 
-                // Then "AND" these masks to figure out which instruments overlap, update the map of overlaps.
-                // We create overlaps both ways, so this is O(N^2/2) i guess.
-                var it1 = instrumentMasks.GetEnumerator();
-                while (it1.MoveNext())
-                {
-                    var inst1 = it1.Current.Key;
-                    var mask1 = it1.Current.Value;
-
-                    var it2 = it1;
-                    while (it2.MoveNext())
+                    // Then "AND" these masks to figure out which instruments overlap, update the map of overlaps.
+                    // We create overlaps both ways, so this is O(N^2/2) i guess.
+                    var it1 = instrumentMasks.GetEnumerator();
+                    while (it1.MoveNext())
                     {
-                        var inst2 = it2.Current.Key;
-                        var mask2 = it2.Current.Value;
+                        var inst1 = it1.Current.Key;
+                        var mask1 = it1.Current.Value;
 
-                        if ((inst1.N163WaveAutoPos || inst2.N163WaveAutoPos) &&
-                            (mask1.MaxIndex >= mask1.MinIndex) &&
-                            (mask2.MaxIndex >= mask2.MinIndex))
+                        var it2 = it1;
+                        while (it2.MoveNext())
                         {
-                            var idx1 = Math.Max(mask1.MinIndex, mask2.MinIndex);
-                            var idx2 = Math.Min(mask1.MaxIndex, mask2.MaxIndex);
+                            var inst2 = it2.Current.Key;
+                            var mask2 = it2.Current.Value;
 
-                            for (var i = idx1; i <= idx2; i++)
+                            if ((inst1.N163WaveAutoPos || inst2.N163WaveAutoPos) &&
+                                (mask1.MaxIndex >= mask1.MinIndex) &&
+                                (mask2.MaxIndex >= mask2.MinIndex))
                             {
-                                if ((mask1.Bits[i] & mask2.Bits[i]) != 0)
+                                var idx1 = Math.Max(mask1.MinIndex, mask2.MinIndex);
+                                var idx2 = Math.Min(mask1.MaxIndex, mask2.MaxIndex);
+
+                                for (var i = idx1; i <= idx2; i++)
                                 {
-                                    if (inst1.N163WaveAutoPos)
+                                    if ((mask1.Bits[i] & mask2.Bits[i]) != 0)
                                     {
-                                        if (!instrumentOverlaps.TryGetValue(inst1, out var set1))
+                                        if (inst1.N163WaveAutoPos)
                                         {
-                                            set1 = new HashSet<Instrument>(numN163Instruments);
-                                            instrumentOverlaps.Add(inst1, set1);
+                                            if (!instrumentOverlaps.TryGetValue(inst1, out var set1))
+                                            {
+                                                set1 = new HashSet<Instrument>(numN163Instruments);
+                                                instrumentOverlaps.Add(inst1, set1);
+                                            }
+                                            set1.Add(inst2);
                                         }
-                                        set1.Add(inst2);
-                                    }
-                                    if (inst2.N163WaveAutoPos)
-                                    {
-                                        if (!instrumentOverlaps.TryGetValue(inst2, out var set2))
+                                        if (inst2.N163WaveAutoPos)
                                         {
-                                            set2 = new HashSet<Instrument>(numN163Instruments);
-                                            instrumentOverlaps.Add(inst2, set2);
+                                            if (!instrumentOverlaps.TryGetValue(inst2, out var set2))
+                                            {
+                                                set2 = new HashSet<Instrument>(numN163Instruments);
+                                                instrumentOverlaps.Add(inst2, set2);
+                                            }
+                                            set2.Add(inst1);
                                         }
-                                        set2.Add(inst1);
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            // Finally, try to assign the wave positions without generating overlap.
-            // TODO : Sort instrument by descending wav size + how much they are used maybe?
-            wavePositions = new Dictionary<int, int>(numN163AutoPos);
+                // Finally, try to assign the wave positions without generating overlap.
+                // TODO : Sort instrument by descending wav size + how much they are used maybe?
+                wavePositions = new Dictionary<int, int>(numN163AutoPos);
 
-            var maxPos = N163WaveRAMSize * 2;
-            var overlapDetected = false;
+                var maxPos = N163WaveRAMSize * 2;
+                var overlapDetected = false;
 
-            foreach (var kv in instrumentOverlaps)
-            {
-                var inst1 = kv.Key;
-                var pos1 = 0;
-                var overlapInstruments = kv.Value;
-
-                foreach (var inst2 in overlapInstruments)
+                foreach (var kv in instrumentOverlaps)
                 {
-                    var pos2 = (int)inst2.N163WavePos;
+                    var inst1 = kv.Key;
+                    var pos1 = 0;
+                    var overlapInstruments = kv.Value;
 
-                    // No position assigned yet, will be done later.
-                    if (inst2.N163WaveAutoPos && !wavePositions.TryGetValue(inst2.Id, out pos2))
+                    foreach (var inst2 in overlapInstruments)
                     {
-                        continue;
-                    }
+                        var pos2 = (int)inst2.N163WavePos;
 
-                    // If overlap, try again right after this instrument.
-                    if (pos1 + inst1.N163WaveSize > pos2 &&
-                        pos2 + inst2.N163WaveSize > pos1)
-                    {
-                        pos1 = pos2 + inst2.N163WaveSize;
-
-                        // Was not able to allocate.
-                        if (pos1 + inst1.N163WaveSize > maxPos)
+                        // No position assigned yet, will be done later.
+                        if (inst2.N163WaveAutoPos && !wavePositions.TryGetValue(inst2.Id, out pos2))
                         {
-                            Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size or minimize overlap with other instruments. Setting to 0.");
-                            pos1 = 0;
-                            overlapDetected = true;
-                            break;
+                            continue;
+                        }
+
+                        // If overlap, try again right after this instrument.
+                        if (pos1 + inst1.N163WaveSize > pos2 &&
+                            pos2 + inst2.N163WaveSize > pos1)
+                        {
+                            pos1 = pos2 + inst2.N163WaveSize;
+
+                            // Was not able to allocate.
+                            if (pos1 + inst1.N163WaveSize > maxPos)
+                            {
+                                Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size or minimize overlap with other instruments. Setting to 0.");
+                                pos1 = 0;
+                                overlapDetected = true;
+                                break;
+                            }
                         }
                     }
+
+                    wavePositions.Add(inst1.Id, pos1);
                 }
 
-                wavePositions.Add(inst1.Id, pos1);
+                //var B = Platform.TimeSeconds();
+                //Trace.WriteLine($"ASSIGN TIME! {(B - A) * 1000} ms");
+
+                return !overlapDetected;
             }
-
-            //var B = Platform.TimeSeconds();
-            //Trace.WriteLine($"ASSIGN TIME! {(B - A) * 1000} ms");
-
-            return !overlapDetected;
         }
 
         public int FindLargestUniqueId()

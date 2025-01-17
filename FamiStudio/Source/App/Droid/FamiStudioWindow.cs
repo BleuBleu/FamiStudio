@@ -786,7 +786,7 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                Debug.WriteLine($"OnTouchEvent {e.Action.ToString()} ({e.GetX()}, {e.GetY()})");
+                //Debug.WriteLine($"OnTouchEvent {e.Action.ToString()} ({e.GetX()}, {e.GetY()})");
 
                 if (e.Action == MotionEventActions.Up)
                 {
@@ -832,7 +832,7 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                //Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
                 lock (renderLock)
                 {
                     var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
