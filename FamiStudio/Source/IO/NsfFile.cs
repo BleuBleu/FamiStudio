@@ -1411,7 +1411,7 @@ namespace FamiStudio
             preserveDpcmPadding = preserveDpcmPad;
 
             var palSource = (NotSoFatso.NsfIsPal(nsf) & 1) == 1;
-            var numFrames = duration * (palSource ? 50 : 60);
+            var numFrames = (int)MathF.Round(duration * (palSource ? 50.006982f : 60.098814f));
             var clockSpeed = NotSoFatso.NsfGetClockSpeed(nsf);
 
             // Clock speed sanity check.
