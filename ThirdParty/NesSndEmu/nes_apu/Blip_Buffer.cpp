@@ -65,8 +65,8 @@ void Blip_Buffer::clear( int entire_buffer )
 
 Blip_Buffer::blargg_err_t Blip_Buffer::set_sample_rate( long new_rate, int msec )
 {
-    assert(msec > 0);
-    long new_size = (new_rate * (msec + 1) + 999) / 1000;
+	assert(msec > 0);
+	long new_size = (new_rate * (msec + 1) + 999) / 1000;
 
 	if ( buffer_size_ != new_size )
 	{
