@@ -60,19 +60,6 @@ void Nes_Apu::enable_nonlinear( double v )
 {
 	dmc.nonlinear = true;
 
-	// 0.00752: Blargg's approximation, but i find that it is pretty 
-	//          bad compared to my NES. Much too low.
-	// 0.00861: Matches the end points of 95.52 / (8128.0 / n + 100) exactly, 
-	//          but tends to underestimate the middle range where most music is 
-	//          composed.
-	// 0.00955: Best linear fit of 95.52 / (8128.0 / n + 100) found in Mathematica. 
-	//          Will likely be too loud when  both squares are at full volume, 
-	//          but this rarely happens in real songs.
-
-	// Still, I find my NES's squares to be about 10-15% louder than Mesen, NSFPlay
-	// and FamiStudio. So I wonder if we put too much trust in the equations on the 
-	// wiki. Or if my NES is broken!
-
 	square_synth.volume( 1.0 ); // Moved volume logic and mixing to simple_apu
 	
 	const double tnd = 1.0 / 196;
