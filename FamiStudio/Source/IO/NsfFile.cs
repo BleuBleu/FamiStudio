@@ -1535,8 +1535,14 @@ namespace FamiStudio
             song.InvalidateCumulativePatternCache();
             project.DeleteUnusedInstruments();
 
-            foreach (var sample in project.Samples)
-                sample.ReverseBits = reverseDpcm;
+            if (reverseDpcm)
+            {
+                foreach (var sample in project.Samples)
+                {
+                    sample.ReverseBits = true;            
+                    sample.Process();
+                }
+            }
 
             return project;
         }
