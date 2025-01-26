@@ -744,17 +744,20 @@ namespace FamiStudio
                 var px = GetPixelForNote(Song.GetPatternStartAbsoluteNoteIndex(i));
                 var sx = GetPixelForNote(patternLen, false);
 
-                c.PushTranslation(px, 0);
+                if (sx > 0)
+                {
+                    c.PushTranslation(px, 0);
 
-                var text = (i + 1).ToString();
-                if (Song.PatternHasCustomSettings(i))
-                    text += "*";
-                c.DrawText(text, Fonts.FontMedium, 0, barTextPosY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Clip, sx);
+                    var text = (i + 1).ToString();
+                    if (Song.PatternHasCustomSettings(i))
+                        text += "*";
+                    c.DrawText(text, Fonts.FontMedium, 0, barTextPosY, Theme.LightGreyColor1, TextFlags.Center | TextFlags.Clip, sx);
 
-                if (i == Song.LoopPoint)
-                    c.DrawTextureAtlas(bmpLoopPoint, headerIconPosX, headerIconPosY, bitmapScale, Theme.LightGreyColor1);
+                    if (i == Song.LoopPoint)
+                        c.DrawTextureAtlas(bmpLoopPoint, headerIconPosX, headerIconPosY, bitmapScale, Theme.LightGreyColor1);
 
-                c.PopTransform();
+                    c.PopTransform();
+                }
             }
 
             // Seek bar
