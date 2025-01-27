@@ -16,6 +16,7 @@ namespace FamiStudio
         private int buttonSizeY;
         private int hoverButtonIndex;
         private bool capture;
+        private bool changing;
         private int captureButton;
         private float changeDelay;
 
@@ -58,6 +59,7 @@ namespace FamiStudio
                     InvokeValueChangeStart();
                     changeDelay = 0.35f;
                     capture = true;
+                    changing = true;
                     captureButton = buttonIndex;
                     ChangeValue(buttonIndex);
                     SetTickEnabled(true);
@@ -71,9 +73,7 @@ namespace FamiStudio
         {
             if (e.Left && capture)
             {
-                capture = false;
-                SetTickEnabled(false);
-                InvokeValueChangeEnd();
+                StopChanging();
                 e.MarkHandled();
             }
             else if (e.Right && GetButtonIndex(e.X) == 0)
@@ -93,7 +93,18 @@ namespace FamiStudio
 
         protected override void OnPointerLeave(EventArgs e)
         {
+            StopChanging();
             SetAndMarkDirty(ref hoverButtonIndex, 0);
+        }
+
+        private void StopChanging()
+        {
+            SetTickEnabled(false);
+            if (capture)
+            {
+                InvokeValueChangeEnd();
+            }
+            capture = false;
         }
 
         private void ChangeValue(int delta)
