@@ -371,11 +371,8 @@ namespace FamiStudio
             {
                 tempFolder = Path.Combine(tempFolder, "FamiStudio");
 
-                try
-                {
+                if (Directory.Exists(tempFolder))
                     Directory.Delete(tempFolder, true);
-                }
-                catch { }
 
                 Directory.CreateDirectory(tempFolder);
             }
