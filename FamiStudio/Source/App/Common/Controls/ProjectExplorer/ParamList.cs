@@ -16,7 +16,6 @@ namespace FamiStudio
         private int buttonSizeY;
         private int hoverButtonIndex;
         private bool capture;
-        private bool changing;
         private int captureButton;
         private float changeDelay;
 
@@ -59,7 +58,6 @@ namespace FamiStudio
                     InvokeValueChangeStart();
                     changeDelay = 0.35f;
                     capture = true;
-                    changing = true;
                     captureButton = buttonIndex;
                     ChangeValue(buttonIndex);
                     SetTickEnabled(true);
