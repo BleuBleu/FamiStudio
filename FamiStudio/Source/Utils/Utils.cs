@@ -363,7 +363,7 @@ namespace FamiStudio
         }
 
         // TODO : This needs to be in Platform.
-        public static string GetTemporaryDiretory()
+        public static string GetTemporaryDirectory()
         {
             var tempFolder = Path.GetTempPath();
             

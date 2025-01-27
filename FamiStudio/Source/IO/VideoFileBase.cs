@@ -213,7 +213,7 @@ namespace FamiStudio
             var downsampled = settings.Downsample > 1;
 
             // Save audio to temporary file.
-            tempAudioFile = Path.Combine(Utils.GetTemporaryDiretory(), "temp.wav");
+            tempAudioFile = Path.Combine(Utils.GetTemporaryDirectory(), "temp.wav");
             AudioExportUtils.Save(song, tempAudioFile, SampleRate, 1, -1, -1, false, false, settings.Stereo, settings.ChannelPan, settings.AudioDelay, true, true, (samples, samplesChannels, fn) => { WaveFile.Save(samples, fn, SampleRate, samplesChannels); });
 
             if (Log.ShouldAbortOperation)
