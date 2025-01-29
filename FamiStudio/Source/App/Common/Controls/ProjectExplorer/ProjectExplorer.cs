@@ -56,6 +56,7 @@ namespace FamiStudio
         LocalizedString AutoSortSongsTooltip;
         LocalizedString ChangeValueFineTooltip;
         LocalizedString ChangeValueTooltip;
+        LocalizedString CheckBoxSelectAllTooltip;
         LocalizedString CopyEnvelopeTooltip;
         LocalizedString CopyReplaceInstrumentTooltip;
         LocalizedString EditEnvelopeTooltip;
@@ -2466,7 +2467,7 @@ namespace FamiStudio
                             }
 
                             var dlg = new PropertyDialog(ParentWindow, ImportSongsTitle, 300);
-                            dlg.Properties.AddCheckBoxList(ImportSongsLabel.Colon, songsNames.ToArray(), null, null, 15); // 0
+                            dlg.Properties.AddCheckBoxList(ImportSongsLabel.Colon, songsNames.ToArray(), null, CheckBoxSelectAllTooltip, 15); // 0
                             dlg.Properties.Build();
 
                             dlg.ShowDialogAsync((r) =>
@@ -2604,7 +2605,7 @@ namespace FamiStudio
                                 }
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportInstrumentsTitle, 350);
-                                dlg.Properties.AddCheckBoxList(ImportInstrumentsLabel.Colon, instrumentNames.ToArray(), null, null, 15); // 0
+                                dlg.Properties.AddCheckBoxList(ImportInstrumentsLabel.Colon, instrumentNames.ToArray(), null, CheckBoxSelectAllTooltip, 15); // 0
                                 dlg.Properties.Build();
 
                                 dlg.ShowDialogAsync((r) =>
@@ -2733,7 +2734,7 @@ namespace FamiStudio
                                 }
 
                                 var dlg = new PropertyDialog(ParentWindow, ImportSamplesTitle, 300);
-                                dlg.Properties.AddCheckBoxList(ImportSamplesLabel.Colon, samplesNames.ToArray(), null, null, 15); // 0
+                                dlg.Properties.AddCheckBoxList(ImportSamplesLabel.Colon, samplesNames.ToArray(), null, CheckBoxSelectAllTooltip, 15); // 0
                                 dlg.Properties.Build();
 
                                 dlg.ShowDialogAsync((r) =>
