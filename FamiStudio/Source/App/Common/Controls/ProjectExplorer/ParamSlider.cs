@@ -91,6 +91,7 @@ namespace FamiStudio
                         InvokeValueChangeStart();
                         IncrementValue(buttonIndex, 0.0);
                         SetTickEnabled(true);
+                        CapturePointer();
                     }
                 }
             }
