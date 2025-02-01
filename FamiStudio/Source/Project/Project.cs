@@ -2591,6 +2591,11 @@ namespace FamiStudio
             buffer.Serialize(ref name);
             buffer.Serialize(ref expanded);
         }
+
+        public override string ToString()
+        {
+            return name;
+        }
     }
 
     public static class ExpansionType
