@@ -966,6 +966,7 @@ namespace FamiStudio
             var reload = CreateImageButton(panel, editWave.Left - spacingX - iconSizeX, "Reload");
             reload.ToolTip = $"<MouseLeft> {ReloadSourceDataTooltip}";
             reload.Click += (s) => ReloadDPCMSampleSourceData(sample);
+            reload.EnabledEvent += (s) => !string.IsNullOrEmpty(sample.SourceFilename);
 
             var play = CreateImageButton(panel, reload.Left - spacingX - iconSizeX, "PlaySource");
             play.ToolTip = $"<MouseLeft> {PreviewProcessedSampleTooltip}\n<MouseRight> {PlaySourceSampleTooltip}";
