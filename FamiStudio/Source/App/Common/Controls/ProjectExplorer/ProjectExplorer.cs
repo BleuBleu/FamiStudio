@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -1287,7 +1288,6 @@ namespace FamiStudio
         {
             var project = App.Project;
             var folders = project.GetFoldersForType(FolderType.Song);
-            var lastSong = (Song)null;
             folders.Insert(0, null);
             CreateInsertionPoint(FolderType.Song);
 
@@ -1300,7 +1300,7 @@ namespace FamiStudio
                 {
                     CreateFolderControls(f);
                     folderExpanded = f.Expanded;
-                    CreateInsertionPoint(FolderType.Song, lastSong, f);
+                    CreateInsertionPoint(FolderType.Song, null, f);
                 }
 
                 if (folderExpanded)
@@ -1309,7 +1309,6 @@ namespace FamiStudio
                     {
                         CreateSongControls(song);
                         CreateInsertionPoint(FolderType.Song, song, f);
-                        lastSong = song;
                     }
                 }
 
@@ -1321,7 +1320,6 @@ namespace FamiStudio
         {
             var project = App.Project;
             var folders = project.GetFoldersForType(FolderType.Instrument);
-            var lastIntrument = (Instrument)null;
             folders.Insert(0, null);
             CreateInsertionPoint(FolderType.Instrument);
 
@@ -1334,7 +1332,7 @@ namespace FamiStudio
                 {
                     CreateFolderControls(f);
                     folderExpanded = f.Expanded;
-                    CreateInsertionPoint(FolderType.Instrument, lastIntrument, f);
+                    CreateInsertionPoint(FolderType.Instrument, null, f);
                 }
 
                 if (folderExpanded)
@@ -1345,7 +1343,6 @@ namespace FamiStudio
                         if (instrument == expandedInstrument)
                             CreateParamsControls(instrument.Color, instrument, InstrumentParamProvider.GetParams(instrument), TransactionScope.Instrument, instrument.Id, selectedInstrumentTab);
                         CreateInsertionPoint(FolderType.Instrument, instrument, f);
-                        lastIntrument = instrument;
                     }
                 }
 
@@ -1379,7 +1376,6 @@ namespace FamiStudio
         {
             var project = App.Project;
             var folders = project.GetFoldersForType(FolderType.Sample);
-            var lastSample = (DPCMSample)null;
             folders.Insert(0, null);
             CreateInsertionPoint(FolderType.Sample);
 
@@ -1392,7 +1388,7 @@ namespace FamiStudio
                 {
                     CreateFolderControls(f);
                     folderExpanded = f.Expanded;
-                    CreateInsertionPoint(FolderType.Sample, lastSample, f);
+                    CreateInsertionPoint(FolderType.Sample, null, f);
                 }
 
                 if (folderExpanded)
@@ -1403,7 +1399,6 @@ namespace FamiStudio
                         if (sample == expandedSample)
                             CreateParamsControls(sample.Color, sample, DPCMSampleParamProvider.GetParams(sample), TransactionScope.DPCMSample, sample.Id);
                         CreateInsertionPoint(FolderType.Sample, sample, f);
-                        lastSample = sample;
                     }
                 }
 
@@ -1435,7 +1430,6 @@ namespace FamiStudio
 
             var project = App.Project;
             var folders = project.GetFoldersForType(FolderType.Arpeggio);
-            var lastArpeggio = (Arpeggio)null;
             folders.Insert(0, null);
             CreateInsertionPoint(FolderType.Arpeggio);
 
@@ -1448,7 +1442,7 @@ namespace FamiStudio
                 {
                     CreateFolderControls(f);
                     folderExpanded = f.Expanded;
-                    CreateInsertionPoint(FolderType.Arpeggio, lastArpeggio, f);
+                    CreateInsertionPoint(FolderType.Arpeggio, null, f);
                 }
 
                 if (folderExpanded)
@@ -1457,7 +1451,6 @@ namespace FamiStudio
                     {
                         CreateArpeggioControls(arp);
                         CreateInsertionPoint(FolderType.Arpeggio, arp, f);
-                        lastArpeggio = arp;
                     }
                 }
 
