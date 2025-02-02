@@ -1,7 +1,20 @@
-4.4.0
+4.3.3
 =====
-- Blip buffer accuracy stuff + make everything 32-bit in NesSndEmu on all platforms.
-- 
+- Recompile NesSndEmu on all platforms.
+- Do a memory allocation pass, the GC runs a lot now.
+
+4.3.3 Changelog
+===============
+- Improved playback speed precision to better match hardware
+- Improved NSF import duration accuracy
+- Added tooltip for "Select All / Select None" 
+- Reversed bits of Journey to Silius demo song to sound as the authors intended
+- Fixed toolbar issue when resizing that could cause the timecode to be  misplaced
+- Fixed DPCM bit reversing on NSF and VGM import
+- Fixed temp folder issue which caused freezing on Linux
+- Fixed several typos and localization issues
+- Fixed DPCM reload button always being visually enabled
+- All of these fixes/improvements were done in collaboration with Steo, thanks!
 
 Linux notes 
 =========== 
@@ -109,6 +122,11 @@ MkDocs
 		<meta name="description" content="{{ config.site_description }}">
 		{% endif %}
  
+Good VS extensions
+==================
+- https://marketplace.visualstudio.com/items?itemName=PerniciousGames.OpenFileInSolution
+- https://marketplace.visualstudio.com/items?itemName=Stefan-IulianChivu.SearchableNavBar-x64
+
 Discord 
 ======= 
 - Invite link: https://discord.gg/QRCMe595Pv
