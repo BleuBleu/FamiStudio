@@ -499,6 +499,7 @@ namespace FamiStudio
                 if (buffer.IsForUndoRedo)
                 {
                     buffer.Serialize(ref processedData);
+                    buffer.Serialize(ref processedDataStartTime);
                 }
                 else if (buffer.IsReading)
                 {

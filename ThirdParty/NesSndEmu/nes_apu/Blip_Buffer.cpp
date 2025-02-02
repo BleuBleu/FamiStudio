@@ -65,17 +65,9 @@ void Blip_Buffer::clear( int entire_buffer )
 
 Blip_Buffer::blargg_err_t Blip_Buffer::set_sample_rate( long new_rate, int msec )
 {
-	// start with maximum length that resampled time can represent
-	long new_size = (ULONG_MAX >> BLIP_BUFFER_ACCURACY) - buffer_extra - 64;
-	if ( msec != blip_max_length )
-	{
-		long s = (new_rate * (msec + 1) + 999) / 1000;
-		if ( s < new_size )
-			new_size = s;
-		else
-			assert( 0 ); // fails if requested buffer length exceeds limit
-	}
-	
+	assert(msec > 0);
+	long new_size = (new_rate * (msec + 1) + 999) / 1000;
+
 	if ( buffer_size_ != new_size )
 	{
 		void* p = realloc( buffer_, (new_size + buffer_extra) * sizeof *buffer_ );
@@ -103,7 +95,7 @@ Blip_Buffer::blargg_err_t Blip_Buffer::set_sample_rate( long new_rate, int msec 
 blip_resampled_time_t Blip_Buffer::clock_rate_factor( long clock_rate ) const
 {
 	double ratio = (double) sample_rate_ / clock_rate;
-	long factor = (long) floor( ratio * (1L << BLIP_BUFFER_ACCURACY) + 0.5 );
+	long factor = (long) floor( ratio * (1LL << BLIP_BUFFER_ACCURACY) + 0.5 );
 	assert( factor > 0 || !sample_rate_ ); // fails if clock/output ratio is too large
 	return (blip_resampled_time_t) factor;
 }
@@ -123,7 +115,7 @@ void Blip_Buffer::bass_freq( int freq )
 
 void Blip_Buffer::end_frame( blip_time_t t )
 {
-	offset_ += t * factor_;
+	offset_ += (blip_resampled_time_t) t * factor_;
 	assert( samples_avail() <= (long) buffer_size_ ); // time outside buffer length
 }
 

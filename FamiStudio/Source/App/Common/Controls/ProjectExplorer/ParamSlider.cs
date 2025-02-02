@@ -91,6 +91,7 @@ namespace FamiStudio
                         InvokeValueChangeStart();
                         IncrementValue(buttonIndex, 0.0);
                         SetTickEnabled(true);
+                        CapturePointer();
                     }
                 }
             }
@@ -100,13 +101,7 @@ namespace FamiStudio
         {
             if (e.Left && capture)
             {
-                SetTickEnabled(false);
-                if (changing)
-                {
-                    InvokeValueChangeEnd();
-                }
-                capture = false;
-                changing = false;
+                StopChanging();
             }
             else if (e.Right && GetButtonIndex(e.X) == 0)
             {
@@ -159,6 +154,7 @@ namespace FamiStudio
 
         protected override void OnPointerLeave(EventArgs e)
         {
+            StopChanging();
             SetAndMarkDirty(ref hoverButtonIndex, 0);
         }
 
@@ -169,6 +165,17 @@ namespace FamiStudio
                 new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
                 new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
             });
+        }
+
+        private void StopChanging()
+        {
+            SetTickEnabled(false);
+            if (changing)
+            {
+                InvokeValueChangeEnd();
+            }
+            capture = false;
+            changing = false;
         }
 
         private void ChangeValue(int x)

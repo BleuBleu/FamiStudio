@@ -453,7 +453,9 @@ namespace FamiStudio
                 CacheViewRect();
 
                 if (container != null)
-                { 
+                {
+                    captureControl?.SendPointerUp(new PointerEventArgs(0, 0)); // We dont store the last position, should be good enough.
+                    ReleasePointer();
                     container.Resize(width, height);
                 }
             }
@@ -788,7 +790,7 @@ namespace FamiStudio
             {
                 //Debug.WriteLine($"OnTouchEvent {e.Action.ToString()} ({e.GetX()}, {e.GetY()})");
 
-                if (e.Action == MotionEventActions.Up)
+                if (e.Action == MotionEventActions.Up || e.Action == MotionEventActions.Cancel)
                 {
                     lock (renderLock)
                     {

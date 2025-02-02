@@ -748,16 +748,16 @@ namespace FamiStudio
 
                         oscilloscope.Visible = !hideOscilloscope;
                         
+                        x += margin;
+                        timecode.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                        x += timecodeOscSizeX + margin;
+                        
                         if (oscilloscope.Visible)
                         {
                             x += margin;
-                            timecode.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
+                            oscilloscope.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
                             x += timecodeOscSizeX + margin;
                         }
-
-                        x += margin;
-                        oscilloscope.Move(x, margin, timecodeOscSizeX, Height - margin * 2);
-                        x += timecodeOscSizeX + margin;
                     }
                 }
 

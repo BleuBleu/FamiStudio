@@ -363,7 +363,7 @@ namespace FamiStudio
         }
 
         // TODO : This needs to be in Platform.
-        public static string GetTemporaryDiretory()
+        public static string GetTemporaryDirectory()
         {
             var tempFolder = Path.GetTempPath();
             
@@ -371,11 +371,8 @@ namespace FamiStudio
             {
                 tempFolder = Path.Combine(tempFolder, "FamiStudio");
 
-                try
-                {
+                if (Directory.Exists(tempFolder))
                     Directory.Delete(tempFolder, true);
-                }
-                catch { }
 
                 Directory.CreateDirectory(tempFolder);
             }

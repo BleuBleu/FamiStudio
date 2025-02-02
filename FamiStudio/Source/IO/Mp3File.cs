@@ -19,8 +19,8 @@ namespace FamiStudio
         {
             if (sampleRate < 44100)
             {
-                sampleRate = 44100;
                 Log.LogMessage(LogSeverity.Warning, $"Sample rate of {sampleRate}Hz is too low for MP3. Forcing 44100Hz.");
+                sampleRate = 44100;
             }
 
             var mp3Data = new byte[wavData.Length * sizeof(short) * 4];

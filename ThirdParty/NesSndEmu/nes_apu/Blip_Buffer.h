@@ -77,10 +77,10 @@ public:
 	blip_time_t count_clocks( long count ) const;
 	
 	// not documented yet
-	typedef unsigned long blip_resampled_time_t;
+	typedef unsigned long long blip_resampled_time_t;
 	void remove_silence( long count );
-	blip_resampled_time_t resampled_duration( int t ) const     { return t * factor_; }
-	blip_resampled_time_t resampled_time( blip_time_t t ) const { return t * factor_ + offset_; }
+	blip_resampled_time_t resampled_duration( int t ) const     { return (blip_resampled_time_t) t * factor_; }
+	blip_resampled_time_t resampled_time( blip_time_t t ) const { return (blip_resampled_time_t) t * factor_ + offset_; }
 	blip_resampled_time_t clock_rate_factor( long clock_rate ) const;
 public:
 	Blip_Buffer();
@@ -117,7 +117,7 @@ private:
 // Number of bits in resample ratio fraction. Higher values give a more accurate ratio
 // but reduce maximum buffer size.
 #ifndef BLIP_BUFFER_ACCURACY
-	#define BLIP_BUFFER_ACCURACY 16
+	#define BLIP_BUFFER_ACCURACY 32
 #endif
 
 // Number bits in phase offset. Fewer than 6 bits (64 phase offsets) results in
@@ -128,7 +128,7 @@ private:
 #endif
 
 	// Internal
-	typedef unsigned long blip_resampled_time_t;
+	typedef unsigned long long blip_resampled_time_t;
 	int const blip_widest_impulse_ = 16;
 	int const blip_res = 1 << BLIP_PHASE_BITS;
 	class blip_eq_t;
@@ -188,10 +188,10 @@ public:
 	
 	// Same as offset(), except code is inlined for higher performance
 	void offset_inline( blip_time_t t, int delta, Blip_Buffer* buf ) const {
-		offset_resampled( t * buf->factor_ + buf->offset_, delta, buf );
+		offset_resampled( (blip_resampled_time_t) t * buf->factor_ + buf->offset_, delta, buf );
 	}
 	void offset_inline( blip_time_t t, int delta ) const {
-		offset_resampled( t * impl.buf->factor_ + impl.buf->offset_, delta, impl.buf );
+		offset_resampled( (blip_resampled_time_t) t * impl.buf->factor_ + impl.buf->offset_, delta, impl.buf );
 	}
 	
 public:
@@ -317,7 +317,7 @@ inline void Blip_Synth<quality,range>::offset_resampled( blip_resampled_time_t t
 template<int quality,int range>
 void Blip_Synth<quality,range>::offset( blip_time_t t, int delta, Blip_Buffer* buf ) const
 {
-	offset_resampled( t * buf->factor_ + buf->offset_, delta, buf );
+	offset_resampled( (blip_resampled_time_t) t * buf->factor_ + buf->offset_, delta, buf );
 }
 
 template<int quality,int range>
@@ -325,7 +325,7 @@ void Blip_Synth<quality,range>::update( blip_time_t t, int amp )
 {
 	int delta = amp - impl.last_amp;
 	impl.last_amp = amp;
-	offset_resampled( t * impl.buf->factor_ + impl.buf->offset_, delta, impl.buf );
+	offset_resampled( (blip_resampled_time_t) t * impl.buf->factor_ + impl.buf->offset_, delta, impl.buf );
 }
 
 inline blip_eq_t::blip_eq_t( double t ) :
@@ -347,7 +347,6 @@ inline int Blip_Reader::begin( Blip_Buffer& blip_buf )
 	return blip_buf.bass_shift;
 }
 
-int const blip_max_length = 0;
 int const blip_default_length = 250;
 
 #endif
