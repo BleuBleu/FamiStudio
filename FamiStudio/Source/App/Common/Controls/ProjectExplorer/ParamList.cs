@@ -71,7 +71,12 @@ namespace FamiStudio
         {
             if (e.Left && capture)
             {
-                StopChanging();
+                SetTickEnabled(false);
+                if (capture)
+                {
+                    InvokeValueChangeEnd();
+                }
+                capture = false;
                 e.MarkHandled();
             }
             else if (e.Right && GetButtonIndex(e.X) == 0)
@@ -91,18 +96,7 @@ namespace FamiStudio
 
         protected override void OnPointerLeave(EventArgs e)
         {
-            StopChanging();
             SetAndMarkDirty(ref hoverButtonIndex, 0);
-        }
-
-        private void StopChanging()
-        {
-            SetTickEnabled(false);
-            if (capture)
-            {
-                InvokeValueChangeEnd();
-            }
-            capture = false;
         }
 
         private void ChangeValue(int delta)
