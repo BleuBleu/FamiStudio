@@ -1,7 +1,6 @@
 4.3.3
 =====
 - Recompile NesSndEmu on all platforms.
-- Crash project explorer : https://discord.com/channels/747649221879922840/798008185977176074/1336500364349800488
 - Do a memory allocation pass, the GC runs a lot now.
 
 4.3.3 Changelog

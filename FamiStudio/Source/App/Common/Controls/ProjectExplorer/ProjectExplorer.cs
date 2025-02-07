@@ -1614,16 +1614,19 @@ namespace FamiStudio
 
         public void InstrumentEnvelopeChanged(Instrument instrument, int envType)
         {
-            // Arpeggios trigger this, but with null instruments.
-            if (instrument != null)
+            if (selectedTab == TabType.Project)
             {
-                var env = instrument.Envelopes[envType];
-                var button = FindInstrumentEnvelopeButton(instrument, envType);
-                button.Dimmed = env.IsEmpty(envType);
-            }
-            else
-            {
-                Debug.Assert(envType == EnvelopeType.Arpeggio);
+                // Arpeggios trigger this, but with null instruments.
+                if (instrument != null)
+                {
+                    var env = instrument.Envelopes[envType];
+                    var button = FindInstrumentEnvelopeButton(instrument, envType);
+                    button.Dimmed = env.IsEmpty(envType);
+                }
+                else
+                {
+                    Debug.Assert(envType == EnvelopeType.Arpeggio);
+                }
             }
         }
 
