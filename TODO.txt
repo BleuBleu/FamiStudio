@@ -1,8 +1,3 @@
-4.3.3
-=====
-- Recompile NesSndEmu on all platforms.
-- Do a memory allocation pass, the GC runs a lot now.
-
 4.3.3 Changelog
 ===============
 - Improved playback speed precision to better match hardware
