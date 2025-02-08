@@ -61,11 +61,25 @@ namespace FamiStudio
         public static int[] GetAvailableScalings()
         {
             if (Platform.IsWindows || Platform.IsLinux)
+            {
                 return new[] { 100, 125, 150, 175, 200, 225, 250 };
-            else if (Platform.IsMobile)
-                return new[] { 66, 100, 133 };
+            }
             else if (Platform.IsMacOS)
+            {
                 return new int[0]; // Intentional, we dont allow to manually set the scaling on MacOS.
+            }
+            else if (Platform.IsMobile)
+            {
+                if (Platform.IsAndroid)
+                {
+                    return new[] { 66, 100, 133 };
+                }
+                else
+                {
+                    return new[] { 64, 76, 88, 100, 112, 124, 140 };
+                }
+            }
+
 
             Debug.Assert(false);
             return new int[] { };
@@ -117,14 +131,20 @@ namespace FamiStudio
                 }
                 else 
                 {
-                    // MATTT : Add more mobile scaling values + quantize.
                     var res = Platform.GetScreenResolution();
-
                     windowScaling = Math.Min(1.0f, Math.Min(res.Width, res.Height) / 1080.0f);
                 }
 
-                fontScaling   = (float)Math.Round(windowScaling * 3);
-                windowScaling = (float)Math.Round(windowScaling * 6);
+                if (Platform.IsAndroid)
+                {
+                    fontScaling   = (float)Math.Round(windowScaling * 3);
+                    windowScaling = (float)Math.Round(windowScaling * 6);
+                }
+                else
+                {
+                    fontScaling   = windowScaling * 3.0f;
+                    windowScaling = windowScaling * 6.0f;
+                }
             }
             else
             {

@@ -705,7 +705,6 @@ namespace FamiStudio
             Platform.SetClipboardData(clipboardData.ToArray());
         }
 
-        // MATTT : Need a flag for patterns too!
         public static Pattern[,] LoadPatterns(Song song, ClipboardImportFlags instImportFlags, ClipboardImportFlags arpImportFlags, ClipboardImportFlags sampleImportFlags, ClipboardImportFlags patternImportFlags, out Song.PatternCustomSetting[] customSettings)
         {
             var buffer = GetClipboardDataInternal(MagicNumberClipboardPatterns);

@@ -649,6 +649,8 @@ namespace FamiStudio
                         App.ShowHelp();
                     }
                 });
+
+                StartClosing();
             }
             else
             {
