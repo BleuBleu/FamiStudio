@@ -70,6 +70,7 @@ namespace FamiStudio
         GLFWwindowsizefun windowSizeCallback;
         GLFWwindowclosefun windowCloseCallback;
         GLFWwindowrefreshfun windowRefreshCallback;
+        GLFWwindowcontentscalefun windowContentScaleCallback;
         GLFWmousebuttonfun mouseButtonCallback;
         GLFWcursorposfun cursorPosCallback;
         GLFWcursorenterfun cursorEnterCallback;
@@ -103,6 +104,7 @@ namespace FamiStudio
             windowSizeCallback = new GLFWwindowsizefun(WindowSizeCallback);
             windowCloseCallback = new GLFWwindowclosefun(WindowCloseCallback);
             windowRefreshCallback = new GLFWwindowrefreshfun(WindowRefreshCallback);
+            windowContentScaleCallback = new GLFWwindowcontentscalefun(WindowContentScaleCallback);
             mouseButtonCallback = new GLFWmousebuttonfun(MouseButtonCallback);
             cursorPosCallback = new GLFWcursorposfun(CursorPosCallback);
             cursorEnterCallback = new GLFWcursorenterfun(CursorEnterCallback);
@@ -119,6 +121,7 @@ namespace FamiStudio
             glfwSetWindowSizeCallback(window, windowSizeCallback);
             glfwSetWindowCloseCallback(window, windowCloseCallback);
             glfwSetWindowRefreshCallback(window, windowRefreshCallback);
+            glfwSetWindowContentScaleCallback(window, windowContentScaleCallback);
             glfwSetMouseButtonCallback(window, mouseButtonCallback);
             glfwSetCursorPosCallback(window, cursorPosCallback);
             glfwSetCursorEnterCallback(window, cursorEnterCallback);
@@ -439,6 +442,11 @@ namespace FamiStudio
         {
             Debug.WriteLine($"WINDOW REFRESH!");
             MarkDirty();
+        }
+
+        private void WindowContentScaleCallback(IntPtr window, float xscale, float _)
+        {
+            Debug.WriteLine($"*** WINDOW CONTENT SCALED: {xscale}");
         }
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
