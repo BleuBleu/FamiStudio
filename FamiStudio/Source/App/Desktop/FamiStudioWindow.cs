@@ -79,6 +79,8 @@ namespace FamiStudio
         GLFWcharmodsfun charModsCallback;
         GLFWdropfun dropCallback;
 
+        private static bool isWayland = false;
+
         public FamiStudioWindow(FamiStudio app, IntPtr glfwWindow)
         {
             famistudio = app;
@@ -202,6 +204,8 @@ namespace FamiStudio
                 glfwTerminate();
                 return null;
             }
+
+            isWayland = glfwGetPlatform() == GLFW_PLATFORM_WAYLAND;
 
             glfwMakeContextCurrent(window);
             glfwSetWindowSizeLimits(window, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
@@ -417,7 +421,7 @@ namespace FamiStudio
 
         public static void GLFWToWindow(double dx, double dy, out int x, out int y)
         {
-            if (Platform.IsMacOS && DpiScaling.IsInitialized)
+            if ((Platform.IsMacOS || Platform.IsLinux && isWayland) && DpiScaling.IsInitialized)
             {
                 Debug.Assert(!DpiScaling.ForceUnitScaling);
 
