@@ -81,7 +81,7 @@ namespace FamiStudio
         GLFWdropfun dropCallback;
 
         private static bool isWayland = false;
-        private static float scaleModifer = 1f;
+        private static float scaleModifier = 1f;
 
         public FamiStudioWindow(FamiStudio app, IntPtr glfwWindow)
         {
@@ -418,7 +418,7 @@ namespace FamiStudio
 
             if (isWayland)
             {
-                scaleModifer = scaling / DpiScaling.Window;
+                scaleModifier = scaling / DpiScaling.Window;
             }
         }
 
@@ -439,8 +439,8 @@ namespace FamiStudio
             {
                 Debug.Assert(!DpiScaling.ForceUnitScaling);
 
-                x = (int)Math.Round(dx * (DpiScaling.Window * scaleModifer));
-                y = (int)Math.Round(dy * (DpiScaling.Window * scaleModifer));
+                x = (int)Math.Round(dx * (DpiScaling.Window * scaleModifier));
+                y = (int)Math.Round(dy * (DpiScaling.Window * scaleModifier));
             }
             else
             {
