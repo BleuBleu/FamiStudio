@@ -439,8 +439,8 @@ namespace FamiStudio
             {
                 Debug.Assert(!DpiScaling.ForceUnitScaling);
 
-                x = (int)Math.Round(dx * (DpiScaling.Window * scaleModifier));
-                y = (int)Math.Round(dy * (DpiScaling.Window * scaleModifier));
+                x = (int)Math.Round(dx * DpiScaling.Window * scaleModifier);
+                y = (int)Math.Round(dy * DpiScaling.Window * scaleModifier);
             }
             else
             {
