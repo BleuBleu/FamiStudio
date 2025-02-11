@@ -81,6 +81,7 @@ namespace FamiStudio
         GLFWdropfun dropCallback;
 
         private static bool isWayland = false;
+        private static float scaleModifer = 1f;
 
         public FamiStudioWindow(FamiStudio app, IntPtr glfwWindow)
         {
@@ -411,6 +412,16 @@ namespace FamiStudio
             RefreshLayout();
         }
 
+        private void WindowContentScaleCallback(IntPtr window, float scaling, float _)
+        {
+            Debug.WriteLine($"*** RESCALED: {scaling}");
+
+            if (isWayland)
+            {
+                scaleModifer = scaling / DpiScaling.Window;
+            }
+        }
+
         private void WindowCloseCallback(IntPtr window)
         {
             if (IsAsyncDialogInProgress)
@@ -424,12 +435,12 @@ namespace FamiStudio
 
         public static void GLFWToWindow(double dx, double dy, out int x, out int y)
         {
-            if ((Platform.IsMacOS || Platform.IsLinux && isWayland) && DpiScaling.IsInitialized)
+            if ((Platform.IsMacOS || (Platform.IsLinux && isWayland)) && DpiScaling.IsInitialized)
             {
                 Debug.Assert(!DpiScaling.ForceUnitScaling);
 
-                x = (int)Math.Round(dx * DpiScaling.Window);
-                y = (int)Math.Round(dy * DpiScaling.Window);
+                x = (int)Math.Round(dx * (DpiScaling.Window * scaleModifer));
+                y = (int)Math.Round(dy * (DpiScaling.Window * scaleModifer));
             }
             else
             {
@@ -442,11 +453,6 @@ namespace FamiStudio
         {
             Debug.WriteLine($"WINDOW REFRESH!");
             MarkDirty();
-        }
-
-        private void WindowContentScaleCallback(IntPtr window, float xscale, float _)
-        {
-            Debug.WriteLine($"*** WINDOW CONTENT SCALED: {xscale}");
         }
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
