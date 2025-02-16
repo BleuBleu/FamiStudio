@@ -1,3 +1,6 @@
+- Change defaut snap to 1/4, at least on mobile
+- Look at Android crashes.
+
 4.3.3 Changelog
 ===============
 - Improved playback speed precision to better match hardware
