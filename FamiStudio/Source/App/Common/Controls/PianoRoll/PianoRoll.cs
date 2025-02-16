@@ -312,7 +312,7 @@ namespace FamiStudio
         int selectionMin = -1;
         int selectionMax = -1;
         int dragSeekPosition = -1;
-        int snapResolution = Platform.IsMobile ? SnapResolutionType.QuarterBeat : SnapResolutionType.Beat;
+        int snapResolution = Settings.DefaultSnapResolution;
         int scrollX = 0;
         int scrollY = 0;
         int lastChannelScrollX = -1;
