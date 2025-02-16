@@ -70,6 +70,7 @@ namespace FamiStudio
         GLFWwindowsizefun windowSizeCallback;
         GLFWwindowclosefun windowCloseCallback;
         GLFWwindowrefreshfun windowRefreshCallback;
+        GLFWwindowcontentscalefun windowContentScaleCallback;
         GLFWmousebuttonfun mouseButtonCallback;
         GLFWcursorposfun cursorPosCallback;
         GLFWcursorenterfun cursorEnterCallback;
@@ -78,6 +79,9 @@ namespace FamiStudio
         GLFWcharfun charCallback;
         GLFWcharmodsfun charModsCallback;
         GLFWdropfun dropCallback;
+
+        private static bool isWayland = false;
+        private static float scaleModifier = 1f;
 
         public FamiStudioWindow(FamiStudio app, IntPtr glfwWindow)
         {
@@ -101,6 +105,7 @@ namespace FamiStudio
             windowSizeCallback = new GLFWwindowsizefun(WindowSizeCallback);
             windowCloseCallback = new GLFWwindowclosefun(WindowCloseCallback);
             windowRefreshCallback = new GLFWwindowrefreshfun(WindowRefreshCallback);
+            windowContentScaleCallback = new GLFWwindowcontentscalefun(WindowContentScaleCallback);
             mouseButtonCallback = new GLFWmousebuttonfun(MouseButtonCallback);
             cursorPosCallback = new GLFWcursorposfun(CursorPosCallback);
             cursorEnterCallback = new GLFWcursorenterfun(CursorEnterCallback);
@@ -117,6 +122,7 @@ namespace FamiStudio
             glfwSetWindowSizeCallback(window, windowSizeCallback);
             glfwSetWindowCloseCallback(window, windowCloseCallback);
             glfwSetWindowRefreshCallback(window, windowRefreshCallback);
+            glfwSetWindowContentScaleCallback(window, windowContentScaleCallback);
             glfwSetMouseButtonCallback(window, mouseButtonCallback);
             glfwSetCursorPosCallback(window, cursorPosCallback);
             glfwSetCursorEnterCallback(window, cursorEnterCallback);
@@ -202,6 +208,8 @@ namespace FamiStudio
                 glfwTerminate();
                 return null;
             }
+
+            isWayland = glfwGetPlatform() == GLFW_PLATFORM_WAYLAND;
 
             glfwMakeContextCurrent(window);
             glfwSetWindowSizeLimits(window, 400, 300, GLFW_DONT_CARE, GLFW_DONT_CARE);
@@ -391,7 +399,7 @@ namespace FamiStudio
         {
             // Under Wayland, the callback spams errors about the window position.
             // This slows everything to a crawl while debugging, so we mitigate it.
-            if (glfwGetPlatform() == GLFW_PLATFORM_WAYLAND && description.Contains("window position"))
+            if (isWayland && description.Contains("window position"))
                 return;
 
             Debug.WriteLine($"*** GLFW Error code {error}, {description}.");
@@ -402,6 +410,16 @@ namespace FamiStudio
             Debug.WriteLine($"*** SIZE {width}, {height}.");
 
             RefreshLayout();
+        }
+
+        private void WindowContentScaleCallback(IntPtr window, float scaling, float _)
+        {
+            Debug.WriteLine($"*** RESCALED: {scaling}");
+
+            if (isWayland)
+            {
+                scaleModifier = scaling / DpiScaling.Window;
+            }
         }
 
         private void WindowCloseCallback(IntPtr window)
@@ -417,12 +435,12 @@ namespace FamiStudio
 
         public static void GLFWToWindow(double dx, double dy, out int x, out int y)
         {
-            if (Platform.IsMacOS && DpiScaling.IsInitialized)
+            if ((Platform.IsMacOS || (Platform.IsLinux && isWayland)) && DpiScaling.IsInitialized)
             {
                 Debug.Assert(!DpiScaling.ForceUnitScaling);
 
-                x = (int)Math.Round(dx * DpiScaling.Window);
-                y = (int)Math.Round(dy * DpiScaling.Window);
+                x = (int)Math.Round(dx * DpiScaling.Window * scaleModifier);
+                y = (int)Math.Round(dy * DpiScaling.Window * scaleModifier);
             }
             else
             {
