@@ -266,7 +266,7 @@ namespace FamiStudio
 
         public void Undo()
         {
-            if (index > 0)
+            if (index > 0 && !HasTransactionInProgress)
             {
                 var trans = transactions[index - 1];
                 PreUndoRedo?.Invoke(trans.Scope, trans.Flags);
@@ -279,7 +279,7 @@ namespace FamiStudio
 
         public void Redo()
         {
-            if (index < transactions.Count)
+            if (index < transactions.Count && !HasTransactionInProgress)
             {
                 index++;
                 var trans = transactions[index - 1];
