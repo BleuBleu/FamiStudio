@@ -240,7 +240,7 @@ namespace FamiStudio
         public static int  MobilePianoHeight = 25;
 
         // Piano roll stuff
-        public static int SnapResolution = SnapResolutionType.OneBeat;
+        public static int SnapResolution = SnapResolutionType.Beat;
         public static bool SnapEnabled = true;
         public static bool SnapEffects = false;
 
@@ -603,14 +603,14 @@ namespace FamiStudio
             MobilePianoHeight = ini.GetInt("Mobile", "MobilePianoHeight", 25);
 
             // Piano roll section
-            SnapResolution = Utils.Clamp(ini.GetInt("PianoRoll", "SnapResolution", SnapResolutionType.OneBeat), SnapResolutionType.Min, SnapResolutionType.Max);
+            SnapResolution = Utils.Clamp(ini.GetInt("PianoRoll", "SnapResolution", SnapResolutionType.Beat), SnapResolutionType.Min, SnapResolutionType.Max);
             SnapEnabled = ini.GetBool("PianoRoll", "SnapEnabled", true);
             SnapEffects = ini.GetBool("PianoRoll", "SnapEffects", false);
 
             // At 4.0.0, we fixed an issue where the snapping was not saved properly. Reset.
             if (Version < 7)
             {
-                SnapResolution = SnapResolutionType.OneBeat;
+                SnapResolution = SnapResolutionType.Beat;
                 SnapEnabled = true;
                 ShowImplicitStopNotes = false;
             }

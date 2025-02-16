@@ -312,7 +312,7 @@ namespace FamiStudio
         int selectionMin = -1;
         int selectionMax = -1;
         int dragSeekPosition = -1;
-        int snapResolution = SnapResolutionType.OneBeat;
+        int snapResolution = Platform.IsMobile ? SnapResolutionType.QuarterBeat : SnapResolutionType.Beat;
         int scrollX = 0;
         int scrollY = 0;
         int lastChannelScrollX = -1;
@@ -9947,9 +9947,10 @@ namespace FamiStudio
 
     public class SnapResolutionType
     {
-        public const int Min     = 0;
-        public const int Max     = 10;
-        public const int OneBeat = 7;
+        public const int Min         = 0;
+        public const int Max         = 10;
+        public const int Beat        = 7;
+        public const int QuarterBeat = 4;
 
         public static readonly double[] Factors = new[]
         {
