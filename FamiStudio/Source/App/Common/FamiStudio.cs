@@ -1598,7 +1598,7 @@ namespace FamiStudio
                 return;
             }
 
-            instrumentPlayer.PlayNote(channel, note);
+            instrumentPlayer?.PlayNote(channel, note);
 
             if (allowRecording && recordingMode)
                 PianoRoll.RecordNote(note);
@@ -1614,11 +1614,11 @@ namespace FamiStudio
                 selectedInstrument.CanRelease(channel) &&
                 channel.SupportsInstrument(selectedInstrument))
             {
-                instrumentPlayer.ReleaseNote(selectedChannelIndex);
+                instrumentPlayer?.ReleaseNote(selectedChannelIndex);
             }
             else
             {
-                instrumentPlayer.StopAllNotes();
+                instrumentPlayer?.StopAllNotes();
             }
         }
 
