@@ -240,7 +240,7 @@ namespace FamiStudio
         public static int  MobilePianoHeight = 25;
 
         // Piano roll stuff
-        public static int SnapResolution = SnapResolutionType.Beat;
+        public static int SnapResolution = Platform.IsMobile ? SnapResolutionType.QuarterBeat : SnapResolutionType.Beat;
         public static bool SnapEnabled = true;
         public static bool SnapEffects = false;
 
