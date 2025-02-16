@@ -1469,7 +1469,7 @@ namespace FamiStudio
 
             if (ini.Load(WipSettings))
             {
-                project.Filename = ini.GetString("General", "Filename", null);
+                project.Filename = ini.GetString("General", "Filename", "");
                 if (ini.GetBool("General", "Dirty", false))
                     undoRedoManager.ForceDirty();
             }
@@ -1482,17 +1482,11 @@ namespace FamiStudio
         private void SaveWipSettings()
         {
             // Save the actual project filename in a text file along with it.
+            var ini = new IniFile();
             if (!string.IsNullOrEmpty(project.Filename))
-            {
-                var ini = new IniFile();
                 ini.SetString("General", "Filename", project.Filename);
-                ini.SetBool("General", "Dirty", undoRedoManager.NeedsSaving);
-                ini.Save(WipSettings);
-            }
-            else
-            {
-                File.Delete(WipSettings);
-            }
+            ini.SetBool("General", "Dirty", undoRedoManager.NeedsSaving);
+            ini.Save(WipSettings);
         }
 
         private void CheckNewReleaseDone()
