@@ -1627,7 +1627,7 @@ namespace FamiStudio
 
         private bool HandleTouchDownPan(int x, int y)
         {
-            if (IsPointInPatternArea(x, y))
+            if (IsPointInPatternArea(x, y) || IsPointInChannelArea(x, y))
             {
                 StartCaptureOperation(x, y, CaptureOperation.MobilePan);
                 return true;
