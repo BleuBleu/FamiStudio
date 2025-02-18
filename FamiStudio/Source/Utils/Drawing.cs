@@ -93,6 +93,16 @@ namespace FamiStudio
             return color;
         }
 
+        public static Color Lerp(Color c1, Color c2, float alpha)
+        {
+            var c = new Color();
+            c.R = (byte)float.Lerp(c1.R, c2.R, alpha);
+            c.G = (byte)float.Lerp(c1.G, c2.G, alpha);
+            c.B = (byte)float.Lerp(c1.B, c2.B, alpha);
+            c.A = (byte)float.Lerp(c1.A, c2.A, alpha);
+            return c;
+        }
+
         public Color Scaled(float scale)
         {
             return new Color((int)(R * scale), (int)(G * scale), (int)(B * scale), A);
@@ -231,6 +241,8 @@ namespace FamiStudio
         public float X { get => x; set => x = value; }
         public float Y { get => y; set => y = value; }
 
+        public float SquaredLength => x * x + y * y;
+
         public PointF(float x, float y)
         {
             this.x = x;
@@ -253,6 +265,11 @@ namespace FamiStudio
             return new PointF(
                 float.Lerp(p1.x, p2.x, alpha),
                 float.Lerp(p1.y, p2.y, alpha));
+        }
+
+        public override string ToString()
+        {
+            return $"({x}, {y})";
         }
     }
 
