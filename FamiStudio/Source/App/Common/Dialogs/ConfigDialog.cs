@@ -328,7 +328,7 @@ namespace FamiStudio
                     page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 6
                     page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 7
                     page.AddCheckBox(AccurateSeekLabel.Colon, Settings.AccurateSeek, AccurateSeekTooltip); // 8
-                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 200.0, (v) => $"{v/100.0:P0}", MetronomeVolumeTooltip); // 9
+                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 100.0, (v) => $"{v/100.0:P0}", MetronomeVolumeTooltip); // 9
                     break;
                 }
                 case ConfigSection.Mixer:
@@ -582,11 +582,13 @@ namespace FamiStudio
                     var newAudioBufferSize = pageSound.GetPropertyValue<int>(1);
                     var newNumBufferedFrames = pageSound.GetPropertyValue<int>(2);
                     var newN163Mix = pageSound.GetPropertyValue<bool>(5);
+                    var newMetronomeVolume = (int)pageSound.GetPropertyValue<double>(9);
 
                     if (Settings.AudioAPI          != newAudioApi          || 
                         Settings.AudioBufferSize   != newAudioBufferSize   ||
                         Settings.NumBufferedFrames != newNumBufferedFrames ||
                         Settings.N163Mix           != newN163Mix           ||
+                        Settings.MetronomeVolume   != newMetronomeVolume   ||
                         mixerProperties.Changed)
                     {
                         // Use "Yes" as a special code to mean to recreate audio players.
@@ -602,7 +604,7 @@ namespace FamiStudio
                     Settings.ClampPeriods = pageSound.GetPropertyValue<bool>(6);
                     Settings.NoDragSoungWhenPlaying = pageSound.GetPropertyValue<bool>(7);
                     Settings.AccurateSeek = pageSound.GetPropertyValue<bool>(8);
-                    Settings.MetronomeVolume = (int)pageSound.GetPropertyValue<double>(9);
+                    Settings.MetronomeVolume = newMetronomeVolume;
 
                     // Input
                     Settings.TrackPadControls = pageInput.GetPropertyValue<bool>(0);

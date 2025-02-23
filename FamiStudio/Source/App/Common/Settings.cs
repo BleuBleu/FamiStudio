@@ -470,7 +470,7 @@ namespace FamiStudio
             ClampPeriods = ini.GetBool("Audio", "ClampPeriods", true);
             AccurateSeek = ini.GetBool("Audio", "AccurateSeek", false);
             NoDragSoungWhenPlaying = ini.GetBool("Audio", "NoDragSoungWhenPlaying", false);
-            MetronomeVolume = ini.GetInt("Audio", "MetronomeVolume", 50);
+            MetronomeVolume = int.Clamp(ini.GetInt("Audio", "MetronomeVolume", 50), 1, 100);
             SeparateChannelsExportTndMode = ini.GetInt("Audio", "SeparateChannelsExportTndMode", NesApu.TND_MODE_SINGLE);
 
             if (!audioAPIs.Contains(AudioAPI))
