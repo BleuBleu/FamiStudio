@@ -13,6 +13,7 @@
 - Fixed app not asking you to save new project if app was first minimized on mobile
 - Fixed issues on Linux using Wayland when using high DPI scalings
 - Fixed instrument/arpeggio eyedropper
+- Fixed metronome volume not applying until you restarted the app
 - Most of these fixes/improvements were done in collaboration with Steo, thanks!
 
 Linux notes 
