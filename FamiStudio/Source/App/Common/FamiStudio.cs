@@ -578,8 +578,8 @@ namespace FamiStudio
         {
             if (note != null && note.Instrument != null)
             {
-                selectedInstrument = note.Instrument;
-                selectedArpeggio   = note.Arpeggio;
+                SelectedInstrument = note.Instrument;
+                SelectedArpeggio   = note.Arpeggio;
 
                 ProjectExplorer.BlinkButton(selectedInstrument);
             }
@@ -607,9 +607,9 @@ namespace FamiStudio
         private void ResetSelectedInstrumentArpeggio()
         {
             if (!project.InstrumentExists(selectedInstrument))
-                selectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
+                SelectedInstrument = project.Instruments.Count > 0 ? project.Instruments[0] : null;
             if (!project.ArpeggioExists(selectedArpeggio))
-                selectedArpeggio = null;
+                SelectedArpeggio = null;
         }
 
         private void ProjectExplorer_ProjectModified()

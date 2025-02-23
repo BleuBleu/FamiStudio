@@ -12,7 +12,8 @@
 - Fixed crash when trying to use undo/redo during certain operations
 - Fixed app not asking you to save new project if app was first minimized on mobile
 - Fixed issues on Linux using Wayland when using high DPI scalings
-- All of these fixes/improvements were done in collaboration with Steo, thanks!
+- Fixed instrument/arpeggio eyedropper
+- Most of these fixes/improvements were done in collaboration with Steo, thanks!
 
 Linux notes 
 =========== 

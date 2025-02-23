@@ -1552,13 +1552,16 @@ namespace FamiStudio
 
         private void UpdateSelectedItem(Type type, object obj)
         {
-            foreach (var ctrl in mainContainer.Controls)
+            if (mainContainer != null)
             {
-                if (ctrl is PanelContainer panel)
+                foreach (var ctrl in mainContainer.Controls)
                 {
-                    if (panel.UserData != null && panel.UserData.GetType() == type)
+                    if (ctrl is PanelContainer panel)
                     {
-                        panel.FindControlOfType<Label>().Font = panel.UserData == obj ? fonts.FontMediumBold : fonts.FontMedium;
+                        if (panel.UserData != null && panel.UserData.GetType() == type)
+                        {
+                            panel.FindControlOfType<Label>().Font = panel.UserData == obj ? fonts.FontMediumBold : fonts.FontMedium;
+                        }
                     }
                 }
             }
