@@ -4,6 +4,42 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.3.4 (iOS Hotfix)
+
+Changes/Fixes:
+
+- Fixed screen scaling issue on some devices.
+
+## Version 4.3.3 (Hotfix)
+
+Changes/Fixes:
+
+- First IOS release!
+- Improved playback speed precision to better match hardware
+- Improved NSF import duration accuracy
+- Fixed toolbar issue when resizing that could cause the timecode to be misplaced
+- Fixed DPCM bit reversing on NSF and VGM import
+- Fixed temp folder issue which caused freezing on Linux
+- Fixed several typos and localization issues
+- Fixed DPCM reload button always being visually enabled
+- Fixed crash when trying to use undo/redo during certain operations
+- Fixed app not asking you to save new project if app was first minimized on mobile
+- Fixed issues on Linux using Wayland when using high DPI scalings
+- Fixed instrument/arpeggio eyedropper
+- Fixed metronome volume not applying until you restarted the app
+- Added tooltip for "Select All / Select None" 
+- Reversed bits of Journey to Silius demo song to sound as the authors intended
+- Most of these fixes/improvements were done in collaboration with Steo, thanks!
+
+Breaking/Behavior changes:
+
+- Default snap precision on Mobile is now 1/4 beat (1/16th note)
+
+<div style="position:relative;margin-left: auto;margin-right: auto;width:80%;height:0;padding-bottom:45%;">
+	<iframe style="position:absolute;top:0;left:0;width:100%;height:100%" src="https://www.youtube.com/embed/MhEeVK23k_s" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+<br/>
+
 ## Version 4.3.2 (Hotfix)
 
 Changes/Fixes:
