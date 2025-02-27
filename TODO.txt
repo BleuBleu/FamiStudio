@@ -1,6 +1,8 @@
 4.3.4
 =====
 - Respect snapping for releases.
+- Bug when samples are not referenced by anything.
+- 
 
 Linux notes 
 =========== 
