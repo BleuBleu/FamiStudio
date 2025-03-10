@@ -603,7 +603,7 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.PreviewRate); }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
                 new DPCMSampleParamInfo(sample, SampleRateLabel, 0, 15, 15, SampleRateTooltip, true)
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.SampleRate); }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, PaddingModeLabel, 0, 4, DPCMPaddingType.PadTo16Bytes, PaddingModeTooltip, true)
+                new DPCMSampleParamInfo(sample, PaddingModeLabel, 0, 6, DPCMPaddingType.PadTo16Bytes, PaddingModeTooltip, true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, DmcInitialValueDiv2Label, 0, 63, NesApu.DACDefaultValueDiv2, DmcInitialValueDiv2Tooltip)
                     { GetValue = () => { return sample.DmcInitialValueDiv2; }, SetValue = (v) => { sample.DmcInitialValueDiv2 = v; sample.Process(); } },

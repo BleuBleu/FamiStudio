@@ -302,7 +302,10 @@ namespace FamiStudio
 
                 // Optional padding.
                 if (paddingMode == DPCMPaddingType.PadTo16Bytes ||
-                    paddingMode == DPCMPaddingType.PadTo16BytesPlusOne)
+                    paddingMode == DPCMPaddingType.PadTo16BytesPlusOne ||
+                    paddingMode == DPCMPaddingType.TrimTo16Bytes ||
+                    paddingMode == DPCMPaddingType.TrimTo16BytesPlusOne
+                    )
                 {
                     var newSize = 0;
 
@@ -313,6 +316,12 @@ namespace FamiStudio
                             break;
                         case DPCMPaddingType.PadTo16BytesPlusOne:
                             newSize = Utils.RoundUp(processedData.Length - 1, 16) + 1;
+                            break;
+                        case DPCMPaddingType.TrimTo16Bytes:
+                            newSize = Utils.RoundDown(processedData.Length, 16);
+                            break;
+                        case DPCMPaddingType.TrimTo16BytesPlusOne:
+                            newSize = Utils.RoundDown(processedData.Length - 1, 16) + 1;
                             break;
                     }
 
@@ -512,8 +521,8 @@ namespace FamiStudio
         // [1] = PAL
         public static float[] DpcmSampleMaximumRate =
         {
-            33143.9f,
-            33252.1f
+            33143.945f,
+            33252.14f
         };
     }
 
@@ -671,6 +680,8 @@ namespace FamiStudio
         public const int PadTo16BytesPlusOne   = 2;
         public const int RoundTo16Bytes        = 3;
         public const int RoundTo16BytesPlusOne = 4;
+        public const int TrimTo16Bytes         = 5;
+        public const int TrimTo16BytesPlusOne  = 6;
 
         public static readonly string[] Names =
         {
@@ -678,7 +689,9 @@ namespace FamiStudio
             "Pad to 16",
             "Pad to 16+1",
             "Round to 16",
-            "Round to 16+1"
+            "Round to 16+1",
+            "Trim to 16",
+            "Trim to 16+1"
         };
 
         public static int GetValueForName(string str)
@@ -706,41 +719,41 @@ namespace FamiStudio
         {
             // NTSC
             {
-                4181.71f,
-                4709.93f,
-                5264.04f,
-                5593.04f,
-                6257.95f,
-                7046.35f,
-                7919.35f,
-                8363.42f,
-                9419.86f,
-                11186.1f,
-                12604.0f,
-                13982.6f,
-                16884.6f,
-                21306.8f,
-                24858.0f,
-                33143.9f
+                4181.7124f,
+                4709.9287f,
+                5264.038f,
+                5593.0405f,
+                6257.9478f,
+                7046.3506f,
+                7919.3496f,
+                8363.425f,
+                9419.857f,
+                11186.081f,
+                12604.035f,
+                13982.602f,
+                16884.65f,
+                21306.822f,
+                24857.959f,
+                33143.945f
             },
             // PAL
             {
-                4177.40f,
+                4177.4043f,
                 4696.63f,
-                5261.41f,
-                5579.22f,
-                6023.94f,
-                7044.94f,
-                7917.18f,
-                8397.01f,
-                9446.63f,
-                11233.8f,
-                12595.5f,
-                14089.9f,
-                16965.4f,
-                21315.5f,
-                25191.0f,
-                33252.1f
+                5261.4146f,
+                5579.2183f,
+                6023.9385f,
+                7044.945f,
+                7917.1763f,
+                8397.005f,
+                9446.631f,
+                11233.831f,
+                12595.508f,
+                14089.89f,
+                16965.377f,
+                21315.475f,
+                25191.016f,
+                33252.14f
             }
         };
 
