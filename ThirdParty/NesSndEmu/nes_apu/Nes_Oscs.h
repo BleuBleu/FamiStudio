@@ -171,8 +171,8 @@ struct apu_register_values
 	unsigned char ages[20];
 
 	// Extra internal states.
-	unsigned char dpcm_bytes_left;
-	unsigned char dpcm_dac;
+	unsigned short dpcm_bytes_left;
+	unsigned char  dpcm_dac;
 };
 
 #endif

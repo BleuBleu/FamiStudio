@@ -2388,6 +2388,7 @@ famistudio_update_fds_channel_sound:
     dec famistudio_fds_mod_delay_counter
     lda #0x80
     sta FAMISTUDIO_FDS_MOD_HI
+    sta FAMISTUDIO_FDS_SWEEP_ENV
     bne .compute_volume
 
 .zero_delay:
