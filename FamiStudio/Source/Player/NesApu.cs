@@ -473,7 +473,7 @@ namespace FamiStudio
             public fixed byte Ages[20];
 
             // Extra internal states.
-            public byte DpcmBytesLeft;
+            public ushort DpcmBytesLeft;
             public byte DpcmDac;
         }
 
