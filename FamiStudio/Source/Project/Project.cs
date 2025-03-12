@@ -2108,33 +2108,45 @@ namespace FamiStudio
                     var inst1 = kv.Key;
                     var pos1 = 0;
                     var overlapInstruments = kv.Value;
+                    var moved = false;
 
-                    foreach (var inst2 in overlapInstruments)
+                    do
                     {
-                        var pos2 = (int)inst2.N163WavePos;
+                        moved = false;
 
-                        // No position assigned yet, will be done later.
-                        if (inst2.N163WaveAutoPos && !wavePositions.TryGetValue(inst2.Id, out pos2))
+                        foreach (var inst2 in overlapInstruments)
                         {
-                            continue;
-                        }
+                            var pos2 = (int)inst2.N163WavePos;
 
-                        // If overlap, try again right after this instrument.
-                        if (pos1 + inst1.N163WaveSize > pos2 &&
-                            pos2 + inst2.N163WaveSize > pos1)
-                        {
-                            pos1 = pos2 + inst2.N163WaveSize;
-
-                            // Was not able to allocate.
-                            if (pos1 + inst1.N163WaveSize > maxPos)
+                            // No position assigned yet, will be done later.
+                            if (inst2.N163WaveAutoPos && !wavePositions.TryGetValue(inst2.Id, out pos2))
                             {
-                                Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size or minimize overlap with other instruments. Setting to 0.");
-                                pos1 = 0;
-                                overlapDetected = true;
-                                break;
+                                continue;
+                            }
+
+                            // If overlap, try again right after this instrument.
+                            if (pos1 + inst1.N163WaveSize > pos2 &&
+                                pos2 + inst2.N163WaveSize > pos1)
+                            {
+                                pos1 = pos2 + inst2.N163WaveSize;
+                                moved = true;
+
+                                // Was not able to allocate.
+                                if (pos1 + inst1.N163WaveSize > maxPos)
+                                {
+                                    Log.LogMessage(LogSeverity.Warning, $"Not able to assign a N163 wave position to instrument '{inst1.Name}', reduce wave size or minimize overlap with other instruments. Setting to 0.");
+                                    pos1 = 0;
+                                    overlapDetected = true;
+                                    break;
+                                }
+                                else
+                                {
+                                    continue;
+                                }
                             }
                         }
                     }
+                    while (moved && !overlapDetected);
 
                     wavePositions.Add(inst1.Id, pos1);
                 }
