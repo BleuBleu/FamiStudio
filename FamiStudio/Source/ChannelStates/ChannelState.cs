@@ -495,6 +495,7 @@ namespace FamiStudio
 
         protected void WriteRegister(int reg, int data, int skipCycles = 4, int metadata = 0)
         {
+            Debug.Assert(data == data % 256);
             NesApu.WriteRegister(apuIdx, reg, data);
             player.NotifyRegisterWrite(apuIdx, reg, data, metadata);
             
