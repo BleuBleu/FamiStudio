@@ -5213,9 +5213,6 @@ famistudio_set_fds_instrument:
 
     @write_fds_wave:
 
-        ora #$80
-        sta FAMISTUDIO_FDS_VOL ; Enable wave RAM write
-
         ; FDS Waveform
         lda (@ptr),y
         sta @wave_ptr+0
@@ -5224,20 +5221,23 @@ famistudio_set_fds_instrument:
         sta @wave_ptr+1
         iny
         sty @tmp_y
+        lda (@ptr),y ; Read master volume
+        tax          ; Store master volume to X
 
-        ldy #0
+        ldy #63
         @wave_loop:
+            txa ; Get master volume
+            ora #$80
+            sta FAMISTUDIO_FDS_VOL ; Enable RAM write
             lda (@wave_ptr),y
             sta FAMISTUDIO_FDS_WAV_START,y
-            iny
-            cpy #64
-            bne @wave_loop
+            stx FAMISTUDIO_FDS_VOL ; Disable RAM write.
+            dey
+            bpl @wave_loop
 
         ldy @tmp_y
         lda #$80
         sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
-        lda (@ptr),y ; Read master volume
-        sta FAMISTUDIO_FDS_VOL ; Disable RAM write.
         lda #0
         sta FAMISTUDIO_FDS_SWEEP_BIAS
         iny

@@ -28,12 +28,15 @@ namespace FamiStudio
                     Debug.Assert(wav.Length == 0x40);
                     Debug.Assert(mod.Length == 0x20);
 
-                    WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
-
-                    for (int i = 0; i < 0x40; ++i)
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 16); // 16 cycles to mimic ASM loop.
+                    // We read the table from end to start to mimic the ASM code.
+                    for (int i = 0x3F; i >= 0; i--)
+                    {
+                        // We toggle RAM write every iteration since we do the same in ASM.
+                        WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
+                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 27); // 27 cycles to mimic ASM loop.
+                        WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
+                    }
                     
-                    WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
 
@@ -126,6 +129,7 @@ namespace FamiStudio
                 else
                 {
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                    WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80);
                     modDelayCounter--;
                 }
             }
