@@ -33,7 +33,7 @@ namespace FamiStudio
                     {
                         // We toggle RAM write every iteration since we do the same in ASM.
                         WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 27); // 27 cycles to mimic ASM loop.
+                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 28); // 28 cycles to mimic ASM loop.
                         WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
                     }
                     
