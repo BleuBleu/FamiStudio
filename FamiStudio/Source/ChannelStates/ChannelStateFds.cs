@@ -28,13 +28,14 @@ namespace FamiStudio
                     Debug.Assert(wav.Length == 0x40);
                     Debug.Assert(mod.Length == 0x20);
 
-                    // We read the table from end to start to mimic the ASM code.
+                    // We read the table from end to start to mimic the ASM code (saves cycles).
                     for (int i = 0x3F; i >= 0; i--)
                     {
-                        // We toggle RAM write every iteration since we do the same in ASM.
-                        WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 28); // 28 cycles to mimic ASM loop.
-                        WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
+                        // Toggle write each iteration. ASM does this for smooth cycling 
+                        // between instruments. Skipped cycles mimic the ASM loop (27).
+                        WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume, 8);
+                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 10);
+                        WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume, 9); 
                     }
                     
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);
