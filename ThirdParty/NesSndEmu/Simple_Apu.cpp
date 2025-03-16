@@ -185,9 +185,11 @@ void Simple_Apu::treble_eq(int expansion, double treble_amount, int treble_freq,
 
 void Simple_Apu::bass_freq(int bass_freq)
 {
+	// FDS doesn't filter lows as much. Might be worth adding a 
+	// setting for it, or separating 2A03/2A07 from expansions.
 	buf.bass_freq(bass_freq);
 	buf_exp.bass_freq(bass_freq);
-	buf_fds.bass_freq(bass_freq);
+	buf_fds.bass_freq(round(bass_freq / 5));
 	buf_tnd[0].bass_freq(bass_freq);
 	buf_tnd[1].bass_freq(bass_freq);
 	buf_tnd[2].bass_freq(bass_freq);
