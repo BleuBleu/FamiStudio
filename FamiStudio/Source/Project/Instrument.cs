@@ -1092,13 +1092,6 @@ namespace FamiStudio
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;
             }
 
-            // At version 14 (FamiStudio 4.0.0), we added multi-waveforms for N163
-            if (buffer.Version < 14 && (IsN163 || IsFds))
-            {
-                envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
-                envelopes[EnvelopeType.WaveformRepeat].Length = 1;
-            }
-
             if (IsRegular)
             {
                 if (buffer.IsReading)
