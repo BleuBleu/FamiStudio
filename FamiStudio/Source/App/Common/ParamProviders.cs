@@ -215,6 +215,8 @@ namespace FamiStudio
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.CountNoPWM - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveCountLabel, 1, instrument.Envelopes[EnvelopeType.FdsWaveform].Values.Length / 64, 1)
+                        { GetValue = () => { return instrument.FdsWaveCount; }, SetValue = (v) => { instrument.FdsWaveCount = (byte)v;}, GetMaxValue = () => { return instrument.FdsMaxWaveCount; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModPresetLabel, 0, WavePresetType.CountNoResample - 1, WavePresetType.Flat, null, true )
                         { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModSpeedLabel, 0, 4095, 0)
@@ -603,7 +605,7 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.PreviewRate); }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
                 new DPCMSampleParamInfo(sample, SampleRateLabel, 0, 15, 15, SampleRateTooltip, true)
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.SampleRate); }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, PaddingModeLabel, 0, 4, DPCMPaddingType.PadTo16Bytes, PaddingModeTooltip, true)
+                new DPCMSampleParamInfo(sample, PaddingModeLabel, 0, 6, DPCMPaddingType.PadTo16Bytes, PaddingModeTooltip, true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, DmcInitialValueDiv2Label, 0, 63, NesApu.DACDefaultValueDiv2, DmcInitialValueDiv2Tooltip)
                     { GetValue = () => { return sample.DmcInitialValueDiv2; }, SetValue = (v) => { sample.DmcInitialValueDiv2 = v; sample.Process(); } },

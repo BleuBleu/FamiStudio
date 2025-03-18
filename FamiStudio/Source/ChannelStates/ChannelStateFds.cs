@@ -9,6 +9,8 @@ namespace FamiStudio
         private ushort modDepth;
         private ushort modSpeed;
         private int    prevPeriodHi;
+        private int    waveIndex = -1;
+        private int    masterVolume;
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx, int tuning, bool pal) : base(player, apuIdx, channelIdx, tuning, pal)
         {
@@ -22,21 +24,14 @@ namespace FamiStudio
 
                 if (instrument.IsFds)
                 {
-                    var wav = instrument.Envelopes[EnvelopeType.FdsWaveform];
                     var mod = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();
 
-                    Debug.Assert(wav.Length == 0x40);
+                    //Debug.Assert(wav.Length == 0x40);
                     Debug.Assert(mod.Length == 0x20);
 
-                    // We read the table from end to start to mimic the ASM code (saves cycles).
-                    for (int i = 0x3F; i >= 0; i--)
-                    {
-                        // Toggle write each iteration. ASM does this for smooth cycling 
-                        // between instruments. Skipped cycles mimic the ASM loop (27).
-                        WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume, 8);
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 10);
-                        WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume, 9); 
-                    }
+                    waveIndex = -1; // Force reload on instrument change.
+                    masterVolume = instrument.FdsMasterVolume;
+                    ConditionalLoadWave();
                     
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
@@ -47,11 +42,33 @@ namespace FamiStudio
             }
         }
 
+        private void ConditionalLoadWave()
+         {
+             var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
+ 
+             if (newWaveIndex != waveIndex)
+             {
+                var wav = envelopes[EnvelopeType.FdsWaveform].GetChunk(newWaveIndex);
+
+                // We read the table from end to start to mimic the ASM code (saves cycles).
+                for (int i = 0x3F; i >= 0; i--)
+                {
+                    // Toggle write each iteration. ASM does this for smooth cycling 
+                    // between instruments. Skipped cycles mimic the ASM loop (27).
+                    WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 8);
+                    WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, 10);
+                    WriteRegister(NesApu.FDS_VOL, masterVolume, 9); 
+                }
+ 
+                 waveIndex = newWaveIndex;
+             }
+         }
+
         public override int GetEnvelopeFrame(int envIdx)
         {
             if (envIdx == EnvelopeType.FdsWaveform)
             {
-                return + NesApu.GetFdsWavePos(apuIdx);
+                return waveIndex * 64 + NesApu.GetFdsWavePos(apuIdx);
             }
             else
             {
@@ -82,6 +99,8 @@ namespace FamiStudio
             }
             else if (note.IsMusical)
             {
+                ConditionalLoadWave();
+
                 var period = GetPeriod();
                 var volume = GetVolume();
                 var instrument = note.Instrument;

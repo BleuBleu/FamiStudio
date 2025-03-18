@@ -513,8 +513,8 @@ namespace FamiStudio
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             // Mixer.
-            GlobalVolumeDb = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
-            BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", 16);
+            GlobalVolumeDb = ini.GetFloat("Mixer", "GlobalVolume", DefaultGlobalVolumeDb);
+            BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", DefaultBassCutoffHz);
 
             Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
 
@@ -525,9 +525,15 @@ namespace FamiStudio
                 {
                     var section = "Mixer" + ExpansionType.InternalNames[i];
 
-                    ExpansionMixerSettings[i].VolumeDb        = ini.GetFloat(section, "VolumeDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
-                    ExpansionMixerSettings[i].TrebleDb        = ini.GetFloat(section, "TrebleDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
-                    ExpansionMixerSettings[i].TrebleRolloffHz = ini.GetInt(section, "TrebleRolloffHz", ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
+                    ExpansionMixerSettings[i].VolumeDb         = ini.GetFloat(section, "VolumeDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
+                    
+                    // FDS bass filter (4.4.0).
+                    if (i == ExpansionType.Fds)
+                        ExpansionMixerSettings[i].BassCutoffHz = ini.GetInt(section, "BassCutoffHz",   ExpansionMixer.DefaultExpansionMixerSettings[i].BassCutoffHz);
+                    else
+                        ExpansionMixerSettings[i].TrebleDb     = ini.GetFloat(section, "TrebleDb",     ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
+                    
+                    ExpansionMixerSettings[i].TrebleRolloffHz  = ini.GetInt(section, "TrebleRolloffHz", ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
                 }
             }
 
@@ -705,7 +711,13 @@ namespace FamiStudio
             {
                 var section = "Mixer" + ExpansionType.InternalNames[i];
                 ini.SetFloat(section, "VolumeDb", ExpansionMixerSettings[i].VolumeDb);
-                ini.SetFloat(section, "TrebleDb", ExpansionMixerSettings[i].TrebleDb);
+
+                // FDS bass filter.
+                if (i == ExpansionType.Fds)
+                    ini.SetInt(section, "BassCutoffHz", ExpansionMixerSettings[i].BassCutoffHz);
+                else
+                    ini.SetFloat(section, "TrebleDb", ExpansionMixerSettings[i].TrebleDb);
+
                 ini.SetFloat(section, "TrebleRolloffHz", ExpansionMixerSettings[i].TrebleRolloffHz);
             }
 

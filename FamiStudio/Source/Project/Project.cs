@@ -28,7 +28,8 @@ namespace FamiStudio
         // Version 15 = FamiStudio 4.1.0 (DPCM bankswitching)
         // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options, project mixer settings)
         // Version 17 = FamiStudio 4.3.0 (Tuning)
-        public const int Version = 17;
+        // Version 18 = FamiStudio 4.4.0 (FDS multi-wave)
+        public const int Version = 18;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
         public const int MaxSampleAddress = 255 * 64;
@@ -2795,17 +2796,19 @@ namespace FamiStudio
 
     public struct ExpansionMixer
     {
-        public ExpansionMixer(float v, float t, int rf)
+        public ExpansionMixer(float v, float t, int rf, int b = 0)
         {
             VolumeDb = v;
             TrebleDb = t;
             TrebleRolloffHz = rf;
+            BassCutoffHz = b;
         }
 
         public bool Override;
         public float VolumeDb;
         public float TrebleDb;
         public int TrebleRolloffHz;
+        public int BassCutoffHz;
 
         public void Serialize(ProjectBuffer buffer)
         {
@@ -2813,6 +2816,7 @@ namespace FamiStudio
             buffer.Serialize(ref VolumeDb);
             buffer.Serialize(ref TrebleDb);
             buffer.Serialize(ref TrebleRolloffHz);
+            buffer.Serialize(ref BassCutoffHz); // Special case for FDS
         }
 
         public static readonly ExpansionMixer[] DefaultExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count]
@@ -2820,7 +2824,7 @@ namespace FamiStudio
             new ExpansionMixer(0.0f,  -5.0f, 14000), // None
             new ExpansionMixer(0.0f,  -5.0f, 14000), // Vrc6
             new ExpansionMixer(0.0f, -15.0f, 14000), // Vrc7
-            new ExpansionMixer(0.0f,   0.0f,  2000), // Fds
+            new ExpansionMixer(0.0f,   0.0f,  2000, 8), // Fds
             new ExpansionMixer(0.0f,  -5.0f, 14000), // Mmc5
             new ExpansionMixer(0.0f, -15.0f, 14000), // N163
             new ExpansionMixer(0.0f,  -5.0f, 14000), // S5B

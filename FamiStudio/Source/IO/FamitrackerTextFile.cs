@@ -893,6 +893,13 @@ namespace FamiStudio
                 else if (instrument.IsFds)
                 {
                     lines.Add($"INSTFDS{i,5}{1,6}{instrument.FdsModSpeed,4}{instrument.FdsModDepth,4}{instrument.FdsModDelay,4} \"{instrument.Name}\"");
+                    
+                    if (instrument.FdsWaveCount > 1)
+                    {
+                        uniqueWarnings.Add($"FDS Instrument '{instrument.Name}' uses multiple waveforms, the original FamiTracker only supported one, truncating.");
+                        instrument.FdsWaveCount = 1;
+                    }
+                    
                     var wavEnv = instrument.Envelopes[EnvelopeType.FdsWaveform];
                     lines.Add($"FDSWAVE{i,5} : {string.Join(" ", wavEnv.Values.Take(wavEnv.Length))}");
                     var modEnv = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();

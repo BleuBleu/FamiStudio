@@ -101,24 +101,48 @@ namespace FamiStudio
                     chipOverrideIndices[i] = -1;
                 }
 
-                chipGridIndices[i] = props.AddGrid(ExpansionType.LocalizedChipNames[i],
-                    new[]
-                    {
-                        new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
-                        new ColumnDesc("", Platform.IsMobile ? 0.75f : 0.6f, ColumnType.Slider)
-                    },
-                    new object[,] {
-                        { VolumeLabel.ToString(), (int)(mixerSetting.VolumeDb * 10) },
-                        { TrebleLabel.ToString(), (int)(mixerSetting.TrebleDb * 10) },
-                        { TrebleFreqLabel.ToString(), (int)(mixerSetting.TrebleRolloffHz / 100) },
-                    },
-                    3, ExpansionGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
+                // FDS is special.
+                if (i == ExpansionType.Fds)
+                {
+                    chipGridIndices[i] = props.AddGrid(ExpansionType.LocalizedChipNames[i],
+                        new[]
+                        {
+                            new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
+                            new ColumnDesc("", Platform.IsMobile ? 0.75f : 0.6f, ColumnType.Slider)
+                        },
+                        new object[,] {
+                            { VolumeLabel.ToString(), (int)(mixerSetting.VolumeDb * 10) },
+                            { BassFilterLabel.ToString(), (int)(mixerSetting.BassCutoffHz) },
+                            { TrebleFreqLabel.ToString(), (int)(mixerSetting.TrebleRolloffHz / 100) },
+                        },
+                        3, ExpansionGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
+                }
+                else
+                {
+                    chipGridIndices[i] = props.AddGrid(ExpansionType.LocalizedChipNames[i],
+                        new[]
+                        {
+                            new ColumnDesc("", Platform.IsMobile ? 0.25f : 0.4f),
+                            new ColumnDesc("", Platform.IsMobile ? 0.75f : 0.6f, ColumnType.Slider)
+                        },
+                        new object[,] {
+                            { VolumeLabel.ToString(), (int)(mixerSetting.VolumeDb * 10) },
+                            { TrebleLabel.ToString(), (int)(mixerSetting.TrebleDb * 10) },
+                            { TrebleFreqLabel.ToString(), (int)(mixerSetting.TrebleRolloffHz / 100) },
+                        },
+                        3, ExpansionGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
+                }
 
                 props.OverrideCellSlider(chipGridIndices[i], 0, 1, -100, 100, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
-                props.OverrideCellSlider(chipGridIndices[i], 1, 1, -1000, 50, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
+
+                // FDS uses a bass filter.
+                if (i == ExpansionType.Fds)
+                    props.OverrideCellSlider(chipGridIndices[i], 1, 1, 2, 100, (o) => FormattableString.Invariant($"{(int)o} Hz"));
+                else
+                    props.OverrideCellSlider(chipGridIndices[i], 1, 1, -1000, 50, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
+
                 props.OverrideCellSlider(chipGridIndices[i], 2, 1, 1, 441, (o) => FormattableString.Invariant($"{(int)o * 100} Hz"));
                 props.SetPropertyEnabled(chipGridIndices[i], project == null || overridden);
-                props.SetPropertyEnabled(chipGridIndices[i], 1, 1, i != ExpansionType.Fds); // No cutoff on special FDS filter.
             }
 
             if (projectSettings)
@@ -175,7 +199,7 @@ namespace FamiStudio
                 var def = settings[i];
 
                 props.SetPropertyValue(chipGridIndices[i], 0, 1, (int)(def.VolumeDb * 10));
-                props.SetPropertyValue(chipGridIndices[i], 1, 1, (int)(def.TrebleDb * 10));
+                props.SetPropertyValue(chipGridIndices[i], 1, 1, i == ExpansionType.Fds ? def.BassCutoffHz : (int)(def.TrebleDb * 10));
                 props.SetPropertyValue(chipGridIndices[i], 2, 1, def.TrebleRolloffHz / 100);
             }
         }
@@ -231,7 +255,13 @@ namespace FamiStudio
                 {
                     target[i].Override = project != null;
                     target[i].VolumeDb = props.GetPropertyValue<int>(chipGridIndices[i], 0, 1) / 10.0f;
-                    target[i].TrebleDb = props.GetPropertyValue<int>(chipGridIndices[i], 1, 1) / 10.0f;
+
+                    // FDS uses a bass filter.
+                    if (i == ExpansionType.Fds)
+                        target[i].BassCutoffHz = props.GetPropertyValue<int>(chipGridIndices[i], 1, 1);
+                    else
+                        target[i].TrebleDb = props.GetPropertyValue<int>(chipGridIndices[i], 1, 1) / 10.0f;
+
                     target[i].TrebleRolloffHz = props.GetPropertyValue<int>(chipGridIndices[i], 2, 1) * 100;
                 }
                 else

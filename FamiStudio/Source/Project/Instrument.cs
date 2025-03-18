@@ -23,6 +23,7 @@ namespace FamiStudio
         private ushort  fdsModSpeed;
         private byte    fdsModDepth;
         private byte    fdsModDelay;
+        private byte    fdsWaveCount = 1;
         private bool    fdsAutoMod;
         private byte    fdsAutoModDenom = 1;
         private byte    fdsAutoModNumer = 1;
@@ -166,7 +167,8 @@ namespace FamiStudio
             }
             else if (envelopeType == EnvelopeType.WaveformRepeat)
             {
-                return expansion == ExpansionType.N163;
+                return expansion == ExpansionType.N163 ||
+                       expansion == ExpansionType.Fds;
             }
             else if (envelopeType == EnvelopeType.S5BNoiseFreq ||
                      envelopeType == EnvelopeType.S5BMixer)
@@ -190,7 +192,7 @@ namespace FamiStudio
 
         public static bool EnvelopeHasRepeat(int envelopeType)
         {
-            return envelopeType == EnvelopeType.N163Waveform;
+            return envelopeType == EnvelopeType.N163Waveform || envelopeType == EnvelopeType.FdsWaveform;
         }
 
         public bool CanRelease(Channel channel)
@@ -233,6 +235,16 @@ namespace FamiStudio
             {
                 fdsModPreset = value;
                 UpdateFdsModulationEnvelope();
+            }
+        }
+
+        public byte FdsWaveCount
+        {
+            get { return fdsWaveCount; }
+            set
+            {
+                fdsWaveCount = (byte)Utils.Clamp(value, 1, FdsMaxWaveCount);
+                UpdateFdsWaveEnvelope();
             }
         }
 
@@ -401,10 +413,19 @@ namespace FamiStudio
 
         public void UpdateFdsWaveEnvelope()
         {
+            var wavEnv = envelopes[EnvelopeType.FdsWaveform];
+            var repEnv = envelopes[EnvelopeType.WaveformRepeat];
+
+            wavEnv.MaxLength = 1024;
+            wavEnv.ChunkLength = 64;
+            wavEnv.Length = 64 * fdsWaveCount;
+            repEnv.Length = fdsWaveCount;
+            repEnv.SetLoopReleaseUnsafe(wavEnv.Loop >= 0 ? wavEnv.Loop / 64 : -1, wavEnv.Release >= 0 ? wavEnv.Release / 64 : -1);
+            
             if (fdsWavPreset == WavePresetType.Resample)
                 ResampleWaveform();
             else
-                FdsWaveformEnvelope.SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
+                wavEnv.SetFromPreset(EnvelopeType.FdsWaveform, fdsWavPreset);
         }
 
         public void SetFdsResampleWaveData(short[] wav)
@@ -468,7 +489,7 @@ namespace FamiStudio
             {
                 var isN163 = IsN163;
 
-                var waveCount     = isN163 ? n163WavCount : 1;
+                var waveCount     = isN163 ? n163WavCount : fdsWaveCount;
                 var waveSize      = isN163 ? n163WavSize  : 64;
                 var waveNormalize = isN163 ? n163ResampleWavNormalize : fdsResampleWavNormalize;
                 var wavePeriod    = isN163 ? n163ResampleWavPeriod    : fdsResampleWavPeriod;
@@ -506,6 +527,10 @@ namespace FamiStudio
                     N163WaveformEnvelope.SetChunkMaxLengthUnsafe(n163WavSize, N163MaxWaveCount * n163WavSize);
                     UpdateN163WaveEnvelope(); // Safety
                     break;
+                case ExpansionType.Fds:
+                     envelopes[EnvelopeType.FdsWaveform].SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
+                     UpdateFdsWaveEnvelope(); // Safety
+                     break;
             }
         }
 
@@ -520,6 +545,7 @@ namespace FamiStudio
                     UpdateN163WaveEnvelope();
                     break;
                 case EnvelopeType.FdsWaveform:
+                    fdsWaveCount = (byte)(FdsWaveformEnvelope.Length / FdsWaveformEnvelope.ChunkLength);
                     if (invalidatePreset)
                         fdsWavPreset = WavePresetType.Custom;
                     UpdateFdsWaveEnvelope();
@@ -559,7 +585,7 @@ namespace FamiStudio
         {
             Debug.Assert(IsFds || IsN163);
 
-            var sourceWaveCount = IsN163 ? N163WaveCount : 1;
+            var sourceWaveCount = IsN163 ? N163WaveCount : fdsWaveCount;
             var waveSize        = IsN163 ? N163WaveSize  : 64;
 
             var env = IsN163 ? N163WaveformEnvelope : FdsWaveformEnvelope;
@@ -821,6 +847,7 @@ namespace FamiStudio
             for (int i = 0; i < EnvelopeType.Count; i++)
             {
                 var env = envelopes[i];
+                var rep = WaveformRepeatEnvelope;
                 var envelopeExists = env != null;
                 var envelopeShouldExists = IsEnvelopeActive(i);
 
@@ -831,21 +858,15 @@ namespace FamiStudio
                     Debug.Assert(env.Length % env.ChunkLength == 0);
                     Debug.Assert(env.ValuesInValidRange(this, i));
 
-                    if (i == EnvelopeType.N163Waveform)
+                    if (i == EnvelopeType.N163Waveform || i == EnvelopeType.FdsWaveform)
                     {
-                        var rep = WaveformRepeatEnvelope;
+                        var size = i == EnvelopeType.N163Waveform ? n163WavSize : 64;
 
-                        Debug.Assert(env.ChunkLength == n163WavSize);
-                        Debug.Assert(env.Length == n163WavSize * n163WavCount);
+                        Debug.Assert(env.ChunkLength == size);
+                        Debug.Assert(env.Length == size * (size == 64 ? fdsWaveCount : n163WavCount));
                         Debug.Assert(env.Length / env.ChunkLength == rep.Length);
-                        Debug.Assert(env.Loop < 0 && rep.Loop < 0 || rep.Loop == env.Loop / n163WavSize);
-                        Debug.Assert(env.Release < 0 && rep.Release < 0 || rep.Release == env.Release / n163WavSize);
-                    }
-
-                    if (i == EnvelopeType.FdsWaveform)
-                    {
-                        Debug.Assert(env.Length == 64);
-                        Debug.Assert(env.MaxLength == 64);
+                        Debug.Assert(env.Loop < 0 && rep.Loop < 0 || rep.Loop == env.Loop / size);
+                        Debug.Assert(env.Release < 0 && rep.Release < 0 || rep.Release == env.Release / size);
                     }
                 }
             }
@@ -919,6 +940,11 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsModSpeed);
                             buffer.Serialize(ref fdsModDepth); 
                             buffer.Serialize(ref fdsModDelay);
+                            // At version 18 (FamiStudio 4.4.0), we added FDS multi-wave.
+                            if (buffer.Version >= 18)
+                            {
+                                buffer.Serialize(ref fdsWaveCount);
+                            }
                             // At version 16 (FamiStudio 4.2.0), we added FDS auto-modulation
                             if (buffer.Version >= 16)
                             {
@@ -1059,7 +1085,15 @@ namespace FamiStudio
             }
 
             // At version 14 (FamiStudio 4.0.0), we added multi-waveforms for N163
-            if (buffer.Version < 14 && IsN163)
+            // We added them for FDS in version 18 (FamiStudio 4.4.0)
+            if (buffer.Version < 18 && (IsN163 || IsFds))
+            {
+                envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
+                envelopes[EnvelopeType.WaveformRepeat].Length = 1;
+            }
+
+            // At version 14 (FamiStudio 4.0.0), we added multi-waveforms for N163
+            if (buffer.Version < 14 && (IsN163 || IsFds))
             {
                 envelopes[EnvelopeType.WaveformRepeat] = new Envelope(EnvelopeType.WaveformRepeat);
                 envelopes[EnvelopeType.WaveformRepeat].Length = 1;

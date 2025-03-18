@@ -33,10 +33,10 @@ namespace FamiStudio
         {
             maxLength = GetEnvelopeMaxLength(type);
             values = new sbyte[maxLength];
-            canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
-            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.S5BNoiseFreq || type == EnvelopeType.S5BMixer;
-            chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
+            canResize = type != EnvelopeType.FdsModulation;
+            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform || type == EnvelopeType.S5BNoiseFreq || type == EnvelopeType.S5BMixer;
+            chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
 
             if (canResize)
             {
@@ -560,7 +560,6 @@ namespace FamiStudio
             switch (type)
             {
                 case EnvelopeType.FdsWaveform:
-                    return 64;
                 case EnvelopeType.N163Waveform:
                     return 1024; // Actually includes multiple waveforms.
                 case EnvelopeType.FdsModulation:

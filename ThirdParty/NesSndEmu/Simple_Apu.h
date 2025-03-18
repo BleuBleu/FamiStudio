@@ -98,7 +98,7 @@ public:
 	int get_channel_trigger(int exp, int idx);
 
 	void treble_eq(int exp, double treble_amount, int treble_freq, int sample_rate);
-	void bass_freq(int bass_freq);
+	void bass_freq(int exp, int bass_freq);
 	void set_expansion_volume(int expansion, double evolume);
 
 	// Read at most 'count' samples and return number of samples actually read

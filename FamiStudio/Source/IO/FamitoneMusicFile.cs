@@ -477,6 +477,7 @@ namespace FamiStudio
                     switch (i)
                     {
                         case EnvelopeType.N163Waveform:
+                        case EnvelopeType.FdsWaveform:
                         case EnvelopeType.WaveformRepeat:
                             // Handled as special case below since multiple-waveform must be splitted and
                             // repeat envelope must be converted.
@@ -484,9 +485,9 @@ namespace FamiStudio
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
                             break;
-                        case EnvelopeType.FdsWaveform:
-                            processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
-                            break;
+                        //case EnvelopeType.FdsWaveform:
+                            //processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
+                            //break;
                         case EnvelopeType.S5BMixer:
                             processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
                             break;
@@ -514,8 +515,8 @@ namespace FamiStudio
                     }
                 }
 
-                // Special case for N163 multiple waveforms.
-                if (instrument.IsN163)
+                // Special case for N163/FDS multiple waveforms.
+                if (instrument.IsN163 || instrument.IsFds)
                 {
                     var envType = instrument.IsN163 ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
                     var envRepeat = instrument.Envelopes[EnvelopeType.WaveformRepeat];
@@ -683,10 +684,11 @@ namespace FamiStudio
 
                         if (instrument.IsFds)
                         {
-                            var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
+                            var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
+                            //var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
-                            lines.Add($"\t{dw} {llp}env{fdsWavEnvIdx}");
+                            lines.Add($"\t{dw} {llp}env{repeatEnvIdx}");
                             lines.Add($"\t{db} {instrument.FdsMasterVolume}");
                             lines.Add($"\t{dw} {llp}env{fdsModEnvIdx}");
                             lines.Add($"\t{db} {(instrument.FdsAutoMod ? 1 : 0)}");
@@ -807,20 +809,23 @@ namespace FamiStudio
 
             lines.Add("");
 
-            // Write the N163 multiple waveforms.
-            if (project.UsesN163Expansion)
+            // Write the N163/FDS multiple waveforms.
+            if (project.UsesN163Expansion || project.UsesFdsExpansion)
             {
                 foreach (var instrument in project.Instruments)
                 {
-                    if (instrument.IsN163)
+                    if (instrument.IsN163 || instrument.IsFds)
                     {
-                        lines.Add($"{llp}n163_inst{instrumentIndices[instrument]}_waves:");
+                        var name = instrument.IsN163 ? "n163" : "fds";
+                        
+                        lines.Add($"{ll}{name}_inst{instrumentIndices[instrument]}_waves:");
+                        //lines.Add($"{ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves:");
 
                         var waves = instrumentWaveforms[instrument];
                         for (int i = 0; i < waves.Length; i++)
                         {
                             var waveIdx = uniqueEnvelopes.IndexOfKey(waves[i]);
-                            lines.Add($"\t{dw} {llp}env{waveIdx}");
+                            lines.Add($"\t{dw} {ll}env{waveIdx}");
                         }
 
                         size += waves.Length * 2;
@@ -2291,7 +2296,10 @@ namespace FamiStudio
             }
 
 #if DEBUG
-            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + mappingsSize + tempoSize + totalSongsSize);
+            var asmsize = GetAsmFileSize(lines);
+            var expectedSize = headerSize + instSize + mappingsSize + tempoSize + totalSongsSize;
+            Debug.Assert(asmsize == expectedSize);
+            //            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + mappingsSize + tempoSize + totalSongsSize);
 #endif
 
             return true;
