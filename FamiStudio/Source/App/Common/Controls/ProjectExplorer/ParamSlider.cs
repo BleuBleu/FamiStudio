@@ -37,6 +37,7 @@ namespace FamiStudio
             bmpPlus  = ParentWindow.Graphics.GetTextureAtlasRef("ButtonPlus");
             buttonSize = DpiScaling.ScaleCustom(bmpMinus.ElementSize.Width, bmpScale);
             height = buttonSize - (Platform.IsMobile ? DpiScaling.ScaleForWindow(2) : 0);
+            supportsDoubleClick = true;
         }
 
         // -1 = left, 1 = right, 0 = outside
@@ -95,6 +96,11 @@ namespace FamiStudio
                     }
                 }
             }
+        }
+
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
+        {
+            OnPointerDown(e);
         }
 
         protected override void OnPointerUp(PointerEventArgs e)

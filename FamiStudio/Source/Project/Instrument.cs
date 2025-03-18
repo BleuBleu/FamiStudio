@@ -860,10 +860,11 @@ namespace FamiStudio
 
                     if (i == EnvelopeType.N163Waveform || i == EnvelopeType.FdsWaveform)
                     {
-                        var size = i == EnvelopeType.N163Waveform ? n163WavSize : 64;
+                        var n163 = i == EnvelopeType.N163Waveform;
+                        var size = n163 ? n163WavSize : 64;
 
                         Debug.Assert(env.ChunkLength == size);
-                        Debug.Assert(env.Length == size * (size == 64 ? fdsWaveCount : n163WavCount));
+                        Debug.Assert(env.Length == size * (n163 ? n163WavCount : fdsWaveCount));
                         Debug.Assert(env.Length / env.ChunkLength == rep.Length);
                         Debug.Assert(env.Loop < 0 && rep.Loop < 0 || rep.Loop == env.Loop / size);
                         Debug.Assert(env.Release < 0 && rep.Release < 0 || rep.Release == env.Release / size);

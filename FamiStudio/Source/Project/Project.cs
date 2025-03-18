@@ -2821,14 +2821,14 @@ namespace FamiStudio
 
         public static readonly ExpansionMixer[] DefaultExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count]
         {
-            new ExpansionMixer(0.0f,  -5.0f, 14000), // None
-            new ExpansionMixer(0.0f,  -5.0f, 14000), // Vrc6
-            new ExpansionMixer(0.0f, -15.0f, 14000), // Vrc7
-            new ExpansionMixer(0.0f,   0.0f,  2000, 8), // Fds
-            new ExpansionMixer(0.0f,  -5.0f, 14000), // Mmc5
-            new ExpansionMixer(0.0f, -15.0f, 14000), // N163
-            new ExpansionMixer(0.0f,  -5.0f, 14000), // S5B
-            new ExpansionMixer(0.0f,  -5.0f, 14000)  // EPSM
+            new ExpansionMixer(0.0f,  -5.0f, 14000),    // None
+            new ExpansionMixer(0.0f,  -5.0f, 14000),    // Vrc6
+            new ExpansionMixer(0.0f, -15.0f, 14000),    // Vrc7
+            new ExpansionMixer(0.0f,   0.0f,  2000, 5), // Fds (special bass filter)
+            new ExpansionMixer(0.0f,  -5.0f, 14000),    // Mmc5
+            new ExpansionMixer(0.0f, -15.0f, 14000),    // N163
+            new ExpansionMixer(0.0f,  -5.0f, 14000),    // S5B
+            new ExpansionMixer(0.0f,  -5.0f, 14000)     // EPSM
         };
     }
 }
