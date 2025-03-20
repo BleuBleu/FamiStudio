@@ -2392,7 +2392,7 @@ famistudio_update_fds_channel_sound:
         sta famistudio_fds_prev_hi
     .endif
 
-.check_mod_delay:
+.famistudio_set_fds_instrument_check_mod_delay:
     lda famistudio_fds_mod_delay_counter
     beq .zero_delay
     dec famistudio_fds_mod_delay_counter
@@ -2432,7 +2432,7 @@ famistudio_update_fds_channel_sound:
                 sta FAMISTUDIO_FDS_MOD_HI
                 lda *.pitch+0
                 sta FAMISTUDIO_FDS_MOD_LO  
-                jmp *.mod_depth
+                jmp .mod_depth
     .endif
 
     .manual_mod:
@@ -4716,7 +4716,7 @@ famistudio_do_fds_note_attack:
 
     ; Clear wave index to -1 to force reload.
     ldx *.chan_idx
-    lda #$ff
+    lda #0xff
     sta famistudio_fds_wave_index
     ldy *.tmp_y
     rts
@@ -5389,7 +5389,7 @@ famistudio_update_fds_wave:
     lda famistudio_fds_wave_index
     asl
     tay
-    lda [*.wave_ptr]),y
+    lda [*.wave_ptr],y
     sta *.ptr+0
     iny
     lda [*.wave_ptr],y
@@ -5399,7 +5399,7 @@ famistudio_update_fds_wave:
     ldy #63
     .wave_loop:
         txa ; Get master volume
-        ora #$80
+        ora #0x80
         sta FAMISTUDIO_FDS_VOL ; Enable RAM write.
         lda [*.ptr],y
         sta FAMISTUDIO_FDS_WAV_START,y
@@ -5425,10 +5425,10 @@ famistudio_set_fds_instrument:
 
     .local .ptr
     .local .wave_ptr
-    .local .mod_depth
-    .ptr          = famistudio_ptr1
-    .wave_ptr     = famistudio_ptr2
-    .mod_depth    = famistudio_r3 
+    .local .tmp_mod_depth
+    .ptr           = famistudio_ptr1
+    .wave_ptr      = famistudio_ptr2
+    .tmp_mod_depth = famistudio_r3 
 
     ; Store instrument number (premultipled by 4 if not using extended range)
     sta famistudio_chn_fds_instrument-FAMISTUDIO_FDS_CH0_IDX,y
@@ -5457,7 +5457,7 @@ famistudio_set_fds_instrument:
         lda [*.ptr],y ; Read depth / master volume, shift twice for depth and store for later
         lsr
         lsr
-        sta *.mod_depth
+        sta *.tmp_mod_depth
 
         ; Mod envelope
         iny
@@ -5491,12 +5491,12 @@ famistudio_set_fds_instrument:
             bpl .famistudio_set_fds_instrument_check_mod_speed ; Skip auto mod if bit 7 is clear
 
             .famistudio_set_fds_instrument_auto_mod:
-                and #$7f ; Clear bit 7 before setting
+                and #0x7f ; Clear bit 7 before setting
                 sta famistudio_fds_automod_numer
                 iny
-                lda (@ptr),y
+                lda [*.ptr],y
                 sta famistudio_fds_automod_denom
-                bne @check_mod_depth
+                bne .famistudio_set_fds_instrument_check_mod_depth
         .else
             iny
             iny
@@ -5512,7 +5512,7 @@ famistudio_set_fds_instrument:
 
             .famistudio_set_fds_instrument_load_mod_speed:
                 lda [*.ptr],y
-                and #$7f ; Clear bit 7 before setting
+                and #0x7f ; Clear bit 7 before setting
                 sta famistudio_fds_mod_speed+0
                 iny
                 lda [*.ptr],y

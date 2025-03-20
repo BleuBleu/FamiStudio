@@ -4599,7 +4599,7 @@ famistudio_do_fds_note_attack:
     ldx <.chan_idx
     rts
 
-    sty @tmp_y
+    sty <.tmp_y
     ldy <.chan_idx
     ldx famistudio_channel_env,y
     lda #0
@@ -4611,7 +4611,7 @@ famistudio_do_fds_note_attack:
     ldx <.chan_idx
     lda #$ff
     sta famistudio_fds_wave_index
-    ldy @tmp_y
+    ldy <.tmp_y
 
     .endif
 
@@ -5262,7 +5262,7 @@ famistudio_update_fds_wave:
 
     ; Load the pointer for the current wave in the table.
     lda famistudio_fds_wave_index
-    asl
+    asl a
     tay
     lda [.wave_ptr],y
     sta <.ptr+0
@@ -5325,8 +5325,8 @@ famistudio_set_fds_instrument:
         ; FDS Modulation
         iny
         lda [.ptr],y ; Read depth / master volume, shift twice for depth and store for later
-        lsr
-        lsr
+        lsr a
+        lsr a
         sta <.mod_depth
 
         ; Mod envelope
