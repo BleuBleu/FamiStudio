@@ -689,24 +689,28 @@ namespace FamiStudio
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
                             lines.Add($"\t{dw} {llp}env{repeatEnvIdx}");
-                            lines.Add($"\t{db} {instrument.FdsMasterVolume}");
+                            lines.Add($"\t{db} {(instrument.FdsModDepth << 2) | instrument.FdsMasterVolume}");
+                            lines.Add($"\t{dw} {llp}fds_inst{instrumentCountExp}_waves");
                             lines.Add($"\t{dw} {llp}env{fdsModEnvIdx}");
-                            lines.Add($"\t{db} {(instrument.FdsAutoMod ? 1 : 0)}");
 
                             if (instrument.FdsAutoMod)
                             {
                                 var numer = (int)instrument.FdsAutoModNumer;
                                 var denom = (int)instrument.FdsAutoModDenom;
                                 Utils.SimplifyFraction(ref numer, ref denom); // 2/4 is same as 1/2
-                                lines.Add($"\t{db} {numer}, {denom}");
+                                
+                                // Set bit 7 of numer for automod
+                                lines.Add($"\t{db} {0x80 | numer}, {denom}");
                                 usesFdsAutoMod = true;
                             }
                             else
                             {
+                                // Bit 7 of the first byte will always be clear (no automod)
                                 lines.Add($"\t{dw} {instrument.FdsModSpeed}");
                             }
 
-                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}");
+                            //lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}");
+                            lines.Add($"\t{db} {instrument.FdsModDelay}");
                         }
                         else if (instrument.IsN163)
                         {
@@ -2296,10 +2300,7 @@ namespace FamiStudio
             }
 
 #if DEBUG
-            var asmsize = GetAsmFileSize(lines);
-            var expectedSize = headerSize + instSize + mappingsSize + tempoSize + totalSongsSize;
-            Debug.Assert(asmsize == expectedSize);
-            //            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + mappingsSize + tempoSize + totalSongsSize);
+            Debug.Assert(GetAsmFileSize(lines) == headerSize + instSize + mappingsSize + tempoSize + totalSongsSize);
 #endif
 
             return true;
