@@ -5243,7 +5243,7 @@ famistudio_update_fds_wave:
     tay
     lda (@ptr),y
     and #3 ; Bits 0 and 1 are master volume
-    tax
+    tax    ; Store master volume to x
     iny
     
     ; Load the wave table pointer.
@@ -5290,9 +5290,9 @@ famistudio_update_fds_wave:
 
 famistudio_set_fds_instrument:
 
-    @ptr          = famistudio_ptr1
-    @wave_ptr     = famistudio_ptr2
-    @tmp_mod_depth    = famistudio_r3
+    @ptr           = famistudio_ptr1
+    @wave_ptr      = famistudio_ptr2
+    @tmp_mod_depth = famistudio_r3
 
     ; Store instrument number (premultipled by 4 if not using extended range)
     sta famistudio_chn_fds_instrument-FAMISTUDIO_FDS_CH0_IDX,y
@@ -5323,7 +5323,7 @@ famistudio_set_fds_instrument:
         sta @tmp_mod_depth
 
         ; Mod envelope
-        iny
+        iny ; Skip to envelope
         iny
         iny
         lda (@ptr),y
@@ -5332,7 +5332,7 @@ famistudio_set_fds_instrument:
         lda (@ptr),y
         sta @wave_ptr+1
         iny
-        tya
+        tya ; Store y and restore after loop
         tax
 
         ldy #0
