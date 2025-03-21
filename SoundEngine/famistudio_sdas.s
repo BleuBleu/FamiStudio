@@ -5410,7 +5410,6 @@ famistudio_update_fds_wave:
     .famistudio_update_fds_wave_done:
     rts
     
-
 ;======================================================================================================================
 ; FAMISTUDIO_SET_FDS_INSTRUMENT (internal)
 ;
@@ -5436,15 +5435,14 @@ famistudio_set_fds_instrument:
     jsr famistudio_get_exp_inst_ptr
     jsr famistudio_load_basic_envelopes
 
+    ; Load the wave index envelope, x will point to the correct envelope.
+    lda [*.ptr],y
+    sta famistudio_env_addr_lo,x
+    iny
+    lda [*.ptr],y
+    sta famistudio_env_addr_hi,x
+
     .famistudio_set_fds_instrument_write_fds_wave:
-
-        ; FDS Waveform
-        lda [*.ptr],y
-        sta famistudio_env_addr_lo,x
-        iny
-        lda [*.ptr],y
-        sta famistudio_env_addr_hi,x
-
         ; Setup for modulation
         lda #0x80
         sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
@@ -5472,7 +5470,6 @@ famistudio_set_fds_instrument:
         tya
         tax
 
-
         ldy #0
         .famistudio_set_fds_instrument_mod_loop:
             lda [*.wave_ptr],y
@@ -5497,9 +5494,6 @@ famistudio_set_fds_instrument:
                 lda [*.ptr],y
                 sta famistudio_fds_automod_denom
                 bne .famistudio_set_fds_instrument_check_mod_depth
-        .else
-            iny
-            iny
         .endif
 
         .famistudio_set_fds_instrument_check_mod_speed:
@@ -5529,7 +5523,7 @@ famistudio_set_fds_instrument:
             .famistudio_set_fds_instrument_load_mod_depth:
                 tya ; Use depth that was stored earlier
                 tax
-                lda *.mod_depth 
+                lda *.tmp_mod_depth 
                 sta famistudio_fds_mod_depth
                 txa
                 tay

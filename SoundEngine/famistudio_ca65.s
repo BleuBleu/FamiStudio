@@ -976,8 +976,8 @@ famistudio_fds_mod_speed:         .res 2
 famistudio_fds_mod_depth:         .res 1
 famistudio_fds_mod_delay:         .res 1
 famistudio_fds_mod_delay_counter: .res 1
-famistudio_fds_wave_index:        .res 1
 famistudio_fds_override_flags:    .res 1 ; Bit 7 = mod speed overriden, bit 6 mod depth overriden
+famistudio_fds_wave_index:        .res 1
 .if FAMISTUDIO_USE_FDS_AUTOMOD
 famistudio_fds_automod_numer:     .res 1 ; 0 = auto-mod off.
 famistudio_fds_automod_denom:     .res 1
@@ -5292,7 +5292,7 @@ famistudio_set_fds_instrument:
 
     @ptr          = famistudio_ptr1
     @wave_ptr     = famistudio_ptr2
-    @mod_depth    = famistudio_r3
+    @tmp_mod_depth    = famistudio_r3
 
     ; Store instrument number (premultipled by 4 if not using extended range)
     sta famistudio_chn_fds_instrument-FAMISTUDIO_FDS_CH0_IDX,y
@@ -5300,14 +5300,14 @@ famistudio_set_fds_instrument:
     jsr famistudio_get_exp_inst_ptr
     jsr famistudio_load_basic_envelopes
 
-    @write_fds_mod:
-        ; Load the wave index envelope, x will point to the correct envelope.
-        lda (@ptr),y
-        sta famistudio_env_addr_lo,x
-        iny
-        lda (@ptr),y
-        sta famistudio_env_addr_hi,x
+    ; Load the wave index envelope, x will point to the correct envelope.
+    lda (@ptr),y
+    sta famistudio_env_addr_lo,x
+    iny
+    lda (@ptr),y
+    sta famistudio_env_addr_hi,x
 
+    @write_fds_mod:
         ; Setup for modulation
         lda #$80
         sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
@@ -5320,7 +5320,7 @@ famistudio_set_fds_instrument:
         lda (@ptr),y ; Read depth / master volume, shift twice for depth and store for later
         lsr
         lsr
-        sta @mod_depth
+        sta @tmp_mod_depth
 
         ; Mod envelope
         iny
@@ -5359,9 +5359,6 @@ famistudio_set_fds_instrument:
                 lda (@ptr),y
                 sta famistudio_fds_automod_denom
                 bne @check_mod_depth
-        .else
-            iny
-            iny
         .endif
 
         @check_mod_speed:
@@ -5391,7 +5388,7 @@ famistudio_set_fds_instrument:
             @load_mod_depth:
                 tya ; Use depth that was stored earlier
                 tax
-                lda @mod_depth 
+                lda @tmp_mod_depth 
                 sta famistudio_fds_mod_depth
                 txa
                 tay

@@ -485,9 +485,6 @@ namespace FamiStudio
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
                             break;
-                        //case EnvelopeType.FdsWaveform:
-                            //processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
-                            //break;
                         case EnvelopeType.S5BMixer:
                             processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
                             break;
@@ -685,7 +682,6 @@ namespace FamiStudio
                         if (instrument.IsFds)
                         {
                             var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
-                            //var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
                             lines.Add($"\t{dw} {llp}env{repeatEnvIdx}");
@@ -699,17 +695,16 @@ namespace FamiStudio
                                 var denom = (int)instrument.FdsAutoModDenom;
                                 Utils.SimplifyFraction(ref numer, ref denom); // 2/4 is same as 1/2
                                 
-                                // Set bit 7 of numer for automod
+                                // Set bit 7 of numer for automod enabled
                                 lines.Add($"\t{db} {0x80 | numer}, {denom}");
                                 usesFdsAutoMod = true;
                             }
                             else
                             {
-                                // Bit 7 of the first byte will always be clear (no automod)
+                                // Bit 7 of the first byte will be clear here (no automod)
                                 lines.Add($"\t{dw} {instrument.FdsModSpeed}");
                             }
 
-                            //lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}");
                             lines.Add($"\t{db} {instrument.FdsModDelay}");
                         }
                         else if (instrument.IsN163)
@@ -823,7 +818,6 @@ namespace FamiStudio
                         var name = instrument.IsN163 ? "n163" : "fds";
                         
                         lines.Add($"{ll}{name}_inst{instrumentIndices[instrument]}_waves:");
-                        //lines.Add($"{ll}{Utils.MakeNiceAsmName(instrument.Name)}_waves:");
 
                         var waves = instrumentWaveforms[instrument];
                         for (int i = 0; i < waves.Length; i++)

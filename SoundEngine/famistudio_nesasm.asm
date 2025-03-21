@@ -4596,8 +4596,6 @@ famistudio_do_fds_note_attack:
 
     lda famistudio_fds_mod_delay
     sta famistudio_fds_mod_delay_counter
-    ldx <.chan_idx
-    rts
 
     sty <.tmp_y
     ldy <.chan_idx
@@ -4612,6 +4610,7 @@ famistudio_do_fds_note_attack:
     lda #$ff
     sta famistudio_fds_wave_index
     ldy <.tmp_y
+    rts
 
     .endif
 
@@ -5299,7 +5298,7 @@ famistudio_set_fds_instrument:
 
 .ptr          = famistudio_ptr1
 .wave_ptr     = famistudio_ptr2
-.mod_depth    = famistudio_r3
+.tmp_mod_depth    = famistudio_r3
 
     ; Store instrument number (premultipled by 4 if not using extended range)
     sta famistudio_chn_fds_instrument-FAMISTUDIO_FDS_CH0_IDX,y
@@ -5307,14 +5306,14 @@ famistudio_set_fds_instrument:
     jsr famistudio_get_exp_inst_ptr
     jsr famistudio_load_basic_envelopes
 
+    ; Load the wave index envelope, x will point to the correct envelope.
+    lda [.ptr],y
+    sta famistudio_env_addr_lo,x
+    iny
+    lda [.ptr],y
+    sta famistudio_env_addr_hi,x
+
     .write_fds_mod:
-
-        lda [.ptr],y
-        sta famistudio_env_addr_lo,x
-        iny
-        lda [.ptr],y
-        sta famistudio_env_addr_hi,x
-
         ; Setup for modulation
         lda #$80
         sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
@@ -5327,7 +5326,7 @@ famistudio_set_fds_instrument:
         lda [.ptr],y ; Read depth / master volume, shift twice for depth and store for later
         lsr a
         lsr a
-        sta <.mod_depth
+        sta <.tmp_mod_depth
 
         ; Mod envelope
         iny
@@ -5366,9 +5365,6 @@ famistudio_set_fds_instrument:
                 lda [.ptr],y
                 sta famistudio_fds_automod_denom
                 bne .check_mod_depth
-        .else
-            iny
-            iny
         .endif
 
         .check_mod_speed:
@@ -5396,11 +5392,9 @@ famistudio_set_fds_instrument:
             bvs .mod_depth_overriden
 
             .load_mod_depth:
-                lda [.ptr],y
-                sta famistudio_fds_mod_depth
                 tya ; Use depth that was stored earlier
                 tax
-                lda <.mod_depth 
+                lda <.tmp_mod_depth 
                 sta famistudio_fds_mod_depth
                 txa
                 tay
