@@ -43,26 +43,29 @@ namespace FamiStudio
         }
 
         private void ConditionalLoadWave()
-         {
-             var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
- 
-             if (newWaveIndex != waveIndex)
-             {
+        {
+            var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
+
+            if (newWaveIndex != waveIndex)
+            {
                 var wav = envelopes[EnvelopeType.FdsWaveform].GetChunk(newWaveIndex);
 
                 // We read the table from end to start to mimic the ASM code (saves cycles).
-                for (int i = 0x3F; i >= 0; i--)
+                for (int i = 0x3F; i >= 0; i -= 2)
                 {
-                    // Toggle write each iteration. ASM does this for smooth cycling 
-                    // between instruments. Skipped cycles mimic the ASM loop (27).
-                    WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 8);
-                    WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, 10);
-                    WriteRegister(NesApu.FDS_VOL, masterVolume, 9); 
+                    // Toggle write every 2 iterations. ASM does this for smooth cycling between
+                    // waveforms. We write twice between write toggling and iterate half the times 
+                    // to save CPU cycles. 41 skipped cycles to mimic ASM loop (40 if BPL is skipped).
+                    SkipCycles(4); // 4 cycles to mimic TXA and ORA before enabling write
+                    WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 4);
+                    WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, 13);         // +7 for LDA and DEY
+                    WriteRegister(NesApu.FDS_WAV_START + i - 1, wav[i - 1] & 0xff, 11); // +5 for LDA
+                    WriteRegister(NesApu.FDS_VOL, masterVolume, i > 1 ? 9 : 8);         // +5 for DEY and BPL (4 on BPL exit)
                 }
  
-                 waveIndex = newWaveIndex;
-             }
-         }
+                waveIndex = newWaveIndex;
+            }
+        }
 
         public override int GetEnvelopeFrame(int envIdx)
         {

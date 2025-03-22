@@ -5402,6 +5402,9 @@ famistudio_update_fds_wave:
         ora #0x80
         sta FAMISTUDIO_FDS_VOL ; Enable RAM write.
         lda [*.ptr],y
+        sta FAMISTUDIO_FDS_WAV_START,y  ; Write 2 samples between each write toggle (saves ~500 CPU cycles, sounds identical)
+        dey
+        lda [*.ptr],y
         sta FAMISTUDIO_FDS_WAV_START,y
         stx FAMISTUDIO_FDS_VOL ; Disable RAM write.
         dey

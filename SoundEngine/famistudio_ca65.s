@@ -5263,12 +5263,15 @@ famistudio_update_fds_wave:
     lda (@wave_ptr),y
     sta @ptr+1
 
-    ; FDS Waveform (toggle write each iteration for smooth transitions)
+    ; FDS Waveform
     ldy #63
     @wave_loop:
         txa ; Get master volume
         ora #$80
         sta FAMISTUDIO_FDS_VOL ; Enable RAM write.
+        lda (@ptr),y 
+        sta FAMISTUDIO_FDS_WAV_START,y ; Write 2 samples between each write toggle (saves ~500 CPU cycles, sounds identical)
+        dey
         lda (@ptr),y 
         sta FAMISTUDIO_FDS_WAV_START,y
         stx FAMISTUDIO_FDS_VOL ; Disable RAM write.
