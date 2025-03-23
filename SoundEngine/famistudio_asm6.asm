@@ -5328,7 +5328,6 @@ famistudio_set_fds_instrument:
 
             @load_mod_speed:
                 lda (ptr),y
-                and #$7f ; Clear bit 7 before setting
                 sta famistudio_fds_mod_speed+0
                 iny
                 lda (ptr),y
@@ -5337,7 +5336,6 @@ famistudio_set_fds_instrument:
 
             @mod_speed_overriden:
                 iny
-
 
         @check_mod_depth:
             bit famistudio_fds_override_flags

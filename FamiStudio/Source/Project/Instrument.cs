@@ -946,7 +946,7 @@ namespace FamiStudio
                             {
                                 buffer.Serialize(ref fdsWaveCount);
                             }
-                            // At version 16 (FamiStudio 4.2.0), we added FDS auto-modulation
+                            // At version 16 (FamiStudio 4.2.0), we added FDS auto-modulation.
                             if (buffer.Version >= 16)
                             {
                                 buffer.Serialize(ref fdsAutoMod);
