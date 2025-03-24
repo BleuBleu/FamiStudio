@@ -2366,6 +2366,12 @@ famistudio_update_fds_channel_sound:
 
     lda famistudio_chn_note+FAMISTUDIO_FDS_CH0_IDX
     bne .nocut
+    lda #0 ; Disable mod on note off
+    sta FAMISTUDIO_FDS_MOD_LO
+    sta FAMISTUDIO_FDS_SWEEP_BIAS
+    lda #0x80
+    sta FAMISTUDIO_FDS_MOD_HI
+    sta FAMISTUDIO_FDS_SWEEP_ENV
     jmp .set_volume
 
 .nocut:

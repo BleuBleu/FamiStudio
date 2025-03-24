@@ -67,6 +67,14 @@ namespace FamiStudio
             }
         }
 
+        private void ResetModulation()
+        {
+            WriteRegister(NesApu.FDS_MOD_LO, 0x00);
+            WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
+            WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+            WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80);
+        }
+
         public override int GetEnvelopeFrame(int envIdx)
         {
             if (envIdx == EnvelopeType.FdsWaveform)
@@ -99,6 +107,7 @@ namespace FamiStudio
             if (note.IsStop)
             {
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80); // Zero volume
+                ResetModulation();
             }
             else if (note.IsMusical)
             {
@@ -151,10 +160,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    WriteRegister(NesApu.FDS_MOD_LO, 0x00);
-                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
-                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
-                    WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80);
+                    ResetModulation();
                     modDelayCounter--;
                 }
             }
