@@ -151,8 +151,6 @@ namespace FamiStudio
                 }
                 else
                 {
-                    // We need to set FDS_MOD_LO and FDS_SWEEP_BIAS here, otherwise modulation is inconsistent.
-                    // Same goes for the sound engine.
                     WriteRegister(NesApu.FDS_MOD_LO, 0x00);
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);

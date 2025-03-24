@@ -39,7 +39,6 @@ void Nes_Fds::reset()
 	memset(&osc.ages, 0, sizeof(osc.ages));
 	osc.mod_pos = 0;
 	osc.mod_phase = 0;
-	osc.mod_pos = 0;
 	osc.delay = 0;
 	osc.last_amp = 0;
 	osc.phase = 0;
@@ -102,6 +101,7 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 				break;
 			case 5:
 				osc.mod_pos = data & 0x7f;
+				osc.mod_phase = data & 0x7f;
 				break;
 			case 7:
 				if (data & 0x80) 
