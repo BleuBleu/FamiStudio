@@ -2396,6 +2396,9 @@ famistudio_update_fds_channel_sound:
     lda famistudio_fds_mod_delay_counter
     beq .zero_delay
     dec famistudio_fds_mod_delay_counter
+    lda #0
+    sta FAMISTUDIO_FDS_MOD_LO
+    sta FAMISTUDIO_FDS_SWEEP_BIAS
     lda #0x80
     sta FAMISTUDIO_FDS_MOD_HI
     sta FAMISTUDIO_FDS_SWEEP_ENV

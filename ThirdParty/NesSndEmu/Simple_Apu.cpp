@@ -544,13 +544,13 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				long nonlinear_tnd = pack_sample(enabled_channels_non_linear_mix * tnd_volume);
 
 				// Write final result in tnd[0] so that the remaining code can proceed as usual.
-				*p[0]++ = (tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd);
+				*p[0]++ = (tnd_skip ? 0 : nonlinear_tnd - prev_nonlinear_tnd);
 				 p[1]++;
 				 p[2]++;
 
 				prev_nonlinear_tnd = nonlinear_tnd;
 
-				if (tnd_skip > 0)
+				if (tnd_skip)
 					tnd_skip--;
 			}
 		}
@@ -563,10 +563,10 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			{
 				tnd_accum[0] += (long)*p;
     			long nonlinear_tnd = pack_sample(nonlinearize(unpack_sample(tnd_accum[0])) * tnd_volume);
-				*p++ = tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd;
+				*p++ = tnd_skip ? 0 : nonlinear_tnd - prev_nonlinear_tnd;
 				prev_nonlinear_tnd = nonlinear_tnd;
 
-				if (tnd_skip > 0)
+				if (tnd_skip)
 					tnd_skip--;
 			}
 		}
