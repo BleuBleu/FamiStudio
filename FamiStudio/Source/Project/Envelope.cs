@@ -503,6 +503,10 @@ namespace FamiStudio
                         for (int i = 0; i < localChunkLength; i++)
                             values[chunkOffset + i] = (sbyte)(i >= (localChunkLength / 2) + (localChunkLength / 2 - (1 + ((j + 1) * (localChunkLength - 2) / localChunkCount) / 2)) ? max : min);
                         break;
+                    case WavePresetType.PWM4:
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= localChunkLength - 1 - Math.Abs(localChunkLength / 2 - (1 + (j + 1) * (localChunkLength - 2) / localChunkCount)) ? max : min);           
+                        break;
                 }
             }
         }
@@ -834,7 +838,8 @@ namespace FamiStudio
         public const int PWM             = 8; 
         public const int PWM2            = 9; 
         public const int PWM3            = 10;
-        public const int Count           = 11;
+        public const int PWM4            = 11;
+        public const int Count           = 12;
 
         // Use these to display to user
         public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
@@ -852,7 +857,8 @@ namespace FamiStudio
             "Resample",
             "PWM",
             "PWM2",
-            "PWM3"
+            "PWM3",
+            "PWM4"
         };
 
         static WavePresetType()

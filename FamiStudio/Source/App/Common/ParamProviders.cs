@@ -213,7 +213,7 @@ namespace FamiStudio
                 case ExpansionType.Fds:
                     paramInfos.Add(new InstrumentParamInfo(instrument, MasterVolumeLabel, 0, 3, 0, null, true)
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.CountNoPWM - 1, WavePresetType.Sine, null, true)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, WaveCountLabel, 1, instrument.Envelopes[EnvelopeType.FdsWaveform].Values.Length / 64, 1)
                         { GetValue = () => { return instrument.FdsWaveCount; }, SetValue = (v) => { instrument.FdsWaveCount = (byte)v;}, GetMaxValue = () => { return instrument.FdsMaxWaveCount; } });

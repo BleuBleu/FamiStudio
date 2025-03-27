@@ -469,6 +469,10 @@ namespace FamiStudio
                 if (captureControl != null)
                     return;
 
+                // Abort delayed right-click if left-clicking, to avoid a double capture.
+                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                    ClearDelayedRightClick();
+
                 var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
                 container.ConditionalHideContextMenu(ctrl);
 
