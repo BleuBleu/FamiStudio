@@ -597,7 +597,7 @@ namespace FamiStudio
         public void Serialize(ref Instrument instrument)
         {
             int instrumentId = instrument == null ? -1 : instrument.Id;
-            Serialize(ref instrumentId, true);
+            Serialize(ref instrumentId, false);
         }
 
         public void Serialize(ref Arpeggio arpeggio)
