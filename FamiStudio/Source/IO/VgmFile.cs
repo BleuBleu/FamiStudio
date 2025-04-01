@@ -501,6 +501,7 @@ namespace FamiStudio
         byte[] dpcmData = new byte[0xffff];
         byte[] pcmRAMData = new byte[0xffffff];
         bool ym2149AsEPSM;
+        int[] fdsModulationTable = new int[0x40];
         int[] NOISE_FREQ_TABLE = new[] {0x004,0x008,0x010,0x020,0x040,0x060,0x080,0x0A0,0x0CA,0x0FE,0x17C,0x1FC,0x2FA,0x3F8,0x7F2,0xFE4 };
         float[] clockMultiplier = new float[ExpansionType.Count];
 
@@ -895,26 +896,22 @@ namespace FamiStudio
                         }
                         break;
                     }
-                    /*
-                //###############################################################
-                //
-                // TODO
-                //
-                //###############################################################
+
                 case ChannelType.FdsWave:
+                {
+                    switch (state)
                     {
-                        switch (state)
-                        {
-                            case NotSoFatso.STATE_PERIOD: return apuRegister[0x22] | (apuRegister[0x23] & 0xf)<< 8;//mWave_FDS.nFreq.W;
-                            case NotSoFatso.STATE_VOLUME: return ;//mWave_FDS.bEnabled ? mWave_FDS.nVolume : 0;
-                            case NotSoFatso.STATE_FDSWAVETABLE: return mWave_FDS.nWaveTable[sub];
-                            case NotSoFatso.STATE_FDSMODULATIONTABLE: return mWave_FDS.nLFO_Table[sub * 2];
-                            case NotSoFatso.STATE_FDSMODULATIONDEPTH: return mWave_FDS.bLFO_On && (mWave_FDS.nSweep_Mode & 2) ? mWave_FDS.nSweep_Gain : 0;
-                            case NotSoFatso.STATE_FDSMODULATIONSPEED: return mWave_FDS.bLFO_On ? mWave_FDS.nLFO_Freq.W : 0;
-                            case NotSoFatso.STATE_FDSMASTERVOLUME: return mWave_FDS.nMainVolume;
-                        }
-                        break;
-                    }*/
+                        case NotSoFatso.STATE_PERIOD: return apuRegister[0x22] + ((apuRegister[0x23] & 0x0F) << 8);
+                        case NotSoFatso.STATE_VOLUME: return apuRegister[0x20] & 0x3F;
+                        case NotSoFatso.STATE_FDSWAVETABLE: return apuRegister[0x40 + sub];
+                        case NotSoFatso.STATE_FDSMODULATIONTABLE: return fdsModulationTable[sub * 2];
+                        case NotSoFatso.STATE_FDSMODULATIONDEPTH: return apuRegister[0x24] & 0x3F;
+                        case NotSoFatso.STATE_FDSMODULATIONSPEED: return apuRegister[0x26] + ((apuRegister[0x27] & 0x3F) << 8);
+                        case NotSoFatso.STATE_FDSMASTERVOLUME:  return apuRegister[0x29] & 0x3F;
+                    }
+                    break;
+                }
+
                 case ChannelType.Vrc7Fm1:
                 case ChannelType.Vrc7Fm2:
                 case ChannelType.Vrc7Fm3:
@@ -1542,8 +1539,6 @@ namespace FamiStudio
         /*
          * 
          * Todo:
-         * Add FDS Support
-         * Add PAL Support if no expansion is used
          * Add 2A03 Sweep Support (blarrg smooth vibrato uses separate workaround)
          * Add Possibility to import second 2A03 Squares as MMC5
          * 
@@ -1618,6 +1613,7 @@ namespace FamiStudio
             while (vgmDataOffset < vgmFile.Length) {
                 if(expansionMask != project.ExpansionAudioMask)
                     project.SetExpansionAudioMask(expansionMask, 0);
+
                 if (vgmCommand == 0x67)  //DataBlock
                 {
                     var dataSize = BitConverter.ToInt32(vgmFile.AsSpan(vgmDataOffset + 3, 4));
@@ -1760,8 +1756,7 @@ namespace FamiStudio
 
                     vgmData = vgmFile.AsSpan(vgmDataOffset, 3);
                     if (vgmCommand == 0xB4)
-                    {
-
+                    {           
                         if (vgmData[1] == 0x17 && vgmData[2] == 0xc0)
                         {
                             if (apuRegister[1] == 0x87 && apuRegister[2] == 0xff)
@@ -1774,9 +1769,27 @@ namespace FamiStudio
                                 apuRegister[0x07]--;
                         }
 
-                            if (vgmData[1] == 0x15 && (vgmData[2] & 0x10) > 0)
+                        if (vgmData[1] == 0x15 && (vgmData[2] & 0x10) > 0)
                             dpcmTrigger = true;
+
                         apuRegister[vgmData[1]] = vgmData[2];
+
+                        // FDS
+                        if ((vgmData[1] >= 0x40 && vgmData[1] <= 0x7F) || (vgmData[1] >= 0x20 && vgmData[1] <= 0x3E)) 
+                        {
+                            // Mod table
+                            if (vgmData[1] == 0x28)
+                            {
+                                for (int i = 0; i < 62; i++)
+                                {
+                                    fdsModulationTable[i] = fdsModulationTable[i + 2];
+                                }
+
+                                fdsModulationTable[62] = fdsModulationTable[63] = vgmData[2] & 0x07;
+                            }
+
+                            expansionMask = expansionMask | ExpansionType.FdsMask;
+                        }
                     }
                     else if (vgmCommand == 0x51)
                     {
