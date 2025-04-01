@@ -906,7 +906,7 @@ namespace FamiStudio
                         case NotSoFatso.STATE_FDSWAVETABLE: return apuRegister[0x40 + sub];
                         case NotSoFatso.STATE_FDSMODULATIONTABLE: return fdsModulationTable[sub * 2];
                         case NotSoFatso.STATE_FDSMODULATIONDEPTH: return apuRegister[0x24] & 0x3F;
-                        case NotSoFatso.STATE_FDSMODULATIONSPEED: return apuRegister[0x26] + ((apuRegister[0x27] & 0x3F) << 8);
+                        case NotSoFatso.STATE_FDSMODULATIONSPEED: return apuRegister[0x26] + ((apuRegister[0x27] & 0x0F) << 8);
                         case NotSoFatso.STATE_FDSMASTERVOLUME:  return apuRegister[0x29] & 0x3F;
                     }
                     break;
