@@ -1416,7 +1416,13 @@ namespace FamiStudio
                         if (channel.Type == ChannelType.Noise)
                             note = (period ^ 0x0f) + 32;
                         else
+                        {
+                            // S5B is offset by -1 vs 2A03/2A07 tables.
+                            if (channel.IsS5BChannel)
+                                period -= 1;
+                                
                             note = (byte)GetBestMatchingNote(period, noteTable, out finePitch);
+                        }
 
                         if (hasOctave)
                         {
