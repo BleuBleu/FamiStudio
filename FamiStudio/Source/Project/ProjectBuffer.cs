@@ -597,6 +597,10 @@ namespace FamiStudio
         public void Serialize(ref Instrument instrument)
         {
             int instrumentId = instrument == null ? -1 : instrument.Id;
+            
+            // We pass false here to force serialization of the instrument ID. This fixes merging of identical
+            // patterns since notes refer to instruments and we dont want to merge patterns using different
+            // instruments.
             Serialize(ref instrumentId, false);
         }
 
