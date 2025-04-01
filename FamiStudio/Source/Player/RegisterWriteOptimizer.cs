@@ -319,9 +319,9 @@ namespace FamiStudio
                     (w.Register >= NesApu.FDS_WAV_START && w.Register <= NesApu.FDS_ENV_SPEED && useFDS) ||
                     (((w.Register >= NesApu.MMC5_PL1_VOL && w.Register <= NesApu.MMC5_PL2_HI) || w.Register == NesApu.MMC5_SND_CHN) && useMMC5) ||
                     ((w.Register == NesApu.N163_DATA || w.Register == NesApu.N163_ADDR) && useN163) ||
-                    (w.Register == NesApu.S5B_ADDR && useS5B) ||
+                    ((w.Register == NesApu.S5B_ADDR || w.Register == NesApu.S5B_DATA) && useS5B) ||
                     (w.Register >= NesApu.EPSM_ADDR0 && w.Register <= NesApu.EPSM_DATA1 && useEPSM) ||
-                    (w.Register == NesApu.N163_SILENCE && (useN163 || useS5B || useVRC7))   //Bus conflicts
+                    (w.Register == NesApu.N163_SILENCE && (useN163 || useVRC7))   //Bus conflicts
                 ) output.Add(w);
             }
             return output.ToArray();
