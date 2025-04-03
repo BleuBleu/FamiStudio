@@ -260,13 +260,14 @@ namespace FamiStudio
             {
                 var state = channelStates[stateIndex];
                 state.wav = new WavPlayer(SampleRate, song.Project.PalMode, song.Project.OutputsStereoAudio, 1, 1L << state.songChannelIndex, threadIndex).GetSongSamples(song, -1, false, true);
-                state.triggerFunction = new PeakSpeedTrigger(state.wav, false);
 
                 if (Log.ShouldAbortOperation)
                     return false;
 
                 if (song.Project.OutputsStereoAudio)
                     state.wav = WaveUtils.MixDown(state.wav);
+
+                state.triggerFunction = new PeakSpeedTrigger(state.wav, false);
 
                 maxAbsSamples[stateIndex] = WaveUtils.GetMaxAbsValue(state.wav);
 
