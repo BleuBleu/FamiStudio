@@ -19,7 +19,7 @@ static int dac_lookup[] =
 	1222, 1295, 1326, 1416, 1388, 1474, 1514, 1619, 1517, 1605, 1644, 1753, 1724, 1829, 1884, 2016
 };
 
-Nes_Fds::Nes_Fds() : vol(1.0f)
+Nes_Fds::Nes_Fds() : vol(1.0)
 {
 	output(NULL);
 	volume(1.0);
@@ -51,7 +51,7 @@ void Nes_Fds::reset()
 void Nes_Fds::volume(double v)
 {
 	vol = v;
-	synth.volume(vol * 0.195f);
+	synth.volume(vol * 0.195);
 }
 
 void Nes_Fds::treble_eq(blip_eq_t const& eq)
