@@ -832,6 +832,7 @@ namespace FamiStudio
         public string DisplayName    { get; private set; }
         public string ConfigName     { get; private set; }
         public bool   AllowModifiers { get; private set; } = true;
+        public bool   AllowDuringTransaction { get; private set; } = true;
 
         //public int[] ScanCodes = new int[2];
         public Keys[] KeyValues         { get; private set; } = new Keys[2];
@@ -841,20 +842,22 @@ namespace FamiStudio
         {
         }
 
-        public Shortcut(string displayName, string configName, Keys k, bool allowModifiers)
+        public Shortcut(string displayName, string configName, Keys k, bool allowModifiers, bool allowDuringTransaction = true)
         {
             DisplayName = displayName;
             ConfigName = configName;
             AllowModifiers = allowModifiers;
+            AllowDuringTransaction = allowDuringTransaction;
             KeyValues[0] = k;
             KeyValues[1] = Keys.Unknown;
             Settings.AllShortcuts.Add(this);
         }
 
-        public Shortcut(string displayName, string configName, Keys k, ModifierKeys m = default(ModifierKeys))
+        public Shortcut(string displayName, string configName, Keys k, ModifierKeys m = default(ModifierKeys), bool allowDuringTransaction = true)
         {
             DisplayName = displayName;
             ConfigName = configName;
+            AllowDuringTransaction = allowDuringTransaction;
             Modifiers[0] = m;
             KeyValues[0] = k;
             KeyValues[1] = Keys.Unknown;
@@ -871,10 +874,11 @@ namespace FamiStudio
             Settings.AllShortcuts.Add(this);
         }
 
-        public Shortcut(string displayName, string configName, Keys k1, ModifierKeys m1, Keys k2, ModifierKeys m2)
+        public Shortcut(string displayName, string configName, Keys k1, ModifierKeys m1, Keys k2, ModifierKeys m2, bool allowDuringTransaction = true)
         {
             DisplayName = displayName;
             ConfigName = configName;
+            AllowDuringTransaction = allowDuringTransaction;
             Modifiers[0] = m1;
             KeyValues[0] = k1;
             Modifiers[1] = m2;
@@ -921,7 +925,8 @@ namespace FamiStudio
 
         public bool Matches(KeyEventArgs e)
         {
-            return Matches(e, 0) || Matches(e, 1);
+            return (Matches(e, 0) || Matches(e, 1)) &&
+                   (AllowDuringTransaction || !FamiStudio.StaticInstance.UndoRedoManager.HasTransactionInProgress);
         }
 
         public bool IsKeyDown(FamiStudioWindow win, int idx)

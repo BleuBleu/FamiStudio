@@ -2105,6 +2105,7 @@ namespace FamiStudio
             {
                 var selPatterns = GetSelectedPatterns(out var customSettings);
                 ClipboardUtils.SavePatterns(App.Project, selPatterns, customSettings);
+                CancelDragSelection(); // Safety in case a transaction is in progress.
                 DeleteSelection(true, customSettings != null);
             }
         }

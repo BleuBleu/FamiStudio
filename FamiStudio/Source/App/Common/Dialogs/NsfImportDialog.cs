@@ -19,6 +19,8 @@ namespace FamiStudio
         LocalizedString RemoveIntroSilenceLabel;
         LocalizedString ReverseDPCMBitsLabel;
         LocalizedString PreserveDPCMPaddingByte;
+        LocalizedString TuningLabel;
+        LocalizedString TuningTooltip;
 
         #endregion
 
@@ -39,6 +41,7 @@ namespace FamiStudio
                 dialog.Properties.AddCheckBox(RemoveIntroSilenceLabel.Colon, true);        // 4
                 dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);          // 5
                 dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false); // 6
+                dialog.Properties.AddNumericUpDown(TuningLabel, 440, 300, 580, 1, TuningTooltip); // 7
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
                 dialog.Properties.Build();
                 UpdateSongDuration(0);
@@ -75,8 +78,9 @@ namespace FamiStudio
                         var removeIntro         = dialog.Properties.GetPropertyValue<bool>(4); 
                         var reverseDpcmBits     = dialog.Properties.GetPropertyValue<bool>(5); 
                         var preserveDpcmPadding = dialog.Properties.GetPropertyValue<bool>(6);
+                        var tuning              = dialog.Properties.GetPropertyValue<int>(7);
 
-                        var project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, removeIntro, reverseDpcmBits, preserveDpcmPadding);
+                        var project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, removeIntro, reverseDpcmBits, preserveDpcmPadding, tuning);
                         action(project);
                     }
                     else
