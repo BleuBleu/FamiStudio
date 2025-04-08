@@ -1584,15 +1584,15 @@ namespace FamiStudio
             {
                 if (BitConverter.ToInt32(vgmFile.AsSpan(0x74, 4)) > 0)
                     clockMultiplier[ExpansionType.S5B] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x74, 4)) / (((vgmFile[0x78] & vgmFile[0x79] & 0x10) == 0x10) ? 1789773 : (float)894886.5);
-                if (BitConverter.ToInt32(vgmFile.AsSpan(0x44, 4)) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x44, 4)) / 4000000;
-                if (BitConverter.ToInt32(vgmFile.AsSpan(0x48, 4)) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x48, 4)) / 8000000;
-                if (BitConverter.ToInt32(vgmFile.AsSpan(0x4C, 4)) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x4C, 4)) / 8000000;
-                if (BitConverter.ToInt32(vgmFile.AsSpan(0x2c, 4)) > 0)
-                    clockMultiplier[ExpansionType.EPSM] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x2C, 4)) / 8000000;
-                if (BitConverter.ToInt32(vgmFile.AsSpan(0x10, 4)) > 0)
+                if (BitConverter.ToUInt32(vgmFile.AsSpan(0x44, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)(BitConverter.ToInt32(vgmFile.AsSpan(0x44, 4)) & 0x7FFFFFFF) / 4000000;
+                if (BitConverter.ToUInt32(vgmFile.AsSpan(0x48, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)(BitConverter.ToInt32(vgmFile.AsSpan(0x48, 4)) & 0x7FFFFFFF) / 8000000;
+                if (BitConverter.ToUInt32(vgmFile.AsSpan(0x4C, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)(BitConverter.ToInt32(vgmFile.AsSpan(0x4C, 4)) & 0x7FFFFFFF) / 8000000;
+                if (BitConverter.ToUInt32(vgmFile.AsSpan(0x2c, 4)) > 0)
+                    clockMultiplier[ExpansionType.EPSM] = (float)(BitConverter.ToInt32(vgmFile.AsSpan(0x2C, 4)) & 0x7FFFFFFF) / 8000000;
+                if (BitConverter.ToUInt32(vgmFile.AsSpan(0x10, 4)) > 0)
                     clockMultiplier[ExpansionType.Vrc7] = (float)BitConverter.ToInt32(vgmFile.AsSpan(0x10, 4)) / 3579545;
 
                 if (ym2149AsEpsm)
