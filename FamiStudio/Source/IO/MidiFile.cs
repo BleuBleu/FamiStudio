@@ -447,10 +447,16 @@ namespace FamiStudio
 
                     idx++;
                     var tempo = ReadInt24();
-                    var tempoEvent = new TempoEvent();
+                    var tempoEvent = tempoEvents.Find((t) => t.tick == tick); 
+                    
+                    if (tempoEvent == null)
+                    {
+                        tempoEvent = new TempoEvent();
+                        tempoEvents.Add(tempoEvent);
+                    }
+
                     tempoEvent.tick = tick;
                     tempoEvent.tempo = tempo;
-                    tempoEvents.Add(tempoEvent);
                     break;
                 }
 
