@@ -20,7 +20,6 @@ namespace FamiStudio
         LocalizedString ReverseDPCMBitsLabel;
         LocalizedString PreserveDPCMPaddingByte;
         LocalizedString TuningLabel;
-        LocalizedString TuningTooltip;
 
         #endregion
 
@@ -34,14 +33,14 @@ namespace FamiStudio
             if (songNames != null && songNames.Length > 0)
             {
                 dialog = new PropertyDialog(win, NsfImportTitle, 400);
-                dialog.Properties.AddDropDownList(SongLabel.Colon, songNames, songNames[0]); // 0
-                dialog.Properties.AddNumericUpDown(DurationLabel.Colon, 120, 1, 600, 1);    // 1
+                dialog.Properties.AddDropDownList(SongLabel.Colon, songNames, songNames[0]);            // 0
+                dialog.Properties.AddNumericUpDown(DurationLabel.Colon, 120, 1, 600, 1);                // 1
                 dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 4, Pattern.MaxLength, 1);  // 2
-                dialog.Properties.AddNumericUpDown(StartFrameLabel.Colon, 0, 0, 256, 1);       // 3
-                dialog.Properties.AddCheckBox(RemoveIntroSilenceLabel.Colon, true);        // 4
-                dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);          // 5
-                dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false); // 6
-                dialog.Properties.AddNumericUpDown(TuningLabel, 440, 300, 580, 1, TuningTooltip); // 7
+                dialog.Properties.AddNumericUpDown(StartFrameLabel.Colon, 0, 0, 256, 1);                // 3
+                dialog.Properties.AddNumericUpDown(TuningLabel.Colon, 440, 300, 580, 1);                // 4
+                dialog.Properties.AddCheckBox(RemoveIntroSilenceLabel.Colon, true);                     // 5
+                dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);                       // 6
+                dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false);                    // 7
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
                 dialog.Properties.Build();
                 UpdateSongDuration(0);
@@ -72,13 +71,13 @@ namespace FamiStudio
                     if (r == DialogResult.OK)
                     { 
                         var songIndex           = Array.IndexOf(songNames, dialog.Properties.GetPropertyValue<string>(0)); ;
-                        var duration            = dialog.Properties.GetPropertyValue<int>(1); 
-                        var patternLen          = dialog.Properties.GetPropertyValue<int>(2); 
+                        var duration            = dialog.Properties.GetPropertyValue<int>(1);
+                        var patternLen          = dialog.Properties.GetPropertyValue<int>(2);
                         var startFrame          = dialog.Properties.GetPropertyValue<int>(3);
-                        var removeIntro         = dialog.Properties.GetPropertyValue<bool>(4); 
-                        var reverseDpcmBits     = dialog.Properties.GetPropertyValue<bool>(5); 
-                        var preserveDpcmPadding = dialog.Properties.GetPropertyValue<bool>(6);
-                        var tuning              = dialog.Properties.GetPropertyValue<int>(7);
+                        var tuning              = dialog.Properties.GetPropertyValue<int>(4);
+                        var removeIntro         = dialog.Properties.GetPropertyValue<bool>(5);
+                        var reverseDpcmBits     = dialog.Properties.GetPropertyValue<bool>(6);
+                        var preserveDpcmPadding = dialog.Properties.GetPropertyValue<bool>(7);
 
                         var project = new NsfFile().Load(filename, songIndex, duration, patternLen, startFrame, removeIntro, reverseDpcmBits, preserveDpcmPadding, tuning);
                         action(project);

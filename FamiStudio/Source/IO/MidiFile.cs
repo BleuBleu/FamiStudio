@@ -335,7 +335,7 @@ namespace FamiStudio
 
             var chunkLen  = ReadInt32();
             var type      = ReadInt16();
-            var numTracks = ReadInt16();
+            numTracks     = ReadInt16();
             var ticks     = ReadInt16();
 
             Debug.Assert(type != 2);
@@ -655,7 +655,7 @@ namespace FamiStudio
         {
             var track = 0;
 
-            while (idx < bytes.Length)
+            while (idx < bytes.Length && track < numTracks)
             {
                 var chunkType = Encoding.ASCII.GetString(bytes, idx, 4); idx += 4;
                 var chunkLen = ReadInt32();
@@ -682,7 +682,7 @@ namespace FamiStudio
             // Favor note OFF before note ON to avoid false polyphony warnings.
             noteEvents.Sort((e1, e2) => e1.tick == e2.tick ? e1.on.CompareTo(e2.on) : e1.tick.CompareTo(e2.tick)); 
 
-            numTracks = track;
+            Debug.Assert(numTracks == track);
 
             return true;
         }

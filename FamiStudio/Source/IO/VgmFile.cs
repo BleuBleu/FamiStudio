@@ -1404,7 +1404,7 @@ namespace FamiStudio
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels, project.Tuning);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 
@@ -1543,7 +1543,7 @@ namespace FamiStudio
          * Add Possibility to import second 2A03 Squares as MMC5
          * 
          */
-        public Project Load(string filename, int patternLength, int frameSkip, bool adjustClock, bool reverseDpcm, bool preserveDpcmPad, bool ym2149AsEpsm)
+        public Project Load(string filename, int patternLength, int frameSkip, bool adjustClock, bool reverseDpcm, bool preserveDpcmPad, bool ym2149AsEpsm, int tuning = 440)
         {
             var vgmFile = System.IO.File.ReadAllBytes(filename);
             if (filename.EndsWith(".vgz"))
@@ -1563,6 +1563,7 @@ namespace FamiStudio
             project.Author = "unknown";
             project.Copyright = "";
             project.PalMode = false;
+            project.Tuning = tuning;
             var songName = "VGM Import";
             project.SetExpansionAudioMask(0xff, 0);
             song = project.CreateSong(songName);
@@ -1994,7 +1995,7 @@ namespace FamiStudio
                 if (channelStates[c].state != ChannelState.Stopped)
                     song.Channels[c].GetOrCreatePattern(p).GetOrCreateNoteAt(n).IsStop = true;
             }
-            song.Name = songName;
+            song.Name = string.IsNullOrEmpty(songName) ? "VGM Import" : songName; // Song name should never be blank
             var factors = Utils.GetFactors(song.PatternLength, FamiStudioTempoUtils.MaxNoteLength);
             if (factors.Length > 0)
             {

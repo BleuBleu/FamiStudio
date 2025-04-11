@@ -185,10 +185,9 @@ void Simple_Apu::treble_eq(int expansion, double treble_amount, int treble_freq,
 
 void Simple_Apu::bass_freq(int expansion, int bass_freq)
 {
-	// FDS is a special case and has its own bass filter
+	// FDS is a special case and has its own bass filter.
 	// Not sure yet for other expansions, but they share
 	// the same blip buffer anyway.
-	
 	if (expansion == expansion_fds)
 	{
 		buf_fds.bass_freq(bass_freq);
