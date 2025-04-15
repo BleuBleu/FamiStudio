@@ -375,7 +375,7 @@ namespace FamiStudio
                     break;
                 }
 
-                // Various text messages.
+                // Various text messages. Though some of the latter are rarely used, they're still reserved for this purpose.
                 case 0x01:
                 case 0x02:
                 case 0x03:
@@ -385,6 +385,12 @@ namespace FamiStudio
                 case 0x07:
                 case 0x08:
                 case 0x09:
+                case 0x0A:
+                case 0x0B:
+                case 0x0C:
+                case 0x0D:
+                case 0x0E:
+                case 0x0F:
                 {
                     var len  = ReadVarLen();
                     var name = Encoding.ASCII.GetString(bytes, idx, len); idx += len;

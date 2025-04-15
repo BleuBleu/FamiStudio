@@ -529,9 +529,9 @@ namespace FamiStudio
                     
                     // FDS bass filter (4.4.0).
                     if (i == ExpansionType.Fds)
-                        ExpansionMixerSettings[i].BassCutoffHz = ini.GetInt(section, "BassCutoffHz",   ExpansionMixer.DefaultExpansionMixerSettings[i].BassCutoffHz);
+                        ExpansionMixerSettings[i].BassCutoffHz = ini.GetInt(section, "BassCutoffHz",    ExpansionMixer.DefaultExpansionMixerSettings[i].BassCutoffHz);
                     else
-                        ExpansionMixerSettings[i].TrebleDb     = ini.GetFloat(section, "TrebleDb",     ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
+                        ExpansionMixerSettings[i].TrebleDb     = ini.GetFloat(section, "TrebleDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
                     
                     ExpansionMixerSettings[i].TrebleRolloffHz  = ini.GetInt(section, "TrebleRolloffHz", ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
                 }
