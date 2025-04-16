@@ -131,7 +131,7 @@ namespace FamiStudio
                     Value += (captureButton == 0 ? -inc : inc) * (lastDuration >= 1.5f && (Value % (10 * inc)) == 0 ? 10 * inc : 1 * inc);
                 }
             }
-            else
+            else if (!HasDialogFocus)
             {
                 SetTickEnabled(false);
             }
@@ -174,6 +174,7 @@ namespace FamiStudio
         {
             SelectAll();
             caretIndex = text.Length;
+            SetTickEnabled(true);
         }
 
         protected override void OnLostDialogFocus()

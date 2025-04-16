@@ -28,6 +28,8 @@ namespace FamiStudio
         private bool stereo;
         private volatile float[] geometry;
         private volatile bool hasNonZeroData = false;
+        private FamiStudioWindow window = FamiStudioWindow.Instance;
+
         private Dictionary<int, short[]> mixDownBuffers = new Dictionary<int, short[]>();
 
         private int bufferPos = 0;
@@ -86,6 +88,10 @@ namespace FamiStudio
 
                 do
                 {
+                    // Pause oscilloscope rendering if there is a dialog.
+                    if (window.IsAsyncDialogInProgress) 
+                        break;
+                    
                     if (sampleQueue.TryDequeue(out var pair))
                     {
                         var samples = pair.samples;

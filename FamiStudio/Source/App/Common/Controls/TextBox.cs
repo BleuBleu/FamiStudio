@@ -415,6 +415,9 @@ namespace FamiStudio
         {
             caretBlinkTime += delta;
             SetAndMarkDirty(ref caretBlink, Utils.Frac(caretBlinkTime) < 0.5f);
+
+            if (!HasDialogFocus)
+                SetTickEnabled(false);
         }
 
         protected void UpdateCaretBlink()
@@ -551,6 +554,11 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             UpdateTextAreaSize();
+        }
+
+        protected override void OnAcquiredDialogFocus()
+        {
+            SetTickEnabled(true);
         }
 
         protected override void OnResize(EventArgs e)

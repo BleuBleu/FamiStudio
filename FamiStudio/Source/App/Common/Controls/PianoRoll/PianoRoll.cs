@@ -9730,7 +9730,8 @@ namespace FamiStudio
         {
             continuouslyFollowing = false;
 
-            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncSequencer && !panning && captureOperation == CaptureOperation.None && editMode == EditionMode.Channel)
+            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncSequencer && !panning && 
+                captureOperation == CaptureOperation.None && editMode == EditionMode.Channel && !window.IsAsyncDialogInProgress)
             {
                 var frame = App.CurrentFrame;
                 var seekX = GetPixelXForAbsoluteNoteIndex(frame);
