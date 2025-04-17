@@ -88,8 +88,10 @@ namespace FamiStudio
 
                 do
                 {
-                    // Pause oscilloscope rendering if there is a dialog.
-                    if (window.IsAsyncDialogInProgress) 
+                    // On desktop, the main window stops ticking whenever a dialog is present.
+                    // Oscilloscope updates will not be rendered during this time, so we don't
+                    // need to process it. Mobile handles this differently.
+                    if (Platform.IsDesktop && window.IsAsyncDialogInProgress) 
                         break;
                     
                     if (sampleQueue.TryDequeue(out var pair))
