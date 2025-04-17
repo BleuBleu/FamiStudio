@@ -59,7 +59,6 @@ namespace FamiStudio
         // Double-click emulation.
         private int lastClickButton = -1;
         private double lastClickTime;
-        private double lastDoubleClickTime;
         private int lastClickX = -1;
         private int lastClickY = -1;
 
@@ -479,26 +478,27 @@ namespace FamiStudio
 
                 lastButtonPress = button; 
 
-                // Double click emulation.
+                // Multi-click emulation. 
                 var now = glfwGetTime();
-                var delay = now - (lastClickButton == -1 ? lastDoubleClickTime : lastClickTime);
+                var delay = now - lastClickTime;
 
                 var multiClick = delay <= Platform.DoubleClickTime &&
                     Math.Abs(lastClickX - lastCursorX) < 4 &&
                     Math.Abs(lastClickY - lastCursorY) < 4;
 
-                var doubleClick = multiClick && button == lastClickButton;
+                var doubleClick = multiClick && lastClickButton == button;
 
-                // We only send triple-click for supported controls (such as text boxes). It's ignored for
-                // unsupported controls as to not affect other clicks, similar to operating systems.
-                var tripleClick = multiClick && ctrl.SupportsTripleClick && lastClickButton == -1;
+                // Only send triple-click if the control supports it, otherwise revert to single-click.
+                // Avoids cancelling subsequent double-clicks, similar to how operating systems behave.
+                var tripleClick = multiClick && lastClickButton == -1 && (ctrl?.SupportsTripleClick ?? false);
+
                 if (tripleClick) 
                 {
                     lastClickButton = -2;
                 }
                 else if (doubleClick)
                 {
-                    lastDoubleClickTime = now;
+                    lastClickTime = now;
                     lastClickButton = -1;
                 }
                 else
@@ -515,6 +515,7 @@ namespace FamiStudio
 
                     if (tripleClick)
                     {
+                        // We only support left-click for multi-clicks.
                         if (button == GLFW_MOUSE_BUTTON_LEFT)
                         {
                             Debug.WriteLine($"TRIPLE CLICK!");
@@ -524,7 +525,7 @@ namespace FamiStudio
                     }
                     else if (doubleClick)
                     {
-                        // We dont support anything other and double-left click.
+                        // We only support left-click for multi-clicks.
                         if (button == GLFW_MOUSE_BUTTON_LEFT)
                         {
                             Debug.WriteLine($"DOUBLE CLICK!");
