@@ -200,7 +200,7 @@ namespace FamiStudio
 
         protected int FindWordStart(int c, int dir)
         {
-            var isWhiteSpace = char.IsWhiteSpace(text[c]);
+            var isWhiteSpace = c < text.Length && char.IsWhiteSpace(text[c]);
             if (dir > 0)
             {
                 while (c < text.Length && char.IsWhiteSpace(text[c]))
