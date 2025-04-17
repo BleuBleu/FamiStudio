@@ -59,6 +59,7 @@ namespace FamiStudio
         // Double-click emulation.
         private int lastClickButton = -1;
         private double lastClickTime;
+        private double lastDoubleClickTime;
         private int lastClickX = -1;
         private int lastClickY = -1;
 
@@ -480,16 +481,24 @@ namespace FamiStudio
 
                 // Double click emulation.
                 var now = glfwGetTime();
-                var delay = now - lastClickTime;
+                var delay = now - (lastClickButton == -1 ? lastDoubleClickTime : lastClickTime);
 
-                var doubleClick = 
-                    button == lastClickButton &&
-                    delay <= Platform.DoubleClickTime &&
+                var multiClick = delay <= Platform.DoubleClickTime &&
                     Math.Abs(lastClickX - lastCursorX) < 4 &&
                     Math.Abs(lastClickY - lastCursorY) < 4;
 
-                if (doubleClick)
+                var doubleClick = multiClick && button == lastClickButton;
+
+                // We only send triple-click for supported controls (such as text boxes). It's ignored for
+                // unsupported controls as to not affect other clicks, similar to operating systems.
+                var tripleClick = multiClick && ctrl.SupportsTripleClick && lastClickButton == -1;
+                if (tripleClick) 
                 {
+                    lastClickButton = -2;
+                }
+                else if (doubleClick)
+                {
+                    lastDoubleClickTime = now;
                     lastClickButton = -1;
                 }
                 else
@@ -504,7 +513,16 @@ namespace FamiStudio
                 {
                     SetActiveControl(ctrl);
 
-                    if (doubleClick)
+                    if (tripleClick)
+                    {
+                        if (button == GLFW_MOUSE_BUTTON_LEFT)
+                        {
+                            Debug.WriteLine($"TRIPLE CLICK!");
+
+                            ctrl.SendMouseTripleClick(new PointerEventArgs(MakeButtonFlags(button), cx, cy));
+                        }
+                    }
+                    else if (doubleClick)
                     {
                         // We dont support anything other and double-left click.
                         if (button == GLFW_MOUSE_BUTTON_LEFT)

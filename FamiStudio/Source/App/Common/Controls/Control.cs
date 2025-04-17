@@ -19,6 +19,7 @@ namespace FamiStudio
         protected bool enabled = true;
         protected bool canFocus = true;
         protected bool supportsDoubleClick = false;
+        protected bool supportsTripleClick = false;
         protected bool supportsLongPress = false; 
         protected string tooltip;
         protected object userData;
@@ -65,6 +66,7 @@ namespace FamiStudio
         protected virtual void OnPointerDownDelayed(PointerEventArgs e) { }
         protected virtual void OnPointerUp(PointerEventArgs e) { }
         protected virtual void OnMouseDoubleClick(PointerEventArgs e) { }
+        protected virtual void OnMouseTripleClick(PointerEventArgs e) { }
         protected virtual void OnResize(EventArgs e) { }
         protected virtual void OnPointerMove(PointerEventArgs e) { }
         protected virtual void OnPointerEnter(EventArgs e) { }
@@ -116,6 +118,19 @@ namespace FamiStudio
             if (supportsDoubleClick)
             {
                 OnMouseDoubleClick(e);
+            }
+            else
+            {
+                OnPointerDown(e);
+                OnPointerUp(e);
+            }
+        }
+
+        public void SendMouseTripleClick(PointerEventArgs e)
+        {
+            if (supportsTripleClick)
+            {
+                OnMouseTripleClick(e);
             }
             else
             {
@@ -251,6 +266,7 @@ namespace FamiStudio
         public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }
         public object UserData { get => userData; set => userData = value; }
         public bool SupportsDoubleClick { get => supportsDoubleClick; set => supportsDoubleClick = value; }
+        public bool SupportsTripleClick { get => supportsTripleClick; set => supportsTripleClick = value; }
         public bool SupportsLongPress { get => supportsLongPress; set => supportsLongPress = value; }
         public bool TickEnabled => tickEnabled;
         public void MarkDirty() { window?.MarkDirty(); }

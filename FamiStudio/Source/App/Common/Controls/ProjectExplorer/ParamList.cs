@@ -35,7 +35,7 @@ namespace FamiStudio
             buttonSizeX = DpiScaling.ScaleCustom(bmpLeft.ElementSize.Width, bmpScale);
             buttonSizeY = DpiScaling.ScaleCustom(bmpLeft.ElementSize.Height, bmpScale);
             height = buttonSizeY;
-            SupportsDoubleClick = true;
+            supportsDoubleClick = true;
         }
 
         // -1 = left, 1 = right, 0 = outside
