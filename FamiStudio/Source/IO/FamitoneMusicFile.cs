@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace FamiStudio
 {
@@ -2250,7 +2251,13 @@ namespace FamiStudio
             }
             
             var usedFlags = kernel == FamiToneKernel.FamiStudio ? GetRequiredFlags() : new List<string>();
-            var flagComments = usedFlags.Select((s) => $"; {s}").ToList();
+            var pattern = @"FAMISTUDIO_\S+\s*=\s*[1-8]";
+
+            List<string> flagComments = [$"; Required flags for {project.Name}:"];
+            flagComments.AddRange
+            (
+                usedFlags.SelectMany(flag => Regex.Matches(flag, pattern).Cast<Match>()).Select(match => $"; {match.Value}")
+            );
 
             lines.InsertRange(1, flagComments);
 
