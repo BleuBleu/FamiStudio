@@ -192,9 +192,7 @@ namespace FamiStudio
                 // For CA65 we add a re-export of the symbol prefixed with _ for the C code to see
                 // For some reason though, we can only rexport these symbols either before they are defined,
                 // or after all of the data is completely written.
-                lines.Add(".if FAMISTUDIO_CFG_C_BINDINGS");
-                lines.Add($".export _music_data_{name}=music_data_{name}");
-                lines.Add(".endif");
+                lines.Add($".export _music_data_{name}:=music_data_{name}");
                 lines.Add("");
             }
 
@@ -207,10 +205,8 @@ namespace FamiStudio
                 // For SDAS we add a re-export of the symbol prefixed with _ for the C code to see
                 // For some reason we can only do this after the symbol is defined.
                 // Doing it earlier will compile without errors, but results in an incorrect address.
-                lines.Add(".if FAMISTUDIO_CFG_C_BINDINGS");
                 lines.Add($"_music_data_{name}=music_data_{name}");
                 lines.Add($".globl _music_data_{name}");
-                lines.Add(".endif");
                 lines.Add("");
             }
 
