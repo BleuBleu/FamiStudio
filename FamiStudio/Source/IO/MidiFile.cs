@@ -1081,11 +1081,11 @@ namespace FamiStudio
                     if (quantizedNoteIndex == prevIndex && note.IsStop && pattern.Notes[quantizedNoteIndex].IsMusical)
                     {
                         // Push the stop note forward to the next frame, if available.
-                        if (quantizedNoteIndex++ > patternLength && patternIdx++ <= patternInfos.Count - 1)
+                        if (quantizedNoteIndex++ > patternLength && patternIdx < patternInfos.Count - 1)
                         {
                             quantizedNoteIndex = 0;
-                            pattern = channel.PatternInstances[patternIdx] ?? channel.CreatePattern();
-                            channel.PatternInstances[patternIdx] = pattern;
+                            pattern = channel.PatternInstances[patternIdx + 1] ?? channel.CreatePattern();
+                            channel.PatternInstances[patternIdx + 1] = pattern;
                         }
                     }
 
