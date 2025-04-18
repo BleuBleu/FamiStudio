@@ -6,9 +6,7 @@
 ; Vibrato effect is used, you must set FAMISTUDIO_USE_VIBRATO = 1.
 ; Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.
 
-.if FAMISTUDIO_CFG_C_BINDINGS
-.export _music_data_silver_surfer_c_stephen_ruddy=music_data_silver_surfer_c_stephen_ruddy
-.endif
+.export _music_data_silver_surfer_c_stephen_ruddy:=music_data_silver_surfer_c_stephen_ruddy
 
 music_data_silver_surfer_c_stephen_ruddy:
 	.byte 1

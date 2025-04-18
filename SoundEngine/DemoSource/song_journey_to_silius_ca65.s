@@ -4,9 +4,7 @@
 ; Arpeggios are used, you must set FAMISTUDIO_USE_ARPEGGIO = 1.
 ; DPCM Delta Counter effect is used, you must set FAMISTUDIO_USE_DELTA_COUNTER = 1.
 
-.if FAMISTUDIO_CFG_C_BINDINGS
-.export _music_data_journey_to_silius=music_data_journey_to_silius
-.endif
+.export _music_data_journey_to_silius:=music_data_journey_to_silius
 
 music_data_journey_to_silius:
 	.byte 1

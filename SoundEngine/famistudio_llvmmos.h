@@ -3,11 +3,6 @@
 #ifndef FAMISTUDIO_H
 #define FAMISTUDIO_H
 
-// Workaround for code analyzers that don't know about fastcall
-#ifndef __fastcall__
-#define __fastcall__ 
-#endif
-
 /**
  * =====================================================================================================================
  * famistudio_init (public)
@@ -22,17 +17,16 @@
 #define FAMISTUDIO_PLATFORM_NTSC 1
 
 // call `famistudio_init` with the parameters listed below
-// void famistudio_init(unsigned char platform, unsigned char* music_data);
-#define famistudio_init(platform, music_data)         \
-    (__AX__ = ((unsigned int)(music_data))),          \
-    __asm__ ("pha\n"),                                \
-    __asm__ ("txa\n"),                                \
-    __asm__ ("tay\n"),                                \
-    __asm__ ("pla\n"),                                \
-    __asm__ ("tax\n"),                                \
-    __asm__ ("lda #%b\n", (unsigned char)(platform)), \
-    __asm__ ("jsr _famistudio_init\n");
-
+// void __attribute__((__leaf__)) famistudio_init(unsigned char platform, unsigned char* music_data);
+#define famistudio_init(platform, music_data) ({              \
+    unsigned char __unused1,__unused2,__unused3;              \
+    __attribute__((leaf)) __asm__ ("jsr famistudio_init\n"    \
+        : "+a"(__unused1), "+x"(__unused2), "+y"(__unused3)   \
+        : "a"((unsigned char)(platform)),                     \
+        "x"((unsigned char)(unsigned int)(music_data)),       \
+        "y"((unsigned char)((unsigned int)(music_data) >> 8)) \
+        : "p");                                               \
+})
 
 /**
  * ======================================================================================================================
@@ -44,7 +38,7 @@
  * ======================================================================================================================
  */
 
-void __fastcall__ famistudio_music_play(unsigned char song_index);
+void __attribute__((__leaf__)) famistudio_music_play(unsigned char song_index);
 
 /**
  * ======================================================================================================================
@@ -59,7 +53,7 @@ void __fastcall__ famistudio_music_play(unsigned char song_index);
 #define FAMISTUDIO_PLAY 0
 #define FAMISTUDIO_PAUSE 1
 
-void __fastcall__ famistudio_music_pause(unsigned char mode);
+void __attribute__((__leaf__)) famistudio_music_pause(unsigned char mode);
 
 /**
  * ======================================================================================================================
@@ -72,7 +66,7 @@ void __fastcall__ famistudio_music_pause(unsigned char mode);
  * ======================================================================================================================
  */
 
-void __fastcall__ famistudio_music_stop(void);
+void __attribute__((__leaf__)) famistudio_music_stop(void);
 
 /**
  * ======================================================================================================================
@@ -85,7 +79,7 @@ void __fastcall__ famistudio_music_stop(void);
  * ======================================================================================================================
  */
 
-void __fastcall__ famistudio_update(void);
+void __attribute__((__leaf__)) famistudio_update(void);
 
 #ifdef FAMISTUDIO_CFG_SFX_SUPPORT
 
@@ -100,15 +94,15 @@ void __fastcall__ famistudio_update(void);
  */
 
 // call `famistudio_sfx_init` with the parameters listed below
-// void famistudio_sfx_init(unsigned char sfx_data[]);
-#define famistudio_sfx_init(sfx_data)      \
-    (__AX__ = ((unsigned int)(sfx_data))), \
-    __asm__ ("pha\n"),                     \
-    __asm__ ("txa\n"),                     \
-    __asm__ ("tay\n"),                     \
-    __asm__ ("pla\n"),                     \
-    __asm__ ("tax\n"),                     \
-    __asm__ ("jsr _famistudio_sfx_init\n");
+// void __attribute__((__leaf__)) famistudio_sfx_init(unsigned char* sfx_data);
+#define famistudio_sfx_init(sfx_data) ({                       \
+    unsigned char __unused1,__unused2;                         \
+    __attribute__((leaf)) __asm__ ("jsr famistudio_sfx_init\n" \
+        : "+x"(__unused1), "+y"(__unused2)                     \
+        : "x"((unsigned char)(unsigned int)(sfx_data)),        \
+        "y"((unsigned char)((unsigned int)(sfx_data) >> 8))    \
+        : "a", "p");                                           \
+})
 
 
 /**
@@ -128,11 +122,7 @@ void __fastcall__ famistudio_update(void);
 #define FAMISTUDIO_SFX_CH2 30 // 2 * FAMISTUDIO_SFX_STRUCT_SIZE
 #define FAMISTUDIO_SFX_CH3 45 // 3 * FAMISTUDIO_SFX_STRUCT_SIZE
 
-// call `famistudio_sfx_play` with the parameters listed below
-// void famistudio_sfx_play(unsigned char sfx_index, unsigned char channel);
-#define famistudio_sfx_play(sfx_index, channel)                          \
-    (__AX__ = ((unsigned char)(channel)<<8)|(unsigned char)(sfx_index)), \
-    __asm__ ("jsr _famistudio_sfx_play\n");
+void __attribute__((__leaf__)) famistudio_sfx_play(unsigned char sfx_index, unsigned char channel);
 
 
 /**
@@ -145,7 +135,7 @@ void __fastcall__ famistudio_update(void);
  * ======================================================================================================================
  */
 
-void __fastcall__ famistudio_sfx_sample_play(unsigned char sample_index);
+void __attribute__((__leaf__)) famistudio_sfx_sample_play(unsigned char sample_index);
 
 #endif
 #endif
