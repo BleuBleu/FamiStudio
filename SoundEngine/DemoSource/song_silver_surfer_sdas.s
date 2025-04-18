@@ -9,10 +9,8 @@
 music_data_silver_surfer_c_stephen_ruddy:
 	.db 1
 	.dw .music_data_silver_surfer_c_stephen_ruddy_instruments
-.if FAMISTUDIO_CFG_C_BINDINGS
 _music_data_silver_surfer_c_stephen_ruddy=music_data_silver_surfer_c_stephen_ruddy
 .globl _music_data_silver_surfer_c_stephen_ruddy
-.endif
 
 	.dw .music_data_silver_surfer_c_stephen_ruddy_samples-4
 ; 00 : BGM2

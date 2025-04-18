@@ -142,20 +142,17 @@ FAMISTUDIO_ASM6_CODE_BASE = $8000
 FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 
 ; Support for sound effects playback + number of SFX that can play at once.
-; FAMISTUDIO_CFG_SFX_SUPPORT   = 1 
+; FAMISTUDIO_CFG_SFX_SUPPORT   = 1
 ; FAMISTUDIO_CFG_SFX_STREAMS   = 2
 
 ; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels. 
-; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
+; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
 
 ; Enables DPCM playback support.
 FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 
 ; Must be enabled if you are calling sound effects from a different thread than the sound engine update.
-; FAMISTUDIO_CFG_THREAD         = 1     
-
-; Enable to use the CC65 compatible entrypoints via the provided header file
-; FAMISTUDIO_CFG_C_BINDINGS   = 1
+; FAMISTUDIO_CFG_THREAD         = 1
 
 ;======================================================================================================================
 ; 4) SUPPORTED FEATURES CONFIGURATION
@@ -350,10 +347,6 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 .ifndef FAMISTUDIO_CFG_SFX_STREAMS
     FAMISTUDIO_CFG_SFX_STREAMS = 1
-.endif
-
-.ifndef FAMISTUDIO_CFG_C_BINDINGS
-    FAMISTUDIO_CFG_C_BINDINGS = 0
 .endif
 
 .ifndef FAMISTUDIO_CFG_SMOOTH_VIBRATO

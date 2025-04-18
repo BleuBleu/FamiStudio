@@ -2,9 +2,7 @@
 ; Project uses release notes, you must set FAMISTUDIO_USE_RELEASE_NOTES = 1.
 ; Volume track is used, you must set FAMISTUDIO_USE_VOLUME_TRACK = 1.
 
-.if FAMISTUDIO_CFG_C_BINDINGS
-.export _music_data_shatterhand=music_data_shatterhand
-.endif
+.export _music_data_shatterhand:=music_data_shatterhand
 
 music_data_shatterhand:
 	.byte 1

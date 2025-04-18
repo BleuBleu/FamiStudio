@@ -4,10 +4,8 @@ sounds:
 	.dw .sounds_ntsc
 	.dw .sounds_ntsc
 
-.if FAMISTUDIO_CFG_C_BINDINGS
 _sounds=sounds
 .globl _sounds
-.endif
 
 .sounds_ntsc:
 	.dw .sounds_sfx_ntsc_megamanhit

@@ -106,7 +106,11 @@ Another approach would be to compile the engine as a separate obj file and link 
 
 All the instructions to use it in your project are included as comments at the top of these files.
 
-For using the C bindings with CC65, you will need to include the `famistudio_cc65.h` header and also include the `famistudio_ca65.s` into your assembly startup routine. Make sure that `FAMISTUDIO_CFG_C_BINDINGS = 1` is set either as part of your external config or in the file or else the linker will be unable link object files.
+For using the C bindings with CC65, you will need to include the `famistudio_cc65.h` header and also include the `famistudio_ca65.s` into your assembly startup routine.
+
+For using the C bindings with SDCC, you will need to include the `famistudio_sdcc.h` header and also include the `famistudio_sdas.s` into your assembly startup routine. Make sure that `FAMISTUDIO_CFG_C_BINDINGS = 1` is set either as part of your external config or in the file in order to call the functions from C.
+
+For using the C bindings with LLVM-MOS, you will need to follow the instructions for building CA65 object files in LLVM-MOS and compile and link the CA65 assembly source `famistudio_ca65.s` in your project with the appropriate configuration. You can then use the provided header file `famistudio_llvmmos.h` to call the Famistudio functions.
 
 ## Interface
 
