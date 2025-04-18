@@ -474,6 +474,7 @@ namespace FamiStudio
                     ClearDelayedRightClick();
 
                 var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
+                var ctrlIsValid = ctrl != null;
                 container.ConditionalHideContextMenu(ctrl);
 
                 lastButtonPress = button; 
@@ -486,30 +487,21 @@ namespace FamiStudio
                     Math.Abs(lastClickX - lastCursorX) < 4 &&
                     Math.Abs(lastClickY - lastCursorY) < 4;
 
+                // Double-clicks are always sent. Triple-clicks are only sent if the control supports it.
+                // This prevents cancelling subsequent double-clicks, similar to how operating systems behave.
                 var doubleClick = multiClick && lastClickButton == button;
+                var tripleClick = multiClick && lastClickButton == -1 && ctrlIsValid && ctrl.SupportsTripleClick;
 
-                // Only send triple-click if the control supports it, otherwise revert to single-click.
-                // Avoids cancelling subsequent double-clicks, similar to how operating systems behave.
-                var tripleClick = multiClick && lastClickButton == -1 && (ctrl?.SupportsTripleClick ?? false);
-
-                if (tripleClick) 
+                if (!doubleClick && !tripleClick) 
                 {
-                    lastClickButton = -2;
-                }
-                else if (doubleClick)
-                {
-                    lastClickTime = now;
-                    lastClickButton = -1;
-                }
-                else
-                {
-                    lastClickButton = button;
-                    lastClickTime = now;
                     lastClickX = lastCursorX;
                     lastClickY = lastCursorY;
                 }
 
-                if (ctrl != null)
+                lastClickButton = tripleClick ? -2 : doubleClick ? -1 : button;
+                lastClickTime = now;
+
+                if (ctrlIsValid)
                 {
                     SetActiveControl(ctrl);
 
