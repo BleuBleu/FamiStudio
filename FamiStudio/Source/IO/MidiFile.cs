@@ -992,6 +992,7 @@ namespace FamiStudio
             var prevVolume = (byte)15;
             var activeNote = -1;
             var prevIndex  = -1;
+            var prevPattern = -1;
 
             for (int i = 0; i < noteEvents.Count; i++)
             {
@@ -1078,10 +1079,10 @@ namespace FamiStudio
                     var patternLength = song.GetPatternLength(patternIdx);
 
                     // HACK: Edge case. Extremely short notes can have a stop note occur in the same frame.
-                    if (quantizedNoteIndex == prevIndex && note.IsStop && pattern.Notes[quantizedNoteIndex].IsMusical)
+                    if (quantizedNoteIndex == prevIndex && patternIdx == prevPattern && note.IsStop && pattern.Notes[quantizedNoteIndex].IsMusical)
                     {
                         // Push the stop note forward to the next frame, if available.
-                        if (quantizedNoteIndex++ > patternLength && patternIdx < patternInfos.Count - 1)
+                        if (++quantizedNoteIndex > patternLength && patternIdx < patternInfos.Count - 1)
                         {
                             quantizedNoteIndex = 0;
                             pattern = channel.PatternInstances[patternIdx + 1] ?? channel.CreatePattern();
@@ -1095,7 +1096,9 @@ namespace FamiStudio
                     Debug.Assert(quantizedNoteIndex <= patternLength);
 
                     pattern.Notes[quantizedNoteIndex] = note;
-                    prevIndex = quantizedNoteIndex;
+                    
+                    prevIndex   = quantizedNoteIndex;
+                    prevPattern = patternIdx;
                 }
             }
         }
