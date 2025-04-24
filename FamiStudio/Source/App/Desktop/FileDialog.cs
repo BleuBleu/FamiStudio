@@ -62,6 +62,9 @@ namespace FamiStudio
         private string path;
         private string[] extensions;
         private List<FileEntry> files = new List<FileEntry>();
+        private int prevIndex;
+        private string searchString;
+        private DateTime prevTime;
 
         public string SelectedPath => filename;
 
@@ -126,17 +129,11 @@ namespace FamiStudio
             gridFiles.CellClicked += GridFiles_CellClicked;
             gridFiles.CellDoubleClicked += GridFiles_CellDoubleClicked;
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
+            gridFiles.HighlightUpdated += GridFiles_HighlightUpdated;
             y += gridFiles.Height + margin;
 
             textFile = new TextBox("");
             textFile.Move(margin, y, widthNoMargin / 3, textFile.Height);
-
-            if (mode != Mode.Save)
-            {
-                textFile.Enabled = false;
-                if (mode == Mode.Open)
-                    textFile.DisabledColor = textFile.ForeColor;
-            }
 
             dropDownType = new DropDown( descriptions, 0);
             dropDownType.Move(margin * 2 + textFile.Width, y, widthNoMargin - margin - textFile.Width, textFile.Height);
@@ -169,6 +166,8 @@ namespace FamiStudio
 
             UpdatePathBar();
             CenterToWindow();
+
+            gridFiles.GrabDialogFocus();
         }
 
         private void ButtonComputer_Click(Control sender)
@@ -316,10 +315,7 @@ namespace FamiStudio
         {
             if (left)
             {
-                var f = files[rowIndex];
-
-                if (f.Type == EntryType.File)
-                    textFile.Text = f.Name;
+                UpdateText(rowIndex);
             }
         }
 
@@ -340,6 +336,58 @@ namespace FamiStudio
             {
                 textFile.Text = f.Name;
                 ValidateAndClose();
+            }
+        }
+
+        private void GridFiles_HighlightUpdated(Control sender, int rowIndex)
+        {
+            UpdateText(rowIndex);
+            prevIndex = rowIndex;
+        }
+
+        private void TryValidateOrOpen()
+        {
+            if (files.Count == 0)
+            {
+                Platform.Beep();
+                return;
+            }
+
+            if (!OpenFolderOrDrive(prevIndex))
+                ValidateAndClose();
+        }
+
+        private bool OpenFolderOrDrive(int index)
+        {
+            var f = files[index];
+
+            if (f.Type == EntryType.Drive)
+            {
+                var driveInfo = new DriveInfo(f.Name);
+                GoToPath(driveInfo.RootDirectory.FullName);
+                return true;
+            }
+            else if (f.Type == EntryType.Directory)
+            {
+                GoToPath(f.Path);
+                return true;
+            }
+
+            return false;
+        }
+
+        private void GoUpDirectoryLevel()
+        {
+            var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+            if (!string.Equals(path.TrimEnd(Path.DirectorySeparatorChar), userFolder.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
+            {
+                GoToPath(Path.GetDirectoryName(path));
+                gridFiles.ResetHighlight();
+            }
+            else
+            {
+                Platform.Beep();
             }
         }
 
@@ -388,6 +436,12 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        private void UpdateText(int index)
+        {
+            var f = files[index];
+            textFile.Text = f.Name;
         }
 
         private void UpdateColumnNames()
@@ -528,13 +582,68 @@ namespace FamiStudio
             path = p;
             gridFiles.UpdateData(GetGridData(files));
             gridFiles.ResetScroll();
+            gridFiles.ResetHighlight();
             UpdateColumnNames();
             UpdatePathBar();
+
+            prevIndex = 0;
+        }
+
+        private void TextSearch(Keys key)
+        {
+            var now = DateTime.Now;
+            var resetSearch = (now - prevTime) >= TimeSpan.FromSeconds(1) || searchString.Length == 0;
+            var keyChar = ((char)(int)key).ToString();
+
+            if (resetSearch)
+            {
+                if (string.IsNullOrWhiteSpace(keyChar))
+                    return;
+
+                searchString = keyChar;
+                prevIndex = 0;
+            }
+            else if (searchString == keyChar)
+            {
+                prevIndex++; 
+            }
+            else
+            {
+                searchString += keyChar;
+            }
+
+            prevTime = now;
+
+            // Make sure the search wraps when starting on a non-zero value.
+            for (var offset = 0; offset < files.Count; offset++)
+            {
+                var i = (prevIndex + offset) % files.Count;
+
+                if (files[i].Name.StartsWith(searchString, StringComparison.CurrentCultureIgnoreCase))
+                {
+                    textFile.Text = files[i].Name;
+                    gridFiles.UpdateHighlight(i);
+                    prevIndex = i;
+                    break;
+                }
+
+                // No match found.
+                if (offset == files.Count - 1)
+                    Platform.Beep();
+            }
+        }
+
+        private void KeyboardNavigateUpDown(int dir, int mode = 0)
+        {
+            if (files.Count != 0)
+            {
+                gridFiles.KeyboardNavigateUpDown(dir, mode);
+            }
         }
 
         private void ButtonYes_Click(Control sender)
         {
-            ValidateAndClose();
+            TryValidateOrOpen();
         }
 
         private void ButtonNo_Click(Control sender)
@@ -548,12 +657,36 @@ namespace FamiStudio
 
             if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
             {
-                ValidateAndClose();
+                TryValidateOrOpen();
             }
 
             if (!e.Handled && e.Key == Keys.Escape)
             {
                 Close(DialogResult.Cancel);
+            }
+            
+            if (!e.Handled && gridFiles.HasDialogFocus)
+            {
+                if (e.Key == Keys.Up || e.Key ==Keys.Down)
+                {
+                    KeyboardNavigateUpDown(e.Key == Keys.Up ? -1 : 1);
+                }
+                else if (e.Key == Keys.PageUp || e.Key == Keys.PageDown)
+                {
+                    KeyboardNavigateUpDown(e.Key == Keys.PageUp ? -1 : 1, 1);
+                }
+                else if (e.Key == Keys.Home || e.Key == Keys.End)
+                {
+                    KeyboardNavigateUpDown(e.Key == Keys.Home ? -1 : 1, 2);
+                }
+                else if (e.Key == Keys.Backspace)
+                {
+                    GoUpDirectoryLevel();
+                }
+                else if (e.Key != Keys.Enter && e.Key != Keys.KeypadEnter && e.Key != Keys.Escape)
+                {
+                    TextSearch(e.Key);
+                }
             }
         }
     }

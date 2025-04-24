@@ -11,12 +11,14 @@ namespace FamiStudio
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
+        public delegate void HighlightUpdatedDelegate(Control sender, int rolIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
+        public event HighlightUpdatedDelegate HighlightUpdated;
 
         private class CellSliderData
         {
@@ -29,6 +31,7 @@ namespace FamiStudio
         private int maxScroll;
         private int hoverRow = -1;
         private int hoverCol = -1;
+        private int highlightRow = -1;
         private bool hoverButton;
         private int dropDownRow = -1;
         private int dropDownCol = -1;
@@ -321,6 +324,37 @@ namespace FamiStudio
             SetAndMarkDirty(ref scroll, 0);
         }
 
+        public void UpdateHighlight(int index)
+        {
+            if (index >= scroll + numItemRows || index < scroll)
+            {
+                var newScroll = index < scroll ? index : index - numItemRows + 1;
+                scroll = Math.Min(newScroll, ItemCount - numItemRows);
+            }
+
+            SetAndMarkDirty(ref highlightRow, index);
+
+            HighlightUpdated?.Invoke(this, index);
+        }
+
+        public void ResetHighlight()
+        {
+            SetAndMarkDirty(ref highlightRow, -1);
+        }
+
+        public void KeyboardNavigateUpDown(int dir, int mode)
+        {
+            var dist = mode switch
+            {
+                1 => numItemRows, // PGUP / PGDN
+                2 => ItemCount,   // HOME / END
+                _ => 1,           // UP   / DOWN
+            };
+
+            var row = Math.Clamp(highlightRow + (dist * dir), 0, ItemCount - 1);        
+            UpdateHighlight(row);
+        }
+
         protected override void OnAddedToContainer()
         {
             var g = Graphics;
@@ -491,6 +525,8 @@ namespace FamiStudio
             {
                 HeaderCellClicked?.Invoke(this, col);
             }
+            
+            SetAndMarkDirty(ref highlightRow, row);
         }
 
         private bool IsPointInButton(int x, int row, int col)
@@ -691,6 +727,14 @@ namespace FamiStudio
                         c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
                     else
                         c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
+                }
+
+                // Highlighted cell (for keyboard)
+                if (enabled && highlightRow >= 0)
+                {
+                    var highlightColor = Color.FromArgb(100, 0, 96, 192); // Blue
+
+                    c.FillRectangle(0, (numHeaderRows + highlightRow - scroll) * rowHeight, width, (numHeaderRows + highlightRow - scroll + 1) * rowHeight, highlightColor);
                 }
 
                 for (int i = 0, k = scroll; i < numItemRows && k < data.GetLength(0); i++, k++) // Rows
