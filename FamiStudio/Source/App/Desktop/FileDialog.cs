@@ -347,7 +347,7 @@ namespace FamiStudio
 
         private void TryValidateOrOpen()
         {
-            if (files.Count == 0)
+            if (files.Count == 0 || prevIndex >= files.Count)
             {
                 Platform.Beep();
                 return;
@@ -585,8 +585,6 @@ namespace FamiStudio
             gridFiles.ResetHighlight();
             UpdateColumnNames();
             UpdatePathBar();
-
-            prevIndex = 0;
         }
 
         private void TextSearch(Keys key)
