@@ -11,14 +11,14 @@ namespace FamiStudio
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
-        public delegate void HighlightUpdatedDelegate(Control sender, int rolIndex);
+        public delegate void HighlightRowUpdatedDelegate(Control sender, int rolIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
-        public event HighlightUpdatedDelegate HighlightUpdated;
+        public event HighlightRowUpdatedDelegate HighlightRowUpdated;
 
         private class CellSliderData
         {
@@ -324,7 +324,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref scroll, 0);
         }
 
-        public void UpdateHighlight(int index)
+        public void UpdateRowHighlight(int index)
         {
             if (index >= scroll + numItemRows || index < scroll)
             {
@@ -334,29 +334,12 @@ namespace FamiStudio
 
             SetAndMarkDirty(ref highlightRow, index);
 
-            HighlightUpdated?.Invoke(this, index);
+            HighlightRowUpdated?.Invoke(this, index);
         }
 
-        public void ResetHighlight()
+        public void ResetRowHighlight()
         {
             SetAndMarkDirty(ref highlightRow, -1);
-        }
-
-        public void KeyboardNavigateUpDown(Control sender, Keys key)
-        {
-            var newIndex = key switch
-            {
-                Keys.Up       => -1,
-                Keys.Down     =>  1,
-                Keys.PageUp   => -numItemRows,
-                Keys.PageDown =>  numItemRows,
-                Keys.Home     => -ItemCount,
-                Keys.End      =>  ItemCount,
-                _             =>  0,
-            };
-
-            var row = Math.Clamp(highlightRow + newIndex, 0, ItemCount - 1);        
-            UpdateHighlight(row);
         }
 
         protected override void OnAddedToContainer()
@@ -421,6 +404,12 @@ namespace FamiStudio
                 col = -1;
                 return false;
             }
+        }
+
+        private void KeyboardNavigateUpDown(int newIndex)
+        {
+            var row = Math.Clamp(highlightRow + newIndex, 0, ItemCount - 1);
+            UpdateRowHighlight(row);
         }
 
         protected override void OnPointerDown(PointerEventArgs e)
@@ -569,6 +558,12 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnLostDialogFocus()
+        {
+            ResetRowHighlight();
+            base.OnLostDialogFocus();
+        }
+
         protected override void OnPointerUp(PointerEventArgs e)
         {
             if (draggingScrollbars || draggingSlider)
@@ -586,6 +581,30 @@ namespace FamiStudio
                     new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
                 });
                 e.MarkHandled();
+            }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (HasDialogFocus)
+            {
+                var newIndex = e.Key switch
+                {
+                    Keys.Up       => -1,
+                    Keys.Down     =>  1,
+                    Keys.PageUp   => -numItemRows,
+                    Keys.PageDown =>  numItemRows,
+                    Keys.Home     => -ItemCount,
+                    Keys.End      =>  ItemCount,
+                    _             =>  0,
+                };
+
+                if (newIndex != 0)
+                {
+                    KeyboardNavigateUpDown(newIndex);
+                }
             }
         }
 

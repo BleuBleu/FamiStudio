@@ -130,7 +130,7 @@ namespace FamiStudio
             gridFiles.CellClicked += GridFiles_CellClicked;
             gridFiles.CellDoubleClicked += GridFiles_CellDoubleClicked;
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
-            gridFiles.HighlightUpdated += GridFiles_HighlightUpdated;
+            gridFiles.HighlightRowUpdated += GridFiles_HighlightUpdated;
             y += gridFiles.Height + margin;
 
             textFile = new TextBox("");
@@ -348,8 +348,8 @@ namespace FamiStudio
 
         private void TryOpenOrValidate()
         {
-            if (!OpenFolderOrDrive(prevIndex) && !ValidateAndClose())
-                Platform.Beep();
+            if (!OpenFolderOrDrive(prevIndex))
+                ValidateAndClose();
         }
 
         private bool OpenFolderOrDrive(int index)
@@ -383,7 +383,7 @@ namespace FamiStudio
             if (!string.Equals(path.TrimEnd(Path.DirectorySeparatorChar), userFolder.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
             {
                 GoToPath(Path.GetDirectoryName(path));
-                gridFiles.ResetHighlight();
+                gridFiles.ResetRowHighlight();
             }
             else
             {
@@ -441,7 +441,6 @@ namespace FamiStudio
         protected override void OnChar(CharEventArgs e)
         {
             base.OnChar(e);
-
             if (gridFiles.HasDialogFocus)
             {
                 TextSearch(e.Char.ToString());
@@ -606,7 +605,7 @@ namespace FamiStudio
             path = p;
             gridFiles.UpdateData(GetGridData(files));
             gridFiles.ResetScroll();
-            gridFiles.ResetHighlight();
+            gridFiles.ResetRowHighlight();
             UpdateColumnNames();
             UpdatePathBar();
         }
@@ -643,7 +642,7 @@ namespace FamiStudio
                 if (files[i].Name.StartsWith(searchString, StringComparison.CurrentCultureIgnoreCase))
                 {
                     textFile.Text = files[i].Name;
-                    gridFiles.UpdateHighlight(i);
+                    gridFiles.UpdateRowHighlight(i);
                     prevIndex = i;
                     break;
                 }
@@ -651,14 +650,6 @@ namespace FamiStudio
                 // No match found.
                 if (offset == files.Count - 1)
                     Platform.Beep();
-            }
-        }
-
-        private void KeyboardNavigateUpDown(Control sender, Keys key)
-        {
-            if (files.Count != 0)
-            {
-                gridFiles.KeyboardNavigateUpDown(sender, key);
             }
         }
 
@@ -686,23 +677,9 @@ namespace FamiStudio
                 Close(DialogResult.Cancel);
             }
             
-            if (!e.Handled && gridFiles.HasDialogFocus)
+            if (!e.Handled && e.Key == Keys.Backspace && gridFiles.HasDialogFocus)
             {
-                switch(e.Key)
-                {
-                    case Keys.Up:
-                    case Keys.Down:
-                    case Keys.PageUp:
-                    case Keys.PageDown:
-                    case Keys.Home:
-                    case Keys.End:
-                        KeyboardNavigateUpDown(this, e.Key);
-                        break;
-
-                    case Keys.Backspace:
-                        GoUpDirectoryLevel();
-                        break;
-                }
+                GoUpDirectoryLevel();
             }
         }
     }
