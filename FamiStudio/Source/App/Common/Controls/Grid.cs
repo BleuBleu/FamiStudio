@@ -730,7 +730,7 @@ namespace FamiStudio
                 }
 
                 // Highlighted cell (for keyboard)
-                if (enabled && highlightRow >= 0)
+                if (enabled && highlightRow >= 0 && (highlightRow - scroll) >= 0 && (highlightRow - scroll) < numItemRows && highlightRow < data.GetLength(0))
                 {
                     var highlightColor = Color.FromArgb(100, 0, 96, 192); // Blue
 
