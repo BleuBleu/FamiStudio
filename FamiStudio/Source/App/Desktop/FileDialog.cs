@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -345,44 +346,34 @@ namespace FamiStudio
             prevIndex = rowIndex;
         }
 
-        private void TryValidateOrOpen()
+        private void TryOpenOrValidate()
         {
-            if (files.Count == 0 || prevIndex >= files.Count)
-            {
-                if (mode == Mode.Open)
-                {
-                    Platform.Beep();
-                    return;
-                }
-                else
-                {
-                    ValidateAndClose();
-                }
-            }
-            else
-            {
-                if (!OpenFolderOrDrive(prevIndex))
-                    ValidateAndClose();
-            }
+            if (!OpenFolderOrDrive(prevIndex) && !ValidateAndClose())
+                Platform.Beep();
         }
 
         private bool OpenFolderOrDrive(int index)
         {
+            if (index == -1)
+                return false; // No highlight index.
+
+            Debug.Assert(index >= 0 && index < files.Count);
+
             var f = files[index];
 
-            if (f.Type == EntryType.Drive)
+            switch (f.Type)
             {
-                var driveInfo = new DriveInfo(f.Name);
-                GoToPath(driveInfo.RootDirectory.FullName);
-                return true;
-            }
-            else if (f.Type == EntryType.Directory)
-            {
-                GoToPath(f.Path);
-                return true;
-            }
+                case EntryType.Drive:
+                    GoToPath(new DriveInfo(f.Name).RootDirectory.FullName);
+                    return true;
 
-            return false;
+                case EntryType.Directory:
+                    GoToPath(f.Path);
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         private void GoUpDirectoryLevel()
@@ -445,6 +436,32 @@ namespace FamiStudio
             }
 
             return false;
+        }
+
+        protected override void OnChar(CharEventArgs e)
+        {
+            base.OnChar(e);
+
+            if (gridFiles.HasDialogFocus)
+            {
+                TextSearch(e.Char.ToString());
+            }
+            else if (textFile.HasDialogFocus)
+            {
+                PredictText();
+            }
+        }
+
+        private void PredictText()
+        {
+            var input = textFile.Text;
+            var match = files.FirstOrDefault(f => f.Name.StartsWith(input, StringComparison.CurrentCultureIgnoreCase));
+
+            if (match != null)
+            {
+                textFile.Text = match.Name;
+                textFile.SetSelection(input.Length, match.Name.Length - input.Length);
+            }
         }
 
         private void UpdateText(int index)
@@ -551,6 +568,7 @@ namespace FamiStudio
         private void GoToPath(string p)
         {
             files.Clear();
+            prevIndex = -1;
 
             var dirInfo = new DirectoryInfo(p);
 
@@ -582,12 +600,9 @@ namespace FamiStudio
                 }
             }
 
-            if (mode == Mode.Open)
-            {
-                filename = null;
-                textFile.Text = "";
-            }
-
+            filename = null;
+            textFile.Text = "";
+            
             path = p;
             gridFiles.UpdateData(GetGridData(files));
             gridFiles.ResetScroll();
@@ -596,11 +611,10 @@ namespace FamiStudio
             UpdatePathBar();
         }
 
-        private void TextSearch(Keys key)
+        private void TextSearch(string keyChar)
         {
             var now = DateTime.Now;
             var resetSearch = (now - prevTime) >= TimeSpan.FromSeconds(1) || searchString.Length == 0;
-            var keyChar = ((char)(int)key).ToString();
 
             if (resetSearch)
             {
@@ -640,17 +654,17 @@ namespace FamiStudio
             }
         }
 
-        private void KeyboardNavigateUpDown(int dir, int mode = 0)
+        private void KeyboardNavigateUpDown(Control sender, Keys key)
         {
             if (files.Count != 0)
             {
-                gridFiles.KeyboardNavigateUpDown(dir, mode);
+                gridFiles.KeyboardNavigateUpDown(sender, key);
             }
         }
 
         private void ButtonYes_Click(Control sender)
         {
-            TryValidateOrOpen();
+            TryOpenOrValidate();
         }
 
         private void ButtonNo_Click(Control sender)
@@ -664,7 +678,7 @@ namespace FamiStudio
 
             if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
             {
-                TryValidateOrOpen();
+                TryOpenOrValidate();
             }
 
             if (!e.Handled && e.Key == Keys.Escape)
@@ -674,25 +688,20 @@ namespace FamiStudio
             
             if (!e.Handled && gridFiles.HasDialogFocus)
             {
-                if (e.Key == Keys.Up || e.Key ==Keys.Down)
+                switch(e.Key)
                 {
-                    KeyboardNavigateUpDown(e.Key == Keys.Up ? -1 : 1);
-                }
-                else if (e.Key == Keys.PageUp || e.Key == Keys.PageDown)
-                {
-                    KeyboardNavigateUpDown(e.Key == Keys.PageUp ? -1 : 1, 1);
-                }
-                else if (e.Key == Keys.Home || e.Key == Keys.End)
-                {
-                    KeyboardNavigateUpDown(e.Key == Keys.Home ? -1 : 1, 2);
-                }
-                else if (e.Key == Keys.Backspace)
-                {
-                    GoUpDirectoryLevel();
-                }
-                else if (e.Key != Keys.Enter && e.Key != Keys.KeypadEnter && e.Key != Keys.Escape)
-                {
-                    TextSearch(e.Key);
+                    case Keys.Up:
+                    case Keys.Down:
+                    case Keys.PageUp:
+                    case Keys.PageDown:
+                    case Keys.Home:
+                    case Keys.End:
+                        KeyboardNavigateUpDown(this, e.Key);
+                        break;
+
+                    case Keys.Backspace:
+                        GoUpDirectoryLevel();
+                        break;
                 }
             }
         }

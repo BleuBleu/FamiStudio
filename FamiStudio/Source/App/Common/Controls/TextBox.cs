@@ -474,6 +474,7 @@ namespace FamiStudio
 
         public void SetSelection(int start, int len)
         {
+            caretIndex = Math.Max(caretIndex, start);
             SetAndMarkDirty(ref selectionStart, start);
             SetAndMarkDirty(ref selectionLength, Math.Max(0, len));
         }

@@ -342,16 +342,20 @@ namespace FamiStudio
             SetAndMarkDirty(ref highlightRow, -1);
         }
 
-        public void KeyboardNavigateUpDown(int dir, int mode)
+        public void KeyboardNavigateUpDown(Control sender, Keys key)
         {
-            var dist = mode switch
+            var newIndex = key switch
             {
-                1 => numItemRows, // PGUP / PGDN
-                2 => ItemCount,   // HOME / END
-                _ => 1,           // UP   / DOWN
+                Keys.Up       => -1,
+                Keys.Down     =>  1,
+                Keys.PageUp   => -numItemRows,
+                Keys.PageDown =>  numItemRows,
+                Keys.Home     => -ItemCount,
+                Keys.End      =>  ItemCount,
+                _             =>  0,
             };
 
-            var row = Math.Clamp(highlightRow + (dist * dir), 0, ItemCount - 1);        
+            var row = Math.Clamp(highlightRow + newIndex, 0, ItemCount - 1);        
             UpdateHighlight(row);
         }
 
