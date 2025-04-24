@@ -349,12 +349,21 @@ namespace FamiStudio
         {
             if (files.Count == 0 || prevIndex >= files.Count)
             {
-                Platform.Beep();
-                return;
+                if (mode == Mode.Open)
+                {
+                    Platform.Beep();
+                    return;
+                }
+                else
+                {
+                    ValidateAndClose();
+                }
             }
-
-            if (!OpenFolderOrDrive(prevIndex))
-                ValidateAndClose();
+            else
+            {
+                if (!OpenFolderOrDrive(prevIndex))
+                    ValidateAndClose();
+            }
         }
 
         private bool OpenFolderOrDrive(int index)
