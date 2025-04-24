@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -44,6 +45,7 @@ namespace FamiStudio
         private byte columnEnabledMask;
         private bool hasAnyDropDowns;
         private bool hasAnyCheckBoxes;
+        private bool hasAnySliders;
         private bool fullRowSelect;
         private bool isClosingList;
         private Font font;
@@ -107,6 +109,10 @@ namespace FamiStudio
                 else if (col.Type == ColumnType.CheckBox)
                 {
                     hasAnyCheckBoxes = true;
+                }
+                else if (col.Type == ColumnType.Slider)
+                {
+                    hasAnySliders = true;
                 }
             }
 
@@ -590,6 +596,7 @@ namespace FamiStudio
 
             if (HasDialogFocus)
             {
+                // Vertical navigation.
                 var newIndex = e.Key switch
                 {
                     Keys.Up       => -1,
@@ -600,12 +607,61 @@ namespace FamiStudio
                     Keys.End      =>  ItemCount,
                     _             =>  0,
                 };
-
                 if (newIndex != 0)
                 {
                     KeyboardNavigateUpDown(newIndex);
                 }
+
+                // Horizontal value toggling.
+                if (!e.Handled && (e.Key == Keys.Left || e.Key == Keys.Right))
+                {
+                    if (hasAnySliders)
+                    {
+                        var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
+                        if (col != -1)
+                        {
+                            var row = highlightRow;
+                            var sign = e.Key == Keys.Left ? -1 : 1;
+
+                            IncrementDecrementSlider(row, col, sign);
+                        }
+                    }
+                }
+
+                // Spacebar interactions.
+                if (!e.Handled && e.Key == Keys.Space)
+                {
+                    // Checkbox toggling.
+                    if (hasAnyCheckBoxes)
+                    {
+                        var col = Array.FindIndex(columns, c => c.Type == ColumnType.CheckBox);
+                        if (col != -1)
+                        {
+                            ToggleCheckbox(highlightRow, col);
+                        }
+                    }
+                }
             }
+        }
+
+        private void ToggleCheckbox(int row, int col)
+        {
+            var newValue = !(bool)data[row, col];
+            data[row, col] = newValue;
+
+            ValueChanged?.Invoke(this, row, col, newValue);
+            MarkDirty();
+        }
+
+        private void IncrementDecrementSlider(int row, int col, int sign)
+        {
+            GetCellSliderData(row, col, out var min, out var max, out _);
+
+            var newValue = (int)data[row, col] + sign;
+            data[row, col] = Math.Clamp(newValue, min, max);
+
+            ValueChanged?.Invoke(this, row, col, newValue);
+            MarkDirty();
         }
 
         private void SelectAllCheckBoxes(bool check)
@@ -757,6 +813,7 @@ namespace FamiStudio
                 {
                     var highlightColor = Color.FromArgb(100, 0, 96, 192); // Blue
 
+                    // Full row select only.
                     c.FillRectangle(0, (numHeaderRows + highlightRow - scroll) * rowHeight, width, (numHeaderRows + highlightRow - scroll + 1) * rowHeight, highlightColor);
                 }
 
