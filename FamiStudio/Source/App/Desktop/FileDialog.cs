@@ -379,17 +379,12 @@ namespace FamiStudio
 
         private void GoUpDirectoryLevel()
         {
-            var userFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var p = Path.GetDirectoryName(path);
 
-            if (!string.Equals(path.TrimEnd(Path.DirectorySeparatorChar), userFolder.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase))
-            {
-                GoToPath(Path.GetDirectoryName(path));
-                gridFiles.ResetRowHighlight();
-            }
-            else
-            {
-                Platform.Beep();
-            }
+            if (Path.Exists(p))
+                GoToPath(p);
+                
+            gridFiles.ResetRowHighlight();
         }
 
         private bool ValidateAndClose()
