@@ -63,7 +63,7 @@ namespace FamiStudio
         private string path;
         private string[] extensions;
         private List<FileEntry> files = new List<FileEntry>();
-        private int prevIndex;
+        private int selectedIndex;
         private string searchString;
         private DateTime prevTime;
 
@@ -343,7 +343,7 @@ namespace FamiStudio
         private void GridFiles_SelectedRowUpdated(Control sender, int rowIndex)
         {
             UpdateText(rowIndex);
-            prevIndex = rowIndex;
+            selectedIndex = rowIndex;
         }
 
         private void TryOpenOrValidate()
@@ -354,8 +354,8 @@ namespace FamiStudio
 
         private bool OpenFolderOrDrive()
         {
-            var f = (prevIndex >= 0 && gridFiles.HasDialogFocus)
-                ? files[prevIndex]
+            var f = (selectedIndex >= 0 && gridFiles.HasDialogFocus)
+                ? files[selectedIndex]
                 : textFile.HasDialogFocus
                     ? files.FirstOrDefault(file => file.Name.Contains(textFile.Text, StringComparison.OrdinalIgnoreCase))
                     : null;
@@ -561,7 +561,7 @@ namespace FamiStudio
         private void GoToPath(string p)
         {
             files.Clear();
-            prevIndex = -1;
+            selectedIndex = -1;
 
             var dirInfo = new DirectoryInfo(p);
 
@@ -614,12 +614,12 @@ namespace FamiStudio
                 if (!string.IsNullOrWhiteSpace(keyChar))
                 {
                     searchString = keyChar;
-                    prevIndex = 0;
+                    selectedIndex = 0;
                 }
             }
             else if (searchString == keyChar)
             {
-                prevIndex++; 
+                selectedIndex++; 
             }
             else
             {
@@ -631,13 +631,13 @@ namespace FamiStudio
             // Make sure the search wraps when starting on a non-zero value.
             for (var offset = 0; offset < files.Count; offset++)
             {
-                var i = (prevIndex + offset) % files.Count;
+                var i = (selectedIndex + offset) % files.Count;
 
                 if (files[i].Name.StartsWith(searchString, StringComparison.CurrentCultureIgnoreCase))
                 {
                     textFile.Text = files[i].Name;
                     gridFiles.UpdateSelectedRow(i);
-                    prevIndex = i;
+                    selectedIndex = i;
                     break;
                 }
 
