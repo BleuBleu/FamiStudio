@@ -130,7 +130,7 @@ namespace FamiStudio
             gridFiles.CellClicked += GridFiles_CellClicked;
             gridFiles.CellDoubleClicked += GridFiles_CellDoubleClicked;
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
-            gridFiles.HighlightRowUpdated += GridFiles_HighlightUpdated;
+            gridFiles.selectedRowUpdated += GridFiles_SelectedRowUpdated;
             y += gridFiles.Height + margin;
 
             textFile = new TextBox("");
@@ -340,7 +340,7 @@ namespace FamiStudio
             }
         }
 
-        private void GridFiles_HighlightUpdated(Control sender, int rowIndex)
+        private void GridFiles_SelectedRowUpdated(Control sender, int rowIndex)
         {
             UpdateText(rowIndex);
             prevIndex = rowIndex;
@@ -441,11 +441,11 @@ namespace FamiStudio
             }
             else if (textFile.HasDialogFocus)
             {
-                PredictText();
+                AutoFillText();
             }
         }
 
-        private void PredictText()
+        private void AutoFillText()
         {
             var input = textFile.Text;
             var match = files.FirstOrDefault(f => f.Name.StartsWith(input, StringComparison.CurrentCultureIgnoreCase));
@@ -611,11 +611,11 @@ namespace FamiStudio
 
             if (resetSearch)
             {
-                if (string.IsNullOrWhiteSpace(keyChar))
-                    return;
-
-                searchString = keyChar;
-                prevIndex = 0;
+                if (!string.IsNullOrWhiteSpace(keyChar))
+                {
+                    searchString = keyChar;
+                    prevIndex = 0;
+                }
             }
             else if (searchString == keyChar)
             {
@@ -636,7 +636,7 @@ namespace FamiStudio
                 if (files[i].Name.StartsWith(searchString, StringComparison.CurrentCultureIgnoreCase))
                 {
                     textFile.Text = files[i].Name;
-                    gridFiles.UpdateRowHighlight(i);
+                    gridFiles.UpdateSelectedRow(i);
                     prevIndex = i;
                     break;
                 }

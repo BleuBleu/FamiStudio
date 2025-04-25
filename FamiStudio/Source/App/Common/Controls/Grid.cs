@@ -12,14 +12,14 @@ namespace FamiStudio
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
-        public delegate void HighlightRowUpdatedDelegate(Control sender, int rolIndex);
+        public delegate void selectedRowUpdatedDelegate(Control sender, int rolIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
-        public event HighlightRowUpdatedDelegate HighlightRowUpdated;
+        public event selectedRowUpdatedDelegate selectedRowUpdated;
 
         private class CellSliderData
         {
@@ -32,7 +32,7 @@ namespace FamiStudio
         private int maxScroll;
         private int hoverRow = -1;
         private int hoverCol = -1;
-        private int highlightRow = -1;
+        private int selectedRow = -1;
         private bool hoverButton;
         private int dropDownRow = -1;
         private int dropDownCol = -1;
@@ -330,7 +330,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref scroll, 0);
         }
 
-        public void UpdateRowHighlight(int index)
+        public void UpdateSelectedRow(int index)
         {
             if (index >= scroll + numItemRows || index < scroll)
             {
@@ -338,14 +338,13 @@ namespace FamiStudio
                 scroll = Math.Min(newScroll, ItemCount - numItemRows);
             }
 
-            SetAndMarkDirty(ref highlightRow, index);
-
-            HighlightRowUpdated?.Invoke(this, index);
+            selectedRowUpdated?.Invoke(this, index);
+            SetAndMarkDirty(ref selectedRow, index);
         }
 
         public void ResetRowHighlight()
         {
-            SetAndMarkDirty(ref highlightRow, -1);
+            SetAndMarkDirty(ref selectedRow, -1);
         }
 
         protected override void OnAddedToContainer()
@@ -414,8 +413,8 @@ namespace FamiStudio
 
         private void KeyboardNavigateUpDown(int newIndex)
         {
-            var row = Math.Clamp(highlightRow + newIndex, 0, ItemCount - 1);
-            UpdateRowHighlight(row);
+            var row = Math.Clamp(selectedRow + newIndex, 0, ItemCount - 1);
+            UpdateSelectedRow(row);
         }
 
         protected override void OnPointerDown(PointerEventArgs e)
@@ -525,7 +524,7 @@ namespace FamiStudio
                 HeaderCellClicked?.Invoke(this, col);
             }
             
-            SetAndMarkDirty(ref highlightRow, row);
+            SetAndMarkDirty(ref selectedRow, row);
         }
 
         private bool IsPointInButton(int x, int row, int col)
@@ -620,10 +619,11 @@ namespace FamiStudio
                         var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
                         if (col != -1)
                         {
-                            var row = highlightRow;
+                            var row = selectedRow;
                             var sign = e.Key == Keys.Left ? -1 : 1;
+                            var mult = e.Modifiers == ModifierKeys.Shift ? 10 : 1;
 
-                            IncrementDecrementSlider(row, col, sign);
+                            IncrementDecrementSlider(row, col, sign * mult);
                         }
                     }
                 }
@@ -637,7 +637,7 @@ namespace FamiStudio
                         var col = Array.FindIndex(columns, c => c.Type == ColumnType.CheckBox);
                         if (col != -1)
                         {
-                            ToggleCheckbox(highlightRow, col);
+                            ToggleCheckbox(selectedRow, col);
                         }
                     }
                 }
@@ -797,26 +797,6 @@ namespace FamiStudio
             // Data
             if (data != null)
             {
-                // Hovered cell
-                if (enabled && hoverCol >= 0 && (hoverRow - scroll) >= 0 && (hoverRow - scroll) < numItemRows && hoverRow < data.GetLength(0))
-                {
-                    var hoverColor = Color.FromArgb(50, Color.White);
-
-                    if (fullRowSelect)
-                        c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
-                    else
-                        c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
-                }
-
-                // Highlighted cell (for keyboard)
-                if (enabled && highlightRow >= 0 && (highlightRow - scroll) >= 0 && (highlightRow - scroll) < numItemRows && highlightRow < data.GetLength(0))
-                {
-                    var highlightColor = Color.FromArgb(100, 0, 96, 192); // Blue
-
-                    // Full row select only.
-                    c.FillRectangle(0, (numHeaderRows + highlightRow - scroll) * rowHeight, width, (numHeaderRows + highlightRow - scroll + 1) * rowHeight, highlightColor);
-                }
-
                 for (int i = 0, k = scroll; i < numItemRows && k < data.GetLength(0); i++, k++) // Rows
                 {
                     var y = (i + numHeaderRows) * rowHeight;
@@ -917,6 +897,25 @@ namespace FamiStudio
 
                         c.PopTransform();
                     }
+                }
+
+                // Hovered cell
+                if (enabled && hoverCol >= 0 && (hoverRow - scroll) >= 0 && (hoverRow - scroll) < numItemRows && hoverRow < data.GetLength(0))
+                {
+                    var hoverColor = Color.FromArgb(50, Color.White);
+
+                    if (fullRowSelect)
+                        c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
+                    else
+                        c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
+                }
+
+                // Highlighted cell (for keyboard). Full Row Select
+                if (enabled && selectedRow >= 0 && (selectedRow - scroll) >= 0 && (selectedRow - scroll) < numItemRows && selectedRow < data.GetLength(0))
+                {
+                    var highlightColor = Color.FromArgb(70, 0, 128, 255); // Blue
+                    
+                    c.FillRectangle(0, (numHeaderRows + selectedRow - scroll) * rowHeight, width, (numHeaderRows + selectedRow - scroll + 1) * rowHeight, highlightColor);
                 }
             }
 
