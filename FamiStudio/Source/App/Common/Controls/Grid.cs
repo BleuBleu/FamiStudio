@@ -55,6 +55,7 @@ namespace FamiStudio
         private Color foreColor = Theme.LightGreyColor1;
         private CellSliderData[,] cellSliderData;
         private bool[,] cellDisabled;
+        private Point lastMousePosition;
 
         private bool draggingScrollbars;
         private bool draggingSlider;
@@ -483,7 +484,7 @@ namespace FamiStudio
                                     sliderCol = col;
                                     sliderRow = row;
                                     GetCellSliderData(row, col, out var sliderMin, out var sliderMax, out _);
-                                    data[row, col] = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[col]) / (float)columnWidths[col])));
+                                    data[row, col] = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[col]) / (float) columnWidths[col])));
                                     ValueChanged?.Invoke(this, row, col, data[row, col]);
                                     break;
                                 }
@@ -541,8 +542,12 @@ namespace FamiStudio
             if (draggingSlider)
             {
                 GetCellSliderData(sliderRow, sliderCol, out var sliderMin, out var sliderMax, out _);
-                var newSliderVal = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[sliderCol]) / (float)columnWidths[sliderCol])));
-                if (newSliderVal != (int)data[sliderRow, sliderCol])
+                var oldSliderVal = (int)data[sliderRow, sliderCol];
+                var newSliderVal = ModifierKeys.IsControlDown
+                    ? Math.Clamp(Math.Sign(e.X - lastMousePosition.X) + oldSliderVal, sliderMin, sliderMax)
+                    : (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[sliderCol]) / (float)columnWidths[sliderCol])));
+
+                if (newSliderVal != oldSliderVal)
                 {
                     data[sliderRow, sliderCol] = newSliderVal;
                     ValueChanged?.Invoke(this, sliderRow, sliderCol, newSliderVal);
@@ -561,6 +566,8 @@ namespace FamiStudio
             {
                 UpdateHover(e);
             }
+
+            lastMousePosition = e.Position;
         }
 
         protected override void OnLostDialogFocus()
@@ -603,11 +610,11 @@ namespace FamiStudio
                         var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
                         if (col != -1)
                         {
-                            var row = selectedRow;
-                            var sign = e.Key == Keys.Left ? -1 : 1;
-                            var mult = e.Modifiers == ModifierKeys.Shift ? 10 : 1;
+                            var row   = selectedRow;
+                            var sign  = e.Key == Keys.Left ? -1 : 1;
+                            var value = sign * (ModifierKeys.IsShiftDown ? 10 : 1);
 
-                            IncrementDecrementSlider(row, col, sign * mult);
+                            IncrementSlider(row, col, value);
                         }
                     }
 
@@ -658,7 +665,7 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void IncrementDecrementSlider(int row, int col, int sign)
+        private void IncrementSlider(int row, int col, int sign)
         {
             GetCellSliderData(row, col, out var min, out var max, out _);
 
