@@ -189,6 +189,7 @@ namespace FamiStudio
                 if (newIndex != 0)
                 {
                     highlightedIndex = Math.Clamp(highlightedIndex + newIndex, 0, numItemsInList - 1);
+                    e.Handled = true;
                     MarkDirty();
                 }
             }

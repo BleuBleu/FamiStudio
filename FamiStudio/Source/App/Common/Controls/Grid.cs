@@ -593,27 +593,11 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (HasDialogFocus)
+            if (HasDialogFocus && !e.Handled)
             {
-                // Vertical navigation.
-                var newIndex = e.Key switch
+                if (e.Key == Keys.Left || e.Key == Keys.Right)
                 {
-                    Keys.Up       => -1,
-                    Keys.Down     =>  1,
-                    Keys.PageUp   => -numItemRows,
-                    Keys.PageDown =>  numItemRows,
-                    Keys.Home     => -ItemCount,
-                    Keys.End      =>  ItemCount,
-                    _             =>  0,
-                };
-                if (newIndex != 0)
-                {
-                    KeyboardNavigateUpDown(newIndex);
-                }
-
-                // Horizontal value toggling.
-                if (!e.Handled && (e.Key == Keys.Left || e.Key == Keys.Right))
-                {
+                    // Slider adjustment.
                     if (hasAnySliders)
                     {
                         var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
@@ -626,10 +610,10 @@ namespace FamiStudio
                             IncrementDecrementSlider(row, col, sign * mult);
                         }
                     }
-                }
 
-                // Spacebar interactions.
-                if (!e.Handled && e.Key == Keys.Space)
+                    e.Handled = true;
+                }
+                else if (e.Key == Keys.Space)
                 {
                     // Checkbox toggling.
                     if (hasAnyCheckBoxes)
@@ -639,6 +623,27 @@ namespace FamiStudio
                         {
                             ToggleCheckbox(selectedRow, col);
                         }
+                    }
+
+                    e.Handled = true;
+                }
+                else
+                {
+                    // Vertical navigation.
+                    var newIndex = e.Key switch
+                    {
+                        Keys.Up       => -1,
+                        Keys.Down     =>  1,
+                        Keys.PageUp   => -numItemRows,
+                        Keys.PageDown =>  numItemRows,
+                        Keys.Home     => -ItemCount,
+                        Keys.End      =>  ItemCount,
+                        _             =>  0,
+                    };
+                    if (newIndex != 0)
+                    {
+                        KeyboardNavigateUpDown(newIndex);
+                        e.Handled = true;
                     }
                 }
             }
