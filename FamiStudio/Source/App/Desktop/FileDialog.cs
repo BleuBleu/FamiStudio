@@ -383,8 +383,6 @@ namespace FamiStudio
 
             if (Path.Exists(p))
                 GoToPath(p);
-                
-            gridFiles.ResetRowHighlight();
         }
 
         private bool ValidateAndClose()
