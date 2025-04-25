@@ -348,32 +348,33 @@ namespace FamiStudio
 
         private void TryOpenOrValidate()
         {
-            if (!OpenFolderOrDrive(prevIndex))
+            if (!OpenFolderOrDrive())
                 ValidateAndClose();
         }
 
-        private bool OpenFolderOrDrive(int index)
+        private bool OpenFolderOrDrive()
         {
-            if (index == -1)
-                return false; // No highlight index.
+            var f = (prevIndex >= 0 && gridFiles.HasDialogFocus)
+                ? files[prevIndex]
+                : textFile.HasDialogFocus
+                    ? files.FirstOrDefault(file => file.Name.Contains(textFile.Text, StringComparison.OrdinalIgnoreCase))
+                    : null;
 
-            Debug.Assert(index >= 0 && index < files.Count);
+            if (f == null)
+                return false;
 
-            var f = files[index];
-
-            switch (f.Type)
+            return f.Type switch
             {
-                case EntryType.Drive:
-                    GoToPath(new DriveInfo(f.Name).RootDirectory.FullName);
-                    return true;
+                EntryType.Drive     => GoToAndReturn(new DriveInfo(f.Name).RootDirectory.FullName),
+                EntryType.Directory => GoToAndReturn(f.Path),
+                _                   => false
+            };
+        }
 
-                case EntryType.Directory:
-                    GoToPath(f.Path);
-                    return true;
-
-                default:
-                    return false;
-            }
+        private bool GoToAndReturn(string path)
+        {
+            GoToPath(path);
+            return true;
         }
 
         private void GoUpDirectoryLevel()
