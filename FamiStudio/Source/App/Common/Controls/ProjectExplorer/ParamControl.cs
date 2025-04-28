@@ -54,7 +54,7 @@ namespace FamiStudio
             }
             else
             {
-                var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), param.Name, param.GetValue(), param.GetMinValue(), param.GetMaxValue(), true);
+                var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), param.Name, param.GetValue(), param.GetMinValue(), param.GetMaxValue(), true, param.GetScaleValue());
                 dlg.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)

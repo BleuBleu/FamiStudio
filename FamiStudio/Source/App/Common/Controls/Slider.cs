@@ -12,16 +12,18 @@ namespace FamiStudio
         private double min;
         private double max;
         private double val;
+        private double def;
         private int captureX;
         private Func<double, string> format;
         private bool changing;
         private bool dragging;
 
-        public Slider(double value, double minValue, double maxValue, Func<double, string> fmt = null)
+        public Slider(double value, double minValue, double maxValue, Func<double, string> fmt = null, double defaultValue = 0.0)
         {
             min = minValue;
             max = maxValue;
             val = value;
+            def = defaultValue;
             format = fmt == null ? (o) => o.ToString() : fmt;
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 14 : 24);
             supportsLongPress = true;
@@ -29,6 +31,7 @@ namespace FamiStudio
 
         public double Min { get => min; set => SetAndMarkDirty(ref min, value); }
         public double Max { get => max; set => SetAndMarkDirty(ref max, value); }
+        public double Default { get => def; set => SetAndMarkDirty(ref def, value); }
         public Func<double, string> Format { get => format; set { format = value; MarkDirty(); } }
 
         public double Value

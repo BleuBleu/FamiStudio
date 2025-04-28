@@ -26,6 +26,8 @@ namespace FamiStudio
             public int MinValue;
             public int MaxValue;
             public Func<double, string> Formatter;
+            public float? DefaultValue;
+            public bool HasDefaultValue => DefaultValue != null;
         }
 
         private int scroll;
@@ -40,6 +42,7 @@ namespace FamiStudio
         private int numItemRows;
         private int numHeaderRows;
         private object[,] data;
+        private object[,] prevData;
         private int[] columnWidths;
         private int[] columnOffsets;
         private byte columnEnabledMask;
@@ -86,7 +89,10 @@ namespace FamiStudio
 
         LocalizedString SelectAllLabel;
         LocalizedString SelectNoneLabel;
-    
+        LocalizedString EnterValueContext;
+        LocalizedString ResetDefaultValueContext;
+        LocalizedString ResetPreviousValueContext;
+
         #endregion
 
         public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
@@ -175,27 +181,29 @@ namespace FamiStudio
             foreColor = Color.Black;
         }
 
-        public void OverrideCellSlider(int row, int col, int min, int max, Func<double, string> fmt)
+        public void OverrideCellSlider(int row, int col, int min, int max, Func<double, string> fmt, float? defaultValue)
         {
             if (cellSliderData == null)
                 cellSliderData = new CellSliderData[data.GetLength(0), data.GetLength(1)];
 
-            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt };
+            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt, DefaultValue = defaultValue };
         }
 
-        private void GetCellSliderData(int row, int col, out int min, out int max, out Func<double, string> fmt)
+        private void GetCellSliderData(int row, int col, out int min, out int max, out Func<double, string> fmt, out float? defaultValue)
         {
             if (cellSliderData != null && cellSliderData[row, col] != null)
             {
                 min = cellSliderData[row, col].MinValue;
                 max = cellSliderData[row, col].MaxValue;
                 fmt = cellSliderData[row, col].Formatter;
+                defaultValue = cellSliderData[row, col].DefaultValue;
             }
             else
             {
                 min = columns[col].MinValue;    
                 max = columns[col].MaxValue;
                 fmt = columns[col].Formatter;
+                defaultValue = columns[col].DefaultValue;
             }
         }
 
@@ -244,6 +252,7 @@ namespace FamiStudio
                 data.GetLength(1) != newData.GetLength(1);
 
             data = newData;
+            prevData = (object[,])newData.Clone();
 
             Debug.Assert(data.GetLength(1) == columns.Length);
 
@@ -343,7 +352,7 @@ namespace FamiStudio
             SetAndMarkDirty(ref selectedRow, index);
         }
 
-        public void ResetRowHighlight()
+        public void ResetSelectedRow()
         {
             SetAndMarkDirty(ref selectedRow, -1);
         }
@@ -483,7 +492,7 @@ namespace FamiStudio
                                     draggingSlider = true;
                                     sliderCol = col;
                                     sliderRow = row;
-                                    GetCellSliderData(row, col, out var sliderMin, out var sliderMax, out _);
+                                    GetCellSliderData(row, col, out var sliderMin, out var sliderMax, out _, out _);
                                     data[row, col] = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[col]) / (float) columnWidths[col])));
                                     ValueChanged?.Invoke(this, row, col, data[row, col]);
                                     break;
@@ -537,11 +546,69 @@ namespace FamiStudio
             return buttonX >= 0 && buttonX < rowHeight;
         }
 
+        protected void EnterSliderValue()
+        {
+            var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
+            if (col == -1)
+                return;
+
+            GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt, out _);
+            
+            var value = (int)data[selectedRow, col];
+            var scale = Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1));
+
+            if (Platform.IsMobile)
+            {
+                Platform.EditTextAsync(null, value.ToString(), (s) => 
+                {
+                    // TODO!
+                    MarkDirty();
+                });
+            }
+            else
+            {
+                var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value, min, max, true, scale);
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        data[selectedRow, col] = dlg.Value;
+                        MarkDirty();
+                    }
+                });
+            }
+        }
+
+        protected void ResetSliderDefaultValue()
+        {
+            var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
+            if (col == -1)
+                return;
+
+            GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt, out var defaultValue);
+
+            if (defaultValue != null)
+            {
+                var val = (int)(defaultValue / Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1)));
+                data[selectedRow, col] = val;
+                MarkDirty();
+            }
+        }
+
+        protected void ResetSliderPreviousValue()
+        {
+            var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
+            if (col == -1)
+                return;
+
+            data[selectedRow, col] = prevData[selectedRow, col];
+        }
+
         protected override void OnPointerMove(PointerEventArgs e)
         {
             if (draggingSlider)
             {
-                GetCellSliderData(sliderRow, sliderCol, out var sliderMin, out var sliderMax, out _);
+                GetCellSliderData(sliderRow, sliderCol, out var sliderMin, out var sliderMax, out _, out _);
                 var oldSliderVal = (int)data[sliderRow, sliderCol];
                 var newSliderVal = ModifierKeys.IsControlDown
                     ? Math.Clamp(Math.Sign(e.X - lastMousePosition.X) + oldSliderVal, sliderMin, sliderMax)
@@ -572,7 +639,7 @@ namespace FamiStudio
 
         protected override void OnLostDialogFocus()
         {
-            ResetRowHighlight();
+            ResetSelectedRow();
             base.OnLostDialogFocus();
         }
 
@@ -585,14 +652,27 @@ namespace FamiStudio
                 ReleasePointer();
                 MarkDirty();
             }
-            else if (e.Right && hasAnyCheckBoxes)
+            else if (e.Right)
             {
-                App.ShowContextMenuAsync(new[]
-{
-                    new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
-                    new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
-                });
-                e.MarkHandled();
+                if (hasAnyCheckBoxes)
+                {
+                    App.ShowContextMenuAsync(new[]
+                    {
+                        new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
+                        new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
+                    });
+                    e.MarkHandled();
+                }
+                else if (hasAnySliders)
+                {
+                    App.ShowContextMenuAsync(new[]
+                    {
+                        new ContextMenuOption("Type",      EnterValueContext,         () => EnterSliderValue()),
+                        new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => ResetSliderPreviousValue()),
+                        new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => ResetSliderDefaultValue())
+                    });
+                    e.MarkHandled();
+                }
             }
         }
 
@@ -610,11 +690,10 @@ namespace FamiStudio
                         var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
                         if (col != -1)
                         {
-                            var row   = selectedRow;
                             var sign  = e.Key == Keys.Left ? -1 : 1;
                             var value = sign * (ModifierKeys.IsShiftDown ? 10 : 1);
 
-                            IncrementSlider(row, col, value);
+                            IncrementSlider(selectedRow, col, value);
                         }
                     }
 
@@ -665,11 +744,11 @@ namespace FamiStudio
             MarkDirty();
         }
 
-        private void IncrementSlider(int row, int col, int sign)
+        private void IncrementSlider(int row, int col, int offset)
         {
-            GetCellSliderData(row, col, out var min, out var max, out _);
+            GetCellSliderData(row, col, out var min, out var max, out _, out _);
 
-            var newValue = (int)data[row, col] + sign;
+            var newValue = (int)data[row, col] + offset;
             data[row, col] = Math.Clamp(newValue, min, max);
 
             ValueChanged?.Invoke(this, row, col, newValue);
@@ -851,9 +930,10 @@ namespace FamiStudio
                             {
                                 if (cellEnabled)
                                 {
-                                    GetCellSliderData(k, j, out var sliderMin, out var sliderMax, out var fmt);
-                                    c.FillRectangle(0, 0, (int)Math.Round(((int)val - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(fmt((int)val), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    var f = float.Parse(val.ToString());
+                                    GetCellSliderData(k, j, out var sliderMin, out var sliderMax, out var fmt, out _);
+                                    c.FillRectangle(0, 0, (int)Math.Round((f - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
+                                    c.DrawText(fmt(f), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {

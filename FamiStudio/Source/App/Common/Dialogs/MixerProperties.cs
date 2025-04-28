@@ -77,8 +77,8 @@ namespace FamiStudio
 
             var rowIdx = 0;
             if (!projectSettings)
-                props.OverrideCellSlider(globalGridIndex, rowIdx++, 1, -100, 30, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
-            props.OverrideCellSlider(globalGridIndex, rowIdx, 1, 2, 100, (o) => FormattableString.Invariant($"{(int)o} Hz"));
+                props.OverrideCellSlider(globalGridIndex, rowIdx++, 1, -100, 30, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"), Settings.DefaultGlobalVolumeDb);
+            props.OverrideCellSlider(globalGridIndex, rowIdx, 1, 2, 100, (o) => FormattableString.Invariant($"{(int)o} Hz"), Settings.DefaultBassCutoffHz);
 
             var expansionMixerSettings = projectSettings ? project.ExpansionMixerSettings : Settings.ExpansionMixerSettings;
 
@@ -112,7 +112,7 @@ namespace FamiStudio
                         },
                         new object[,] {
                             { VolumeLabel.ToString(), (int)(mixerSetting.VolumeDb * 10) },
-                            { BassFilterLabel.ToString(), (int)(mixerSetting.BassCutoffHz) },
+                            { BassFilterLabel.ToString(), (int)mixerSetting.BassCutoffHz },
                             { TrebleFreqLabel.ToString(), (int)(mixerSetting.TrebleRolloffHz / 100) },
                         },
                         3, ExpansionGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
@@ -133,15 +133,15 @@ namespace FamiStudio
                         3, ExpansionGridTooltip, GridOptions.NoHeader | GridOptions.MobileTwoColumnLayout);
                 }
 
-                props.OverrideCellSlider(chipGridIndices[i], 0, 1, -100, 100, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
+                props.OverrideCellSlider(chipGridIndices[i], 0, 1, -100, 100, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"), ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
 
                 // FDS uses a bass filter.
                 if (i == ExpansionType.Fds)
-                    props.OverrideCellSlider(chipGridIndices[i], 1, 1, 2, 100, (o) => FormattableString.Invariant($"{(int)o} Hz"));
+                    props.OverrideCellSlider(chipGridIndices[i], 1, 1, 2, 100, (o) => FormattableString.Invariant($"{(int)o} Hz"), ExpansionMixer.DefaultExpansionMixerSettings[i].BassCutoffHz);
                 else
-                    props.OverrideCellSlider(chipGridIndices[i], 1, 1, -1000, 50, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"));
+                    props.OverrideCellSlider(chipGridIndices[i], 1, 1, -1000, 50, (o) => FormattableString.Invariant($"{(int)o / 10.0:F1} dB"), ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
 
-                props.OverrideCellSlider(chipGridIndices[i], 2, 1, 1, 441, (o) => FormattableString.Invariant($"{(int)o * 100} Hz"));
+                props.OverrideCellSlider(chipGridIndices[i], 2, 1, 1, 441, (o) => FormattableString.Invariant($"{(int)o * 100} Hz"), ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
                 props.SetPropertyEnabled(chipGridIndices[i], project == null || overridden);
             }
 
