@@ -108,7 +108,7 @@ namespace FamiStudio
         {
             if (numeric)
             {
-                var val = text.Contains('.') 
+                var val = text.Contains('.') || text.Contains(',')
                         ? Utils.ParseFloatWithTrailingGarbage(text) 
                         : Utils.ParseIntWithTrailingGarbage(text);
 

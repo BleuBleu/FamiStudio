@@ -163,7 +163,7 @@ namespace FamiStudio
             for (; idx < Math.Min(s.Length, 7); idx++)
             {
                 char c = s[idx];
-                if (c == '.' && !pastDecimal)
+                if ((c == '.' || c == ',') && !pastDecimal)
                 {
                     pastDecimal = true;
                 }
@@ -173,7 +173,7 @@ namespace FamiStudio
                 }
             }
 
-            return idx == 0 || (idx - start) == 0 ? 0 : float.Parse(s.Substring(start, idx - start)) * sign;
+            return idx == 0 || (idx - start) == 0 ? 0 : float.Parse(s.Substring(start, idx - start).Replace(',', '.'), CultureInfo.InvariantCulture) * sign;
         }
 
         public static float ParseFloatWithLeadingAndTrailingGarbage(string s)

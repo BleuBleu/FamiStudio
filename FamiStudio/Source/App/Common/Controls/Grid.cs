@@ -27,7 +27,6 @@ namespace FamiStudio
             public int MaxValue;
             public Func<double, string> Formatter;
             public float? DefaultValue;
-            public bool HasDefaultValue => DefaultValue != null;
         }
 
         private int scroll;
@@ -556,27 +555,16 @@ namespace FamiStudio
             
             var value = (int)data[selectedRow, col];
             var scale = Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1));
-
-            if (Platform.IsMobile)
+            var dlg   = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value, min, max, true, scale);
+            
+            dlg.ShowDialogAsync((r) =>
             {
-                Platform.EditTextAsync(null, value.ToString(), (s) => 
+                if (r == DialogResult.OK)
                 {
-                    // TODO!
+                    data[selectedRow, col] = dlg.Value;
                     MarkDirty();
-                });
-            }
-            else
-            {
-                var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value, min, max, true, scale);
-                dlg.ShowDialogAsync((r) =>
-                {
-                    if (r == DialogResult.OK)
-                    {
-                        data[selectedRow, col] = dlg.Value;
-                        MarkDirty();
-                    }
-                });
-            }
+                }
+            });
         }
 
         protected void ResetSliderDefaultValue()

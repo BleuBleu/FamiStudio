@@ -44,10 +44,14 @@ namespace FamiStudio
         {
             if (Platform.IsMobile)
             {
-                Platform.EditTextAsync(param.Name, param.GetValue().ToString(), (s) => 
+                var scale = param.GetScaleValue();
+                var value = param.GetValue();
+                var scaledValue = Math.Round(value * scale, 2);
+
+                Platform.EditTextAsync(param.Name, scaledValue.ToString(), (s) => 
                 {
                     InvokeValueChangeStart();
-                    param.SetValue(param.SnapAndClampValue(Utils.ParseIntWithTrailingGarbage(s)));
+                    param.SetValue(param.SnapAndClampValue((int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale)));
                     InvokeValueChangeEnd();
                     MarkDirty();
                 });

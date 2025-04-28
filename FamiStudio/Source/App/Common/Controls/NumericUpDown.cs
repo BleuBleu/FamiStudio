@@ -21,7 +21,7 @@ namespace FamiStudio
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
-        public NumericUpDown(int value, int minVal, int maxVal, int increment, float scale) : base(value, minVal, maxVal, increment, scale)
+        public NumericUpDown(int value, int minVal, int maxVal, int increment, float scale = 1.0f) : base(value, minVal, maxVal, increment, scale)
         {
             val = value;
             min = minVal;
@@ -157,6 +157,22 @@ namespace FamiStudio
                 base.OnPointerDown(e);
             }
         }
+
+#if FAMISTUDIO_MOBILE
+        protected override void OnTouchLongPress(PointerEventArgs e)
+        {
+            var grid = container as Grid;
+            {
+                Platform.EditTextAsync("Enter Value:", Math.Round(Value * scale).ToString(), (s) =>
+                {
+                    Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
+
+                    if (grid != null)
+                        grid.UpdateControlValue(this, Value);
+                });
+            }
+        }
+#endif
 
         private void SetAndScaleTextBoxValue()
         {

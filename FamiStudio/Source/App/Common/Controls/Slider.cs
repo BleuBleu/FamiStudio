@@ -31,7 +31,7 @@ namespace FamiStudio
 
         public double Min { get => min; set => SetAndMarkDirty(ref min, value); }
         public double Max { get => max; set => SetAndMarkDirty(ref max, value); }
-        public double Default { get => def; set => SetAndMarkDirty(ref def, value); }
+        public double DefaultValue { get => def; set => SetAndMarkDirty(ref def, value); }
         public Func<double, string> Format { get => format; set { format = value; MarkDirty(); } }
 
         public double Value
@@ -93,6 +93,22 @@ namespace FamiStudio
             Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
             e.MarkHandled();
         }
+
+#if FAMISTUDIO_MOBILE
+        protected override void OnTouchLongPress(PointerEventArgs e)
+        {
+            var grid  = container as Grid;
+            var scale = Utils.ParseFloatWithTrailingGarbage(format(1));
+
+            Platform.EditTextAsync("Enter Value:", Math.Round(Value * scale).ToString(), (s) =>
+            {
+                Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
+
+                if (grid != null)
+                    grid.UpdateControlValue(this, Value);
+            });
+        }
+#endif
 
         protected override void OnRender(Graphics g)
         {
