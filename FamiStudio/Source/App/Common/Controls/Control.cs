@@ -20,7 +20,8 @@ namespace FamiStudio
         protected bool canFocus = true;
         protected bool supportsDoubleClick = false;
         protected bool supportsTripleClick = false;
-        protected bool supportsLongPress = false; 
+        protected bool supportsLongPress = false;
+        protected string label;
         protected string tooltip;
         protected object userData;
         private bool tickEnabled;
@@ -263,6 +264,7 @@ namespace FamiStudio
         public virtual bool CanReceiveLongPress => true;
         public bool CanFocus { get => canFocus; }
         public bool IsContainedByMainWindow => ParentTopContainer != null;
+        public string Label { get => label; set { SetAndMarkDirty(ref label, value); } }
         public string ToolTip { get => tooltip; set { SetAndMarkDirty(ref tooltip, value); } }
         public object UserData { get => userData; set => userData = value; }
         public bool SupportsDoubleClick { get => supportsDoubleClick; set => supportsDoubleClick = value; }

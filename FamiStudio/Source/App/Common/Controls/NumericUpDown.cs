@@ -161,16 +161,13 @@ namespace FamiStudio
 #if FAMISTUDIO_MOBILE
         protected override void OnTouchLongPress(PointerEventArgs e)
         {
-            var grid = container as Grid;
+            Platform.EditTextAsync(label, Math.Round(Value * scale).ToString(), (s) =>
             {
-                Platform.EditTextAsync("", Math.Round(Value * scale).ToString(), (s) =>
-                {
-                    Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
+                Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
 
-                    if (grid != null)
-                        grid.UpdateControlValue(this, Value);
-                });
-            }
+                if (container is Grid grid)
+                    grid.UpdateControlValue(this, Value);
+            });
         }
 #endif
 

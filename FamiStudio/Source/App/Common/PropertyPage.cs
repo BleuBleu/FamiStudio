@@ -177,12 +177,13 @@ namespace FamiStudio
             return new ImageBox(image);
         }
 
-        private NumericUpDown CreateNumericUpDown(int value, int min, int max, int inc, string tooltip = null, float scale = 1.0f)
+        private NumericUpDown CreateNumericUpDown(int value, int min, int max, int inc, string label = null, string tooltip = null, float scale = 1.0f)
         {
             var upDown = new NumericUpDown(value, min, max, inc, scale);
 
             upDown.ValueChanged += UpDown_ValueChanged;
             upDown.ToolTip = tooltip;
+            upDown.Label = label;
 
             return upDown;
         }
@@ -366,7 +367,7 @@ namespace FamiStudio
                 {
                     type = PropertyType.NumericUpDown,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateNumericUpDown(value, min, max, increment, tooltip, scale)
+                    control = CreateNumericUpDown(value, min, max, increment, label, tooltip, scale)
                 });
             return properties.Count - 1;
         }
