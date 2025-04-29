@@ -648,7 +648,7 @@ namespace FamiStudio
             else if (e.Right)
             {
                 if (hoverRow != -1)
-                    selectedRow = hoverRow; // In case up or down were pressed between right-click and release.
+                    UpdateSelectedRow(hoverRow); // In case up or down were pressed between right-click and release.
 
                 if (hasAnyCheckBoxes)
                 {
