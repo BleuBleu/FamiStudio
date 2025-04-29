@@ -532,8 +532,9 @@ namespace FamiStudio
             {
                 HeaderCellClicked?.Invoke(this, col);
             }
-            
+
             SetAndMarkDirty(ref selectedRow, row);
+            UpdateHover(e);
         }
 
         private bool IsPointInButton(int x, int row, int col)
@@ -545,51 +546,55 @@ namespace FamiStudio
             return buttonX >= 0 && buttonX < rowHeight;
         }
 
+        private bool FindColumnIndexByType(ColumnType type, out int col)
+        {
+            col = Array.FindIndex(columns, c => c.Type == type);
+            if (col != -1)
+                return true;
+
+            return false;
+        }
+
         protected void EnterSliderValue()
         {
-            var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
-            if (col == -1)
-                return;
-
-            GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt, out _);
-            
-            var value = (int)data[selectedRow, col];
-            var scale = Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1));
-            var dlg   = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value, min, max, true, scale);
-            
-            dlg.ShowDialogAsync((r) =>
+            if (FindColumnIndexByType(ColumnType.Slider, out var col))
             {
-                if (r == DialogResult.OK)
+                GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt, out _);
+                
+                var value = (int)data[selectedRow, col];
+                var scale = Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1));
+                var dlg   = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value, min, max, true, scale);
+                
+                dlg.ShowDialogAsync((r) =>
                 {
-                    data[selectedRow, col] = dlg.Value;
-                    MarkDirty();
-                }
-            });
+                    if (r == DialogResult.OK)
+                    {
+                        data[selectedRow, col] = dlg.Value;
+                        MarkDirty();
+                    }
+                });
+            }
         }
 
         protected void ResetSliderDefaultValue()
         {
-            var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
-            if (col == -1)
-                return;
-
-            GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt, out var defaultValue);
-
-            if (defaultValue != null)
+            if (FindColumnIndexByType(ColumnType.Slider, out var col))
             {
-                var val = (int)(defaultValue / Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1)));
-                data[selectedRow, col] = val;
-                MarkDirty();
+                GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt, out var defaultValue);
+
+                if (defaultValue != null)
+                {
+                    var val = (int)(defaultValue / Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1)));
+                    data[selectedRow, col] = val;
+                    MarkDirty();
+                }
             }
         }
 
         protected void ResetSliderPreviousValue()
         {
-            var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
-            if (col == -1)
-                return;
-
-            data[selectedRow, col] = prevData[selectedRow, col];
+            if (FindColumnIndexByType(ColumnType.Slider, out var col))
+                data[selectedRow, col] = prevData[selectedRow, col];
         }
 
         protected override void OnPointerMove(PointerEventArgs e)
@@ -642,6 +647,9 @@ namespace FamiStudio
             }
             else if (e.Right)
             {
+                if (hoverRow != -1)
+                    selectedRow = hoverRow; // In case up or down were pressed between right-click and release.
+
                 if (hasAnyCheckBoxes)
                 {
                     App.ShowContextMenuAsync(new[]

@@ -661,19 +661,20 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+            if (!e.Handled)
             {
-                TryOpenOrValidate();
-            }
-
-            if (!e.Handled && e.Key == Keys.Escape)
-            {
-                Close(DialogResult.Cancel);
-            }
-            
-            if (!e.Handled && e.Key == Keys.Backspace && gridFiles.HasDialogFocus)
-            {
-                GoUpDirectoryLevel();
+                if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+                {
+                    TryOpenOrValidate();
+                }
+                else if (e.Key == Keys.Escape)
+                {
+                    Close(DialogResult.Cancel);
+                }
+                else if (e.Key == Keys.Backspace && gridFiles.HasDialogFocus)
+                {
+                    GoUpDirectoryLevel();
+                }
             }
         }
     }

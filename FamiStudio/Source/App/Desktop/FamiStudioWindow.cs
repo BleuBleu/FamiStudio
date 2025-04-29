@@ -695,10 +695,20 @@ namespace FamiStudio
         
         private void SendKeyUpOrDown(Control ctrl, KeyEventArgs e, bool down)
         {
-            if (down)
-                ctrl.SendKeyDown(e);
+            if (IsContextMenuActive)
+            {
+                if (down)
+                    container.ContextMenu.SendKeyDown(e);
+                else
+                    container.ContextMenu.SendKeyUp(e);
+            }
             else
-                ctrl.SendKeyUp(e);
+            {
+                if (down)
+                    ctrl.SendKeyDown(e);
+                else
+                    ctrl.SendKeyUp(e);
+            }
         }
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
