@@ -122,6 +122,22 @@ namespace FamiStudio
             }
         }
 
+        protected void SetAndFormatTextForScaleValue(double s)
+        {
+            text = s.ToString(numberScale % 1 == 0 ? "F0" : numberScale % 0.1f == 0 ? "F1" : "F2");
+        }
+
+        protected void IncrementNumericValue(int sign)
+        {
+            var raw   = Utils.ParseFloatWithTrailingGarbage(text);
+            var step  = numberInc * (ModifierKeys.IsShiftDown ? 10 : 1) * numberScale;
+            var value = Math.Clamp(Math.Round(raw + step * sign, 2), numberMin * numberScale, numberMax * numberScale);
+
+            SetAndFormatTextForScaleValue(value);
+
+            caretIndex = Math.Min(caretIndex, text.Length);
+        }
+
         protected virtual void OnTextChanged()
         {
             TextChanged?.Invoke(this);
@@ -300,6 +316,19 @@ namespace FamiStudio
                 ResetCaretBlink();
                 EnsureCaretVisible();
                 MarkDirty();
+            }
+            else if (e.Key == Keys.Up || e.Key == Keys.Down)
+            {
+                if (numeric)
+                {
+                    var sign = e.Key == Keys.Up ? 1 : -1;
+                    SaveUndoRedoState();
+                    ClearSelection();
+                    IncrementNumericValue(sign);
+                    OnTextChanged();
+                    UpdateScrollParams();
+                    MarkDirty();
+                }    
             }
             else if (e.Key == Keys.A && e.Control)
             {
