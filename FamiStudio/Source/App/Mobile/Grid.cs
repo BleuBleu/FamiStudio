@@ -321,7 +321,7 @@ namespace FamiStudio
                 }
                 case ColumnType.Slider:
                 {
-                    (ctrl as Slider).Value = (double)d;
+                    (ctrl as Slider).Value = (int)d;
                     break;
                 }
                 case ColumnType.NumericUpDown:

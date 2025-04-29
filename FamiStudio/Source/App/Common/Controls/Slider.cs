@@ -104,7 +104,7 @@ namespace FamiStudio
             Platform.EditTextAsync(name, ((int)Math.Round(Value * scale)).ToString(), (s) =>
             {
                 Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
-                grid?.UpdateControlValue(this, Value);
+                grid?.UpdateControlValue(this, (int)Value);
             });
         }
 #endif
