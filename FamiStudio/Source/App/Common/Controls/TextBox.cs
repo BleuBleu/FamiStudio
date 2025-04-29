@@ -33,6 +33,7 @@ namespace FamiStudio
         protected int numberMin;
         protected int numberMax;
         protected int numberInc;
+        protected float numberScale;
         protected bool mouseSelecting;
         protected bool caretBlink = true;
         protected bool numeric;
@@ -70,7 +71,7 @@ namespace FamiStudio
             supportsTripleClick = true;
         }
 
-        public TextBox(int value, int minVal, int maxVal, int increment)
+        public TextBox(int value, int minVal, int maxVal, int increment, float scale)
         {
             height = DpiScaling.ScaleForWindow(24);
             text = value.ToString(CultureInfo.InvariantCulture);
@@ -78,6 +79,7 @@ namespace FamiStudio
             numberMin = minVal;
             numberMax = maxVal;
             numberInc = increment;
+            numberScale = scale;
         }
 
         public string Text
@@ -99,15 +101,18 @@ namespace FamiStudio
 
         protected string FilterString(string s)
         {
-            return numeric ? new string(s.Where(c => char.IsDigit(c) || c == '-').ToArray()) : s;
+            return numeric ? new string(s.Where(c => char.IsDigit(c) || c == '-' || c == '.').ToArray()) : s;
         }
 
         protected void ClampNumber()
         {
             if (numeric)
             {
-                var val = Utils.ParseIntWithTrailingGarbage(text);
-                var clampedVal = Utils.Clamp(Utils.RoundDown(val, numberInc), numberMin, numberMax);
+                var val = text.Contains('.') || text.Contains(',')
+                        ? Utils.ParseFloatWithTrailingGarbage(text) 
+                        : Utils.ParseIntWithTrailingGarbage(text);
+
+                var clampedVal = Utils.Clamp(Utils.RoundDown((int)Math.Round(val / numberScale), numberInc), numberMin, numberMax);
                 if (SetAndMarkDirty(ref text, clampedVal.ToString(CultureInfo.InvariantCulture)))
                 {
                     caretIndex = Utils.Clamp(caretIndex, 0, text.Length);

@@ -44,17 +44,21 @@ namespace FamiStudio
         {
             if (Platform.IsMobile)
             {
-                Platform.EditTextAsync(param.Name, param.GetValue().ToString(), (s) => 
+                var scale = param.GetScaleValue();
+                var value = param.GetValue();
+                var scaledValue = Math.Round(value * scale, 2);
+
+                Platform.EditTextAsync(param.Name, scaledValue.ToString(), (s) => 
                 {
                     InvokeValueChangeStart();
-                    param.SetValue(param.SnapAndClampValue(Utils.ParseIntWithTrailingGarbage(s)));
+                    param.SetValue(param.SnapAndClampValue((int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale)));
                     InvokeValueChangeEnd();
                     MarkDirty();
                 });
             }
             else
             {
-                var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), param.Name, param.GetValue(), param.GetMinValue(), param.GetMaxValue(), true);
+                var dlg = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), param.Name, param.GetValue(), param.GetMinValue(), param.GetMaxValue(), true, param.GetScaleValue());
                 dlg.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)

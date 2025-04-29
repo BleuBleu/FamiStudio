@@ -13,6 +13,7 @@ namespace FamiStudio
         private int min;
         private int max = 10;
         private int inc = 1;
+        private float scale = 1.0f;
         private TextureAtlasRef[] bmp;
         private float captureDuration;
         private int captureButton = -1;
@@ -20,12 +21,13 @@ namespace FamiStudio
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
-        public NumericUpDown(int value, int minVal, int maxVal, int increment) : base(value, minVal, maxVal, increment)
+        public NumericUpDown(int value, int minVal, int maxVal, int increment, float scale = 1.0f) : base(value, minVal, maxVal, increment, scale)
         {
             val = value;
             min = minVal;
             max = maxVal;
             inc = increment;
+            this.scale = scale;
             Debug.Assert(val % increment == 0);
             Debug.Assert(min % increment == 0);
             Debug.Assert(max % increment == 0);
@@ -149,7 +151,6 @@ namespace FamiStudio
                 captureDuration = 0;
                 Value += captureButton == 0 ? -inc : inc;
                 CapturePointer();
-                SetTickEnabled(true);
             }
             else
             {
@@ -157,15 +158,38 @@ namespace FamiStudio
             }
         }
 
+#if FAMISTUDIO_MOBILE
+        protected override void OnTouchLongPress(PointerEventArgs e)
+        {
+            var grid = container as Grid;
+            {
+                Platform.EditTextAsync("Enter Value:", Math.Round(Value * scale).ToString(), (s) =>
+                {
+                    Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
+
+                    if (grid != null)
+                        grid.UpdateControlValue(this, Value);
+                });
+            }
+        }
+#endif
+
+        private void SetAndScaleTextBoxValue()
+        {
+            var v = scale == 1.0f ? val : (float)Math.Round(val * scale, 2);
+            text = v.ToString(scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2");
+        }
+
         private void GetValueFromTextBox()
         {
             ClampNumber();
             val = Utils.ParseIntWithTrailingGarbage(text);
+            SetTextBoxValue();
         }
 
         private void SetTextBoxValue()
         {
-            text = val.ToString(CultureInfo.InvariantCulture);
+            SetAndScaleTextBoxValue();
             SelectAll();
             caretIndex = text.Length;
         }
@@ -180,6 +204,7 @@ namespace FamiStudio
         protected override void OnLostDialogFocus()
         {
             GetValueFromTextBox();
+            SetTickEnabled(false);
         }
 
         protected override void OnMouseDoubleClick(PointerEventArgs e)
@@ -202,7 +227,6 @@ namespace FamiStudio
             {
                 captureButton = -1;
                 ReleasePointer();
-                SetTickEnabled(false);
                 MarkDirty();
             }
             else

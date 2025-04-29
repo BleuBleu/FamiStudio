@@ -148,10 +148,10 @@ namespace FamiStudio
             grid.SetRowColor(rowIdx, color);
         }
 
-        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<double, string> fmt)
+        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<double, string> fmt, float? defaultValue = null)
         {
             var grid = properties[propIdx].control as Grid;
-            grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);
+            grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt, defaultValue);
         }
 
         public void UpdateGrid(int idx, object[,] data, string[] columnNames = null)

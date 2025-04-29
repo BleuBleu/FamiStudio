@@ -12,6 +12,8 @@ namespace FamiStudio
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
 
+        private bool init;
+
         private int margin = DpiScaling.ScaleForWindow(4);
 
         private ColumnDesc[] columns;
@@ -28,6 +30,7 @@ namespace FamiStudio
             public int MinValue;
             public int MaxValue;
             public Func<double, string> Formatter;
+            public float? DefaultValue;
         }
 
         public Grid(Container parent, ColumnDesc[] cols, object[,] d, GridOptions opts = GridOptions.None)
@@ -317,7 +320,7 @@ namespace FamiStudio
                 }
                 case ColumnType.Slider:
                 {
-                    (ctrl as Slider).Value = (int)d;
+                    (ctrl as Slider).Value = (double)d;
                     break;
                 }
                 case ColumnType.NumericUpDown:
@@ -366,12 +369,12 @@ namespace FamiStudio
             }
         }
 
-        public void OverrideCellSlider(int row, int col, int min, int max, Func<double, string> fmt)
+        public void OverrideCellSlider(int row, int col, int min, int max, Func<double, string> fmt, float? defaultValue)
         {
             if (cellSliderData == null)
                 cellSliderData = new CellSliderData[data.GetLength(0), data.GetLength(1)];
 
-            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt };
+            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt, DefaultValue = defaultValue };
 
             var slider = gridControls[row, col] as Slider;
 
@@ -380,7 +383,14 @@ namespace FamiStudio
                 slider.Min = min;
                 slider.Max = max;
                 slider.Format = fmt;
+                slider.DefaultValue = (float)defaultValue;
             }
+        }
+
+        public void UpdateControlValue(Control sender, object val)
+        {
+            if (GetGridCoordForControl(sender, out var row, out var col))
+                SetData(row, col, val);
         }
 
         protected override void OnResize(EventArgs e)
@@ -390,7 +400,10 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            RecreateAllControls();
+            if (!init)
+                RecreateAllControls(); // Prevents EditTextAsync from recreating the controls and not working.
+
+            init = true;
         }
 
         public void UpdateData(object[,] newData)

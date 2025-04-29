@@ -599,7 +599,7 @@ namespace FamiStudio
             path = p;
             gridFiles.UpdateData(GetGridData(files));
             gridFiles.ResetScroll();
-            gridFiles.ResetRowHighlight();
+            gridFiles.ResetSelectedRow();
             UpdateColumnNames();
             UpdatePathBar();
         }

@@ -10,7 +10,7 @@ namespace FamiStudio
         private int minValue;
         private int maxValue;
 
-        public unsafe ValueInputDialog(FamiStudioWindow win, Point pt, string paramName, int value, int min, int max, bool leftAlign)
+        public unsafe ValueInputDialog(FamiStudioWindow win, Point pt, string paramName, int value, int min, int max, bool leftAlign, float scale = 1.0f)
         {
             minValue = min;
             maxValue = max;
@@ -25,7 +25,7 @@ namespace FamiStudio
             }
             else
             {
-                dialog.Properties.AddNumericUpDown(null, value, min, max, 1); // 0
+                dialog.Properties.AddNumericUpDown(null, value, min, max, 1, null, scale); // 0
             }
 
             dialog.Properties.Build();
