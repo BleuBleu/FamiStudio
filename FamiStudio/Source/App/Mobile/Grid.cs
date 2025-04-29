@@ -400,7 +400,7 @@ namespace FamiStudio
                 .Select((column, index) => new { column, index })
                 .FirstOrDefault(x => x.column.Type == ColumnType.Label)?.index ?? -1;
 
-            if (GetGridCoordForControl(sender, out var row, out _))
+            if (GetGridCoordForControl(sender, out var row, out _) && col != -1)
                 return (string)data[row, col];
 
             return string.Empty;
