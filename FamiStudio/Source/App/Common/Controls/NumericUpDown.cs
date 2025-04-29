@@ -163,7 +163,7 @@ namespace FamiStudio
         {
             var grid = container as Grid;
             {
-                Platform.EditTextAsync("Enter Value:", Math.Round(Value * scale).ToString(), (s) =>
+                Platform.EditTextAsync("", Math.Round(Value * scale).ToString(), (s) =>
                 {
                     Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
 

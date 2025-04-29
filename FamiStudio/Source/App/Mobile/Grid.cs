@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -391,6 +392,18 @@ namespace FamiStudio
         {
             if (GetGridCoordForControl(sender, out var row, out var col))
                 SetData(row, col, val);
+        }
+
+        public string GetControlLabel(Control sender)
+        {
+            var col = columns
+                .Select((column, index) => new { column, index })
+                .FirstOrDefault(x => x.column.Type == ColumnType.Label)?.index ?? -1;
+
+            if (GetGridCoordForControl(sender, out var row, out _))
+                return (string)data[row, col];
+
+            return string.Empty;
         }
 
         protected override void OnResize(EventArgs e)

@@ -99,13 +99,12 @@ namespace FamiStudio
         {
             var grid  = container as Grid;
             var scale = Utils.ParseFloatWithTrailingGarbage(format(1));
+            var name  = grid?.GetControlLabel(this) ?? string.Empty;
 
-            Platform.EditTextAsync("Enter Value:", Math.Round(Value * scale).ToString(), (s) =>
+            Platform.EditTextAsync(name, ((int)Math.Round(Value * scale)).ToString(), (s) =>
             {
                 Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
-
-                if (grid != null)
-                    grid.UpdateControlValue(this, Value);
+                grid?.UpdateControlValue(this, Value);
             });
         }
 #endif
