@@ -101,7 +101,7 @@ namespace FamiStudio
 
         protected string FilterString(string s)
         {
-            return numeric ? new string(s.Where(c => char.IsDigit(c) || c == '-' || c == '.').ToArray()) : s;
+            return numeric ? new string(s.Where(c => char.IsDigit(c) || c == '-' || c == '.' || c == ',').ToArray()) : s;
         }
 
         protected void ClampNumber()

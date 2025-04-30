@@ -146,7 +146,7 @@ namespace FamiStudio
 
         public static float ParseFloatWithTrailingGarbage(string s)
         {
-            if (s == null)
+            if (string.IsNullOrEmpty(s))
             {
                 return 0;
             }
@@ -157,8 +157,11 @@ namespace FamiStudio
             int start = negative ?  1 : 0;
             int sign  = negative ? -1 : 1;
             int idx   = start;
-            
+
             s = s.Trim();
+
+            if (s[start] == '.' || s[start] == ',')
+                s = s.Insert(start, "0");
 
             for (; idx < Math.Min(s.Length, 7); idx++)
             {

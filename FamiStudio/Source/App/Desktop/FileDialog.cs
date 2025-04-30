@@ -316,7 +316,7 @@ namespace FamiStudio
         {
             if (left)
             {
-                UpdateText(rowIndex);
+                UpdateTextByIndex(rowIndex);
             }
         }
 
@@ -342,7 +342,7 @@ namespace FamiStudio
 
         private void GridFiles_SelectedRowUpdated(Control sender, int rowIndex)
         {
-            UpdateText(rowIndex);
+            UpdateTextByIndex(rowIndex);
             selectedIndex = rowIndex;
         }
 
@@ -445,6 +445,14 @@ namespace FamiStudio
             }
         }
 
+        private void ToggleFocus()
+        {
+            if (gridFiles.HasDialogFocus && textFile.Enabled)
+                textFile.GrabDialogFocus();
+            else if (textFile.HasDialogFocus)
+                gridFiles.GrabDialogFocus();
+        }
+
         private void AutoFillText()
         {
             var input = textFile.Text;
@@ -457,7 +465,7 @@ namespace FamiStudio
             }
         }
 
-        private void UpdateText(int index)
+        private void UpdateTextByIndex(int index)
         {
             var f = files[index];
             textFile.Text = f.Name;
@@ -675,6 +683,10 @@ namespace FamiStudio
                 else if (e.Key == Keys.Backspace && gridFiles.HasDialogFocus)
                 {
                     GoUpDirectoryLevel();
+                }
+                else if (e.Key == Keys.Tab)
+                {
+                    ToggleFocus();
                 }
             }
         }

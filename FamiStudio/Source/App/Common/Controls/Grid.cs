@@ -585,7 +585,7 @@ namespace FamiStudio
 
                 if (defaultValue != null)
                 {
-                    var val = (int)(defaultValue / Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1)));
+                    var val = (int)(defaultValue / Utils.ParseFloatWithTrailingGarbage(fmt(1)));
                     data[selectedRow, col] = val;
                     MarkDirty();
                 }
@@ -1003,7 +1003,7 @@ namespace FamiStudio
                 if (enabled && selectedRow >= 0 && (selectedRow - scroll) >= 0 && (selectedRow - scroll) < numItemRows && selectedRow < data.GetLength(0))
                 {
                     var highlightColor = Color.FromArgb(70, 0, 128, 255); // Blue
-                    
+
                     c.FillRectangle(0, (numHeaderRows + selectedRow - scroll) * rowHeight, width, (numHeaderRows + selectedRow - scroll + 1) * rowHeight, highlightColor);
                 }
             }
