@@ -171,22 +171,22 @@ namespace FamiStudio
         }
 #endif
 
-        private void SetAndScaleTextBoxValue()
-        {
-            var v = scale == 1.0f ? val : (float)Math.Round(val * scale, 2);
-            text = v.ToString(scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2");
-        }
-
         private void GetValueFromTextBox()
         {
             ClampNumber();
-            val = Utils.ParseIntWithTrailingGarbage(text);
-            SetTextBoxValue();
+            val = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(text) / scale);
+        }
+
+        private void ScaleAndSetTextBoxValue()
+        {
+            var newVal = scale == 1.0f ? val : (float)Math.Round(val * scale, 2);
+            var format = scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2";
+            text = newVal.ToString(format);
         }
 
         private void SetTextBoxValue()
         {
-            SetAndScaleTextBoxValue();
+            ScaleAndSetTextBoxValue();
             SelectAll();
             caretIndex = text.Length;
         }

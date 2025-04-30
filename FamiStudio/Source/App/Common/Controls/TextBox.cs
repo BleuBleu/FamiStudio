@@ -112,8 +112,11 @@ namespace FamiStudio
                         ? Utils.ParseFloatWithTrailingGarbage(text) 
                         : Utils.ParseIntWithTrailingGarbage(text);
 
-                var clampedVal = Utils.Clamp(Utils.RoundDown((int)Math.Round(val / numberScale), numberInc), numberMin, numberMax);
-                if (SetAndMarkDirty(ref text, clampedVal.ToString(CultureInfo.InvariantCulture)))
+                var snap   = Utils.RoundDown((int)Math.Round(val / numberScale), numberInc);
+                var clamp  = Utils.Clamp(snap * numberScale, numberMin * numberScale, numberMax * numberScale);
+                var format = numberScale % 1 == 0 ? "F0" : numberScale % 0.1f == 0 ? "F1" : "F2";
+
+                if (SetAndMarkDirty(ref text, clamp.ToString(format, CultureInfo.InvariantCulture)))
                 {
                     caretIndex = Utils.Clamp(caretIndex, 0, text.Length);
                     selectionStart = -1;
