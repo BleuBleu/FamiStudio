@@ -130,7 +130,7 @@ namespace FamiStudio
             gridFiles.CellClicked += GridFiles_CellClicked;
             gridFiles.CellDoubleClicked += GridFiles_CellDoubleClicked;
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
-            gridFiles.selectedRowUpdated += GridFiles_SelectedRowUpdated;
+            gridFiles.SelectedRowUpdated += GridFiles_SelectedRowUpdated;
             y += gridFiles.Height + margin;
 
             textFile = new TextBox("");
@@ -611,15 +611,15 @@ namespace FamiStudio
 
             if (resetSearch)
             {
-                if (!string.IsNullOrWhiteSpace(keyChar))
-                {
-                    searchString = keyChar;
-                    selectedIndex = 0;
-                }
+                if (string.IsNullOrWhiteSpace(keyChar))
+                    return;
+
+                searchString = keyChar;
+                selectedIndex = 0;
             }
             else if (searchString == keyChar)
             {
-                selectedIndex++; 
+                selectedIndex++;
             }
             else
             {
@@ -627,6 +627,7 @@ namespace FamiStudio
             }
 
             prevTime = now;
+            Debug.Assert(selectedIndex >= 0 && selectedIndex < files.Count);
 
             // Make sure the search wraps when starting on a non-zero value.
             for (var offset = 0; offset < files.Count; offset++)

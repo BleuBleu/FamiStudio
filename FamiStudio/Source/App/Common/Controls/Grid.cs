@@ -12,14 +12,14 @@ namespace FamiStudio
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
-        public delegate void selectedRowUpdatedDelegate(Control sender, int rolIndex);
+        public delegate void selectedRowUpdatedDelegate(Control sender, int rowIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
-        public event selectedRowUpdatedDelegate selectedRowUpdated;
+        public event selectedRowUpdatedDelegate SelectedRowUpdated;
 
         private class CellSliderData
         {
@@ -347,7 +347,7 @@ namespace FamiStudio
                 scroll = Math.Min(newScroll, ItemCount - numItemRows);
             }
 
-            selectedRowUpdated?.Invoke(this, index);
+            SelectedRowUpdated?.Invoke(this, index);
             SetAndMarkDirty(ref selectedRow, index);
         }
 
@@ -533,6 +533,7 @@ namespace FamiStudio
                 HeaderCellClicked?.Invoke(this, col);
             }
 
+            SelectedRowUpdated?.Invoke(this, row);
             SetAndMarkDirty(ref selectedRow, row);
             UpdateHover(e);
         }
