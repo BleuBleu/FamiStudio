@@ -125,17 +125,24 @@ namespace FamiStudio
         protected void SetAndFormatTextForScaleValue(double s)
         {
             text = s.ToString(numberScale % 1 == 0 ? "F0" : numberScale % 0.1f == 0 ? "F1" : "F2");
+            caretIndex = Math.Min(caretIndex, text.Length);
         }
 
         protected void IncrementNumericValue(int sign)
         {
-            var raw   = Utils.ParseFloatWithTrailingGarbage(text);
+            var prev  = Utils.ParseFloatWithTrailingGarbage(text);
             var step  = numberInc * (ModifierKeys.IsShiftDown ? 10 : 1) * numberScale;
-            var value = Math.Clamp(Math.Round(raw + step * sign, 2), numberMin * numberScale, numberMax * numberScale);
+            var value = Math.Clamp(Math.Round(prev + step * sign, 2), numberMin * numberScale, numberMax * numberScale);
 
-            SetAndFormatTextForScaleValue(value);
-
-            caretIndex = Math.Min(caretIndex, text.Length);
+            if (value != prev)
+            {
+                SaveUndoRedoState();
+                ClearSelection();
+                SetAndFormatTextForScaleValue(value);
+                OnTextChanged();
+                UpdateScrollParams();
+                MarkDirty();
+            }
         }
 
         protected virtual void OnTextChanged()
@@ -322,12 +329,7 @@ namespace FamiStudio
                 if (numeric)
                 {
                     var sign = e.Key == Keys.Up ? 1 : -1;
-                    SaveUndoRedoState();
-                    ClearSelection();
                     IncrementNumericValue(sign);
-                    OnTextChanged();
-                    UpdateScrollParams();
-                    MarkDirty();
                 }    
             }
             else if (e.Key == Keys.A && e.Control)
@@ -450,8 +452,12 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(str))
             {
-                SaveUndoRedoState();
-                DeleteSelection();
+                // Deleting selection saves the state, we don't need to save it twice.
+                if (selectionLength > 0)
+                    DeleteSelection();
+                else
+                    SaveUndoRedoState();
+
                 if (maxLength > 0 && text.Length + str.Length > maxLength)
                     str = str.Substring(0, Math.Min(str.Length, Math.Max(0, maxLength - text.Length)));
                 text = text.Insert(caretIndex, str);
@@ -541,6 +547,7 @@ namespace FamiStudio
             if (selectionLength > 0)
             {
                 SaveUndoRedoState();
+
                 text = RemoveStringRange(selectionStart, selectionLength);
 
                 if (caretIndex > selectionStart)
