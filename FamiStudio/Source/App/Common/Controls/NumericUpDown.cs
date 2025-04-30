@@ -191,6 +191,16 @@ namespace FamiStudio
             caretIndex = text.Length;
         }
 
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (!e.Handled && (e.Key == Keys.Up || e.Key == Keys.Down))
+            {
+                GetValueFromTextBox();
+                Value += e.Key == Keys.Up ? inc : -inc;
+            }
+        }
+
         protected override void OnAcquiredDialogFocus()
         {
             SelectAll();

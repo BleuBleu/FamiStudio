@@ -131,23 +131,6 @@ namespace FamiStudio
             caretIndex = Math.Min(caretIndex, text.Length);
         }
 
-        protected void IncrementNumericValue(int sign)
-        {
-            var prev  = Utils.ParseFloatWithTrailingGarbage(text);
-            var step  = numberInc * (ModifierKeys.IsShiftDown ? 10 : 1) * numberScale;
-            var value = Math.Clamp(Math.Round(prev + step * sign, 2), numberMin * numberScale, numberMax * numberScale);
-
-            if (value != prev)
-            {
-                SaveUndoRedoState();
-                ClearSelection();
-                SetAndFormatTextForScaleValue(value);
-                OnTextChanged();
-                UpdateScrollParams();
-                MarkDirty();
-            }
-        }
-
         protected virtual void OnTextChanged()
         {
             TextChanged?.Invoke(this);
@@ -326,14 +309,6 @@ namespace FamiStudio
                 ResetCaretBlink();
                 EnsureCaretVisible();
                 MarkDirty();
-            }
-            else if (e.Key == Keys.Up || e.Key == Keys.Down)
-            {
-                if (numeric)
-                {
-                    var sign = e.Key == Keys.Up ? 1 : -1;
-                    IncrementNumericValue(sign);
-                }    
             }
             else if (e.Key == Keys.A && e.Control)
             {
