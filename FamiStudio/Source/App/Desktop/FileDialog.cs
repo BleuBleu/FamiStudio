@@ -65,7 +65,7 @@ namespace FamiStudio
         private string path;
         private string[] extensions;
         private List<FileEntry> files = new List<FileEntry>();
-        private int selectedIndex;
+        private int searchIndex;
         private string searchString;
         private DateTime prevTime;
 
@@ -209,10 +209,7 @@ namespace FamiStudio
             if (pathIndex > 0)
             {
                 pathIndex--;
-                if (pathHistory[pathIndex] != null)
                     GoToPath(pathHistory[pathIndex], false);
-                else
-                    GoToComputer();
             }
         }
 
@@ -221,10 +218,7 @@ namespace FamiStudio
             if (pathIndex < pathHistory.Count - 1)
             {
                 pathIndex++;
-                if (pathHistory[pathIndex] != null)
-                    GoToPath(pathHistory[pathIndex], false);
-                else
-                    GoToComputer();
+                GoToPath(pathHistory[pathIndex], false);
             }
         }
 
@@ -398,7 +392,7 @@ namespace FamiStudio
         private void GridFiles_SelectedRowUpdated(Control sender, int rowIndex)
         {
             UpdateTextByIndex(rowIndex);
-            selectedIndex = rowIndex;
+            searchIndex = rowIndex;
         }
 
         private void TryOpenOrValidate()
@@ -409,8 +403,8 @@ namespace FamiStudio
 
         private bool OpenFolderOrDrive()
         {
-            var f = (selectedIndex >= 0 && gridFiles.HasDialogFocus)
-                ? files[selectedIndex]
+            var f = (searchIndex >= 0 && gridFiles.HasDialogFocus)
+                ? files[searchIndex]
                 : textFile.HasDialogFocus
                     ? files.FirstOrDefault(file => file.Name.Contains(textFile.Text, StringComparison.OrdinalIgnoreCase))
                     : null;
@@ -575,6 +569,7 @@ namespace FamiStudio
             var downloadDir  = Path.Combine(userDir, "Downloads");
 
             files.Clear();
+            searchIndex = -1;
 
             if (Directory.Exists(userDir))
                 files.Add(new FileEntry("FileHome", "Home", userDir, EntryType.Directory));
@@ -636,8 +631,14 @@ namespace FamiStudio
         
         private void GoToPath(string p, bool stack = true)
         {
+            if (string.IsNullOrEmpty(p))
+            {
+                GoToComputer();
+                return;
+            }
+
             files.Clear();
-            selectedIndex = -1;
+            searchIndex = -1;
 
             var dirInfo = new DirectoryInfo(p);
 
@@ -695,11 +696,11 @@ namespace FamiStudio
                     return;
 
                 searchString = keyChar;
-                selectedIndex = 0;
+                searchIndex = 0;
             }
             else if (searchString == keyChar)
             {
-                selectedIndex++;
+                searchIndex++;
             }
             else
             {
@@ -707,18 +708,18 @@ namespace FamiStudio
             }
 
             prevTime = now;
-            Debug.Assert(selectedIndex >= 0 && selectedIndex < files.Count);
+            Debug.Assert(searchIndex >= 0 && searchIndex < files.Count);
 
             // Make sure the search wraps when starting on a non-zero value.
             for (var offset = 0; offset < files.Count; offset++)
             {
-                var i = (selectedIndex + offset) % files.Count;
+                var i = (searchIndex + offset) % files.Count;
 
                 if (files[i].Name.StartsWith(searchString, StringComparison.CurrentCultureIgnoreCase))
                 {
                     textFile.Text = files[i].Name;
                     gridFiles.UpdateSelectedRow(i);
-                    selectedIndex = i;
+                    searchIndex = i;
                     break;
                 }
 
