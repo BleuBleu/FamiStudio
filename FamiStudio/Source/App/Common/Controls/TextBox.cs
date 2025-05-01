@@ -259,10 +259,11 @@ namespace FamiStudio
 
         protected int FindWordStart(int c, int dir)
         {
-            // Ensure the selection starts within bounds.
-            c = Math.Clamp(c, 0, text.Length - 1); 
+            if (string.IsNullOrEmpty(text))
+                return 0;
 
-            // If selection starts on whitespace, select whitespace.
+            c = Math.Clamp(c, 0, text.Length - 1); 
+            
             var isWhiteSpace = char.IsWhiteSpace(text[c]);
 
             if (dir > 0)
