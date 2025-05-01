@@ -4413,7 +4413,7 @@ namespace FamiStudio
             dlg.Properties.AddDropDownList(PitchLabel.Colon, strings, strings[mapping.Pitch]); // 0
             dlg.Properties.AddCheckBox(LoopLabel.Colon, mapping.Loop); // 1
             dlg.Properties.AddCheckBox(OverrideDMCInitialValueLabel.Colon, mapping.OverrideDmcInitialValue); // 2
-            dlg.Properties.AddNumericUpDown(DMCInitialValueDiv2Label.Colon, mapping.DmcInitialValueDiv2, 0, 63, 1); // 3
+            dlg.Properties.AddNumericUpDown(DMCInitialValueDiv2Label.Colon, mapping.DmcInitialValueDiv2, 0, 63, 1, 32); // 3
             dlg.Properties.Build();
             dlg.Properties.SetPropertyEnabled(3, mapping.OverrideDmcInitialValue);
             dlg.Properties.PropertyChanged += DPCMSampleMapping_PropertyChanged;
@@ -7903,7 +7903,8 @@ namespace FamiStudio
             var val = note.GetEffectValue(selectedEffectIdx);
             var min = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var max = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
-            var dlg = new ValueInputDialog(ParentWindow, new Point(left + x, top + y), EffectType.LocalizedNames[selectedEffectIdx], val, min, max, false);
+            var def = Note.GetEffectDefaultValue(Song, selectedEffectIdx);
+            var dlg = new ValueInputDialog(ParentWindow, new Point(left + x, top + y), EffectType.LocalizedNames[selectedEffectIdx], val, min, max, def, false);
 
             dlg.ShowDialogAsync((r) =>
             {

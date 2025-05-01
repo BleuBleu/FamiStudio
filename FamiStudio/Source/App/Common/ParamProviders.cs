@@ -36,6 +36,7 @@ namespace FamiStudio
         public CustomDrawDelegate CustomDraw;
         public GetValueDelegate GetMinValue;
         public GetValueDelegate GetMaxValue;
+        public GetValueDelegate GetDefaultValue;
         public GetValueFloatDelegate GetScaleValue;
 
         public bool HasTab => !string.IsNullOrEmpty(TabName);
@@ -63,6 +64,7 @@ namespace FamiStudio
             GetValueString = () => GetValue().ToString();
             GetMinValue = () => MinValue;
             GetMaxValue = () => MaxValue;
+            GetDefaultValue = () => DefaultValue;
             GetScaleValue = () => ScaleValue;
             IsEnabled = () => true;
         }

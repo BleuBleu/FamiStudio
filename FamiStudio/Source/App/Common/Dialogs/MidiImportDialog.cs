@@ -60,7 +60,7 @@ namespace FamiStudio
 
                 dialog = new PropertyDialog(win, MidiImportTitle, 500);
                 dialog.Properties.AddDropDownList(PolyphonyBehaviorLabel.Colon, Localization.ToStringArray(MidiPolyphonyBehavior.LocalizedNames), MidiPolyphonyBehavior.LocalizedNames[0]); // 0
-                dialog.Properties.AddNumericUpDown(MeasurePerPatternLabel.Colon, 2, 1, 4, 1, MeasurePerPatternTooltip); // 1
+                dialog.Properties.AddNumericUpDown(MeasurePerPatternLabel.Colon, 2, 1, 4, 1, 2, MeasurePerPatternTooltip); // 1
                 dialog.Properties.AddCheckBox(ImportVelocityAsVolume.Colon, true); // 2
                 dialog.Properties.AddCheckBox(CreatePALProject.Colon, false); // 3
                 dialog.Properties.AddCheckBoxList(ExpansionsLabel.Colon, expNames, new bool[expNames.Length], null); // 4

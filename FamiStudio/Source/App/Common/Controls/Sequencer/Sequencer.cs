@@ -2274,7 +2274,7 @@ namespace FamiStudio
             var dialog = new PropertyDialog(ParentWindow, PasteSpecialTitle, 200);
             dialog.Properties.AddLabelCheckBox(InsertLabel, false, 0, InsertTooltip); // 0
             dialog.Properties.AddLabelCheckBox(ExtendSongLabel, false, 0, ExtendSongTooltip); // 1
-            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, RepeatTooltip); // 2
+            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, 1, RepeatTooltip); // 2
             dialog.Properties.SetPropertyEnabled(1, false);
             dialog.Properties.PropertyChanged += PasteSpecialDialog_PropertyChanged;
             dialog.Properties.Build();

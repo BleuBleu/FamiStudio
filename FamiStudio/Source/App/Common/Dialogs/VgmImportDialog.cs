@@ -26,13 +26,13 @@ namespace FamiStudio
 
             filename = file;
             dialog = new PropertyDialog(win, VgmImportTitle, 400);
-            dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 40, Pattern.MaxLength, 1);  // 0
-            dialog.Properties.AddNumericUpDown(FramesToSkip.Colon, 0, 0, 100, 1);                    // 1
-            dialog.Properties.AddNumericUpDown(TuningLabel.Colon, 440, 300, 580, 1);                 // 2
-            dialog.Properties.AddCheckBox(AdjustClock.Colon, true);                                  // 3
-            dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);                        // 4
-            dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false);                     // 5
-            dialog.Properties.AddCheckBox(Ym2149AsEPSM.Colon, false);                                // 6
+            dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 40, Pattern.MaxLength, 1, 16); // 0
+            dialog.Properties.AddNumericUpDown(FramesToSkip.Colon, 0, 0, 100, 1, 0);                    // 1
+            dialog.Properties.AddNumericUpDown(TuningLabel.Colon, 440, 300, 580, 1, 440);               // 2
+            dialog.Properties.AddCheckBox(AdjustClock.Colon, true);                                     // 3
+            dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);                           // 4
+            dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false);                        // 5
+            dialog.Properties.AddCheckBox(Ym2149AsEPSM.Colon, false);                                   // 6
             dialog.Properties.Build();
         }
 

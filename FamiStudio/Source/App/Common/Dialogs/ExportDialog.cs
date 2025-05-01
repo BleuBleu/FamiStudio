@@ -381,9 +381,9 @@ namespace FamiStudio
                     page.AddDropDownList(SampleRateLabel.Colon, new[] { "11025", "22050", "44100", "48000" }, "44100", SampleRateTooltip); // 2
                     page.AddDropDownList(BitRateLabel.Colon, new[] { "96", "112", "128", "160", "192", "224", "256" }, "192", AudioBitRateTooltip); // 3
                     page.AddDropDownList(ModeLabel.Colon, new string[] { LoopNTimesOption, DurationOption }, LoopNTimesOption, LoopModeTooltip); // 4
-                    page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 10, 1, LoopCountTooltip); // 5
-                    page.AddNumericUpDown(DurationSecLabel.Colon, 120, 1, 1000, 1, DurationTooltip); // 6
-                    page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, DelayTooltip); // 7
+                    page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 10, 1, 1, LoopCountTooltip); // 5
+                    page.AddNumericUpDown(DurationSecLabel.Colon, 120, 1, 1000, 1, 120, DurationTooltip); // 6
+                    page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, 0, DelayTooltip); // 7
                     page.AddCheckBox(SeparateChannelFilesLabel.Colon, false, SeperateFilesTooltip); // 8
                     page.AddCheckBox(SeparateIntroFileLabel.Colon, false, SeperateIntroTooltip); // 9
                     page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 10
@@ -412,15 +412,15 @@ namespace FamiStudio
                         page.AddDropDownList(FrameRateLabel.Colon, new[] { "50/60 FPS", "25/30 FPS" }, "50/60 FPS", FpsTooltip); // 3
                         page.AddDropDownList(AudioBitRateLabel.Colon, new[] { "64", "96", "112", "128", "160", "192", "224", "256", "320" }, "192", AudioBitRateTooltip); // 4
                         page.AddDropDownList(VideoBitRateLabel.Colon, new[] { "250", "500", "750", "1000", "1500", "2000", "3000", "4000", "5000", "8000", "10000", "20000", "30000" }, "8000", VideoBitRateTooltip); // 5
-                        page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, LoopCountTooltip); // 6
-                        page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, DelayTooltip); // 7
-                        page.AddNumericUpDown(OscColumnsLabel.Colon, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), 1, 5, 1, OscColumnsTooltip); // 8
-                        page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, OscWindowTooltip); // 9
-                        page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, OscThicknessTooltip); // 10
+                        page.AddNumericUpDown(LoopCountLabel.Colon, 1, 1, 8, 1, 1, LoopCountTooltip); // 6
+                        page.AddNumericUpDown(AudioDelayMsLabel.Colon, 0, 0, 100, 1, 0, DelayTooltip); // 7
+                        page.AddNumericUpDown(OscColumnsLabel.Colon, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), 1, 5, 1, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), OscColumnsTooltip); // 8
+                        page.AddNumericUpDown(OscilloscopeWindowLabel.Colon, 2, 1, 4, 1, 2, OscWindowTooltip); // 9
+                        page.AddNumericUpDown(OscThicknessLabel.Colon, 2, 2, 10, 2, 2, OscThicknessTooltip); // 10
                         page.AddDropDownList(OscColorLabel.Colon, Localization.ToStringArray(OscilloscopeColorType.LocalizedNames), OscilloscopeColorType.LocalizedNames[OscilloscopeColorType.Instruments]); // 11
                         page.AddDropDownList(PianoRollNoteWidthLabel.Colon, new[] { "Auto", "50%", "75%", "100%", "125%", "150%", "175%", "200%" }, "Auto", PianoRollNoteWidthTooltip); // 12
                         page.AddDropDownList(PianoRollZoomLabel.Colon, new[] { "6.25%", "12.5%", "25%", "50%", "100%", "200%", "400%", "800%" }, project.UsesFamiTrackerTempo ? "100%" : "25%", PianoRollZoomTooltip); // 13
-                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), 1, 16, 1, PianoRollNumRowsTooltip); // 14
+                        page.AddNumericUpDown(PianoRollNumRowsLabel.Colon, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), 1, 16, 1, int.Max(1, Utils.DivideAndRoundUp(numActiveChannels, 8)), PianoRollNumRowsTooltip); // 14
                         page.AddDropDownList(PianoRollPerspectiveLabel.Colon, new[] { "0°", "30°", "45°", "60°", "75°" }, "60°", PianoRollPerspectiveTooltip); // 15
                         page.AddCheckBox(VideoOverlayRegistersLabel.Colon, false, VideoOverlayRegistersTooltip); // 16
                         page.AddCheckBox(StereoLabel.Colon, project.OutputsStereoAudio, StereoTooltip); // 17
@@ -480,7 +480,7 @@ namespace FamiStudio
                     page.AddDropDownList(SongLabel.Colon, songNames, app.SelectedSong.Name, SingleSongTooltip); // 0
                     page.AddCheckBox(ExportVolumeAsVelocityLabel.Colon, true, MidiVelocityTooltip); // 1
                     page.AddCheckBox(ExportSlideAsPitchWheelLabel.Colon, true, MidiPitchTooltip); // 2
-                    page.AddNumericUpDown(PitchWheelRangeLabel.Colon, 24, 1, 24, 1, MidiPitchRangeTooltip); // 3
+                    page.AddNumericUpDown(PitchWheelRangeLabel.Colon, 24, 1, 24, 1, 24, MidiPitchRangeTooltip); // 3
                     page.AddDropDownList(InstrumentModeLabel.Colon, Localization.ToStringArray(MidiExportInstrumentMode.LocalizedNames), MidiExportInstrumentMode.LocalizedNames[0], MidiInstrumentTooltip); // 4
                     page.AddGrid(InstrumentsLabels, new[] { new ColumnDesc("", 0.4f), new ColumnDesc("", 0.6f, MidiFileReader.MidiInstrumentNames) }, GetMidiInstrumentData(MidiExportInstrumentMode.Instrument, out _), 14, MidiInstGridTooltip, GridOptions.MobileTwoColumnLayout); // 5
                     page.PropertyChanged += Midi_PropertyChanged;

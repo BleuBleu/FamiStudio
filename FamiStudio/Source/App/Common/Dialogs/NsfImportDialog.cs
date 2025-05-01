@@ -33,14 +33,14 @@ namespace FamiStudio
             if (songNames != null && songNames.Length > 0)
             {
                 dialog = new PropertyDialog(win, NsfImportTitle, 400);
-                dialog.Properties.AddDropDownList(SongLabel.Colon, songNames, songNames[0]);            // 0
-                dialog.Properties.AddNumericUpDown(DurationLabel.Colon, 120, 1, 600, 1);                // 1
-                dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 4, Pattern.MaxLength, 1);  // 2
-                dialog.Properties.AddNumericUpDown(StartFrameLabel.Colon, 0, 0, 256, 1);                // 3
-                dialog.Properties.AddNumericUpDown(TuningLabel.Colon, 440, 300, 580, 1);                // 4
-                dialog.Properties.AddCheckBox(RemoveIntroSilenceLabel.Colon, true);                     // 5
-                dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);                       // 6
-                dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false);                    // 7
+                dialog.Properties.AddDropDownList(SongLabel.Colon, songNames, songNames[0]);                // 0
+                dialog.Properties.AddNumericUpDown(DurationLabel.Colon, 120, 1, 600, 1, 120);               // 1
+                dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 4, Pattern.MaxLength, 1, 256); // 2
+                dialog.Properties.AddNumericUpDown(StartFrameLabel.Colon, 0, 0, 256, 1, 0);                 // 3
+                dialog.Properties.AddNumericUpDown(TuningLabel.Colon, 440, 300, 580, 1, 440);               // 4
+                dialog.Properties.AddCheckBox(RemoveIntroSilenceLabel.Colon, true);                         // 5
+                dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);                           // 6
+                dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false);                        // 7
                 dialog.Properties.PropertyChanged += Properties_PropertyChanged;
                 dialog.Properties.Build();
                 UpdateSongDuration(0);

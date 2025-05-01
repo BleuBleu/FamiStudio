@@ -20,6 +20,7 @@ namespace FamiStudio
         // Version 7    : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
         // Version 8    : FamiStudio 4.1.0 (Configurable keys)
         // Version 9-10 : FamiStudio 4.2.0 (Latency improvements, more filtering options)
+        // Version 11   : FamiStudio 4.4.0 (Separate bass filter for FDS)
         public const int SettingsVersion = 10;
         public const int NumRecentFiles  = 10;
 
@@ -464,7 +465,7 @@ namespace FamiStudio
             AudioAPI = ini.GetString("Audio", "AudioAPI", audioAPIs[0]);
             AudioBufferSize = ini.GetInt("Audio", "AudioBufferSize", DefaultAudioBufferSize);
             NumBufferedFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedFrames);
-            InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
+            InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 1);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             N163Mix = ini.GetBool("Audio", "N163Mix", true);
             ClampPeriods = ini.GetBool("Audio", "ClampPeriods", true);

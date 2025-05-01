@@ -33,6 +33,7 @@ namespace FamiStudio
         protected int numberMin;
         protected int numberMax;
         protected int numberInc;
+        protected int numberDef;
         protected float numberScale;
         protected bool mouseSelecting;
         protected bool caretBlink = true;
@@ -61,9 +62,18 @@ namespace FamiStudio
 
         public string Prompt { get => prompt; set => prompt = value; }
 
+        #region Localization
+        
+        protected LocalizedString CopyName;
+        protected LocalizedString CutName;
+        protected LocalizedString PasteName;
+
+        #endregion
+
         public TextBox(string txt, int maxLen = 0)
         {
             Debug.Assert(txt != null);
+            Localization.Localize(this);
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
             text = txt;
             maxLength = maxLen;
@@ -71,14 +81,16 @@ namespace FamiStudio
             supportsTripleClick = true;
         }
 
-        public TextBox(int value, int minVal, int maxVal, int increment, float scale)
+        public TextBox(int value, int minVal, int maxVal, int increment, int defaultVal, float scale)
         {
+            Localization.Localize(this);
             height = DpiScaling.ScaleForWindow(24);
             text = value.ToString(CultureInfo.InvariantCulture);
             numeric = true;
             numberMin = minVal;
             numberMax = maxVal;
             numberInc = increment;
+            numberDef = defaultVal;
             numberScale = scale;
         }
 
@@ -137,6 +149,26 @@ namespace FamiStudio
             mouseSelecting = false;
         }
 
+        protected void Cut()
+        {
+            if (selectionLength > 0)
+            {
+                Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+                DeleteSelection();
+            }
+        }
+
+        protected void Copy()
+        {
+            if (selectionLength > 0)
+                Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+        }
+
+        protected void Paste()
+        {
+            InsertText(Platform.GetClipboardString());
+        }
+
         protected void UpdateScrollParams()
         {
             maxScrollX = Math.Max(0, Fonts.FontMedium.MeasureString(text, false) - (textAreaWidth - innerMargin * 2));
@@ -180,10 +212,23 @@ namespace FamiStudio
 
         protected override void OnPointerUp(PointerEventArgs e)
         {
-            if (e.Left && enabled && !e.IsTouchEvent)
+            if (enabled)
             {
-                mouseSelecting = false;
-                ReleasePointer();
+                if (e.Left && !e.IsTouchEvent)
+                {
+                    mouseSelecting = false;
+                    ReleasePointer();
+                }
+                else if (e.Right)
+                {
+                    // TODO: Localize
+                    App.ShowContextMenuAsync(new[]
+                    {
+                        new ContextMenuOption("MenuCut",   CutName,   () => Cut()),
+                        new ContextMenuOption("MenuCopy",  CopyName,  () => Copy()),
+                        new ContextMenuOption("MenuPaste", PasteName, () => Paste()),
+                    });
+                }
             }
         }
 
@@ -344,20 +389,15 @@ namespace FamiStudio
             }
             else if (e.Key == Keys.V && e.Control)
             {
-                InsertText(Platform.GetClipboardString());
+                Paste();
             }
             else if (e.Key == Keys.C && e.Control)
             {
-                if (selectionLength > 0)
-                    Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+                Copy();
             }
             else if (e.Key == Keys.X && e.Control)
             {
-                if (selectionLength > 0)
-                {
-                    Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
-                    DeleteSelection();
-                }
+                Cut();
             }
             else if (e.Key == Keys.Z && e.Control)
             {

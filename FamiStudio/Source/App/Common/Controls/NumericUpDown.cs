@@ -13,6 +13,8 @@ namespace FamiStudio
         private int min;
         private int max = 10;
         private int inc = 1;
+        private int def;
+        private int prev;
         private float scale = 1.0f;
         private TextureAtlasRef[] bmp;
         private float captureDuration;
@@ -21,13 +23,23 @@ namespace FamiStudio
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
-        public NumericUpDown(int value, int minVal, int maxVal, int increment, float scale = 1.0f) : base(value, minVal, maxVal, increment, scale)
+        #region Localization
+
+        protected LocalizedString ResetPreviousValueContext;
+        protected LocalizedString ResetDefaultValueContext;
+
+        #endregion
+
+        public NumericUpDown(int value, int minVal, int maxVal, int increment, int defaultVal, float scale = 1.0f) : base(value, minVal, maxVal, increment, defaultVal, scale)
         {
             val = value;
             min = minVal;
             max = maxVal;
             inc = increment;
+            def = defaultVal;
+            prev = value;
             this.scale = scale;
+            
             Debug.Assert(val % increment == 0);
             Debug.Assert(min % increment == 0);
             Debug.Assert(max % increment == 0);
@@ -191,13 +203,25 @@ namespace FamiStudio
             caretIndex = text.Length;
         }
 
+        protected void ResetPreviousValue()
+        {
+            Value = prev;
+        }
+
+        protected void ResetDefaultValue()
+        {
+            Value = def;
+        }
+
         protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
             if (!e.Handled && (e.Key == Keys.Up || e.Key == Keys.Down))
             {
                 GetValueFromTextBox();
-                Value += e.Key == Keys.Up ? inc : -inc;
+                var mult = e.Modifiers.IsShiftDown ? inc * 10 : inc * 1;
+                var sign = e.Key == Keys.Up ? 1 : -1;
+                Value += mult * sign;
             }
         }
 
@@ -235,6 +259,18 @@ namespace FamiStudio
                 captureButton = -1;
                 ReleasePointer();
                 MarkDirty();
+            }
+            else if (e.Right)
+            {
+                // TODO: Localize
+                App.ShowContextMenuAsync(new[]
+                {
+                    new ContextMenuOption("MenuCut",   CutName,   () => Cut()),
+                    new ContextMenuOption("MenuCopy",  CopyName,  () => Copy()),
+                    new ContextMenuOption("MenuPaste", PasteName, () => Paste()),
+                    new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => ResetPreviousValue()),
+                    new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => ResetDefaultValue()),
+                });
             }
             else
             {

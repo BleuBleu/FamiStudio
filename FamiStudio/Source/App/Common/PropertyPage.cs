@@ -177,9 +177,9 @@ namespace FamiStudio
             return new ImageBox(image);
         }
 
-        private NumericUpDown CreateNumericUpDown(int value, int min, int max, int inc, string label = null, string tooltip = null, float scale = 1.0f)
+        private NumericUpDown CreateNumericUpDown(int value, int min, int max, int inc, int def, string label = null, string tooltip = null, float scale = 1.0f)
         {
-            var upDown = new NumericUpDown(value, min, max, inc, scale);
+            var upDown = new NumericUpDown(value, min, max, inc, def, scale);
 
             upDown.ValueChanged += UpDown_ValueChanged;
             upDown.ToolTip = tooltip;
@@ -360,14 +360,14 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddNumericUpDown(string label, int value, int min, int max, int increment, string tooltip = null, float scale = 1.0f)
+        public int AddNumericUpDown(string label, int value, int min, int max, int increment, int def, string tooltip = null, float scale = 1.0f)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.NumericUpDown,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateNumericUpDown(value, min, max, increment, label, tooltip, scale)
+                    control = CreateNumericUpDown(value, min, max, increment, def, label, tooltip, scale)
                 });
             return properties.Count - 1;
         }
@@ -471,9 +471,9 @@ namespace FamiStudio
             return -1;
         }
 
-        private Slider CreateSlider(double value, double min, double max, Func<double, string> fmt = null, string tooltip = null, double defaultValue = 0.0)
+        private Slider CreateSlider(double value, double min, double max, double def, Func<double, string> fmt = null, string tooltip = null)
         {
-            var slider = new Slider(value, min, max, fmt, defaultValue);
+            var slider = new Slider(value, min, max, def, fmt);
             slider.ValueChanged += Slider_ValueChanged;
             slider.ToolTip = tooltip;
             return slider;
@@ -485,14 +485,14 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, value);
         }
 
-        public int AddSlider(string label, double value, double min, double max, Func<double, string> fmt = null, string tooltip = null, double defaultValue = 0.0)
+        public int AddSlider(string label, double value, double min, double max, double def, Func<double, string> fmt = null, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Slider,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateSlider(value, min, max, fmt, tooltip, defaultValue),
+                    control = CreateSlider(value, min, max, def, fmt, tooltip),
                 });
             return properties.Count - 1;
         }
