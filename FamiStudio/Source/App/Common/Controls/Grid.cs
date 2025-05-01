@@ -526,15 +526,16 @@ namespace FamiStudio
             if (valid)
             {
                 if (e.Left || e.Right)
+                {
                     CellClicked?.Invoke(this, e.Left, row, col);
+                    UpdateSelectedRow(row);
+                }
             }
             else if (e.Left && row < 0 && col >= 0)
             {
                 HeaderCellClicked?.Invoke(this, col);
             }
 
-            SelectedRowUpdated?.Invoke(this, row);
-            SetAndMarkDirty(ref selectedRow, row);
             UpdateHover(e);
         }
 

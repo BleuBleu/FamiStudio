@@ -45,7 +45,7 @@ namespace FamiStudio
             selectedIndex = index;
             height = rowHeight;
             transparent = trans;
-            supportsDoubleClick = false;
+            supportsDoubleClick = true;
             UpdateScrollParams();
         }
 
@@ -114,6 +114,11 @@ namespace FamiStudio
                     }
                 }
             }
+        }
+
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
+        {
+            OnPointerDown(e);
         }
 
         protected override void OnPointerUp(PointerEventArgs e)

@@ -45,6 +45,8 @@ namespace FamiStudio
         private int pathButtonSizeY = DpiScaling.ScaleForWindow(24);
         private int buttonSize      = DpiScaling.ScaleForWindow(36);
 
+        private Button       buttonBack;
+        private Button       buttonForward;
         private Button       buttonComputer;
         private Grid         gridFiles;
         private TextBox      textFile;
@@ -66,6 +68,9 @@ namespace FamiStudio
         private int selectedIndex;
         private string searchString;
         private DateTime prevTime;
+
+        private List<string> pathHistory = new List<string>();
+        private int pathIndex = -1;
 
         public string SelectedPath => filename;
 
@@ -114,10 +119,21 @@ namespace FamiStudio
         private void CreateControls(string[] descriptions)
         {
             var widthNoMargin = width - margin * 2;
+            var x = margin;
             var y = titleBarSizeY + margin;
 
+            buttonBack    = new Button("ArrowLeft", "");
+            buttonBack.Move(x, y, 25, pathButtonSizeY);
+            buttonBack.Click += ButtonBack_Click;
+            x += buttonBack.Width + margin;
+
+            buttonForward = new Button("ArrowRight", "");
+            buttonForward.Move(x, y, 25, pathButtonSizeY);
+            buttonForward.Click += ButtonForward_Click;
+            x += buttonForward.Width + margin;
+
             buttonComputer = new Button("FileComputer", "Computer");
-            buttonComputer.Move(margin, y, 100, pathButtonSizeY); 
+            buttonComputer.Move(x, y, 100, pathButtonSizeY); 
             buttonComputer.Click += ButtonComputer_Click;
             y += buttonComputer.Height + margin;
 
@@ -160,6 +176,8 @@ namespace FamiStudio
 
             AddControl(buttonYes);
             AddControl(buttonNo);
+            AddControl(buttonBack);
+            AddControl(buttonForward);
             AddControl(buttonComputer);
             AddControl(gridFiles);
             AddControl(textFile);
@@ -171,9 +189,43 @@ namespace FamiStudio
             gridFiles.GrabDialogFocus();
         }
 
+        private void ButtonBack_Click(Control sender)
+        {
+            GoBack();
+        }
+
+        private void ButtonForward_Click(Control sender)
+        {
+            GoForward();
+        }
+
         private void ButtonComputer_Click(Control sender)
         {
             GoToComputer();
+        }
+
+        private void GoBack()
+        {
+            if (pathIndex > 0)
+            {
+                pathIndex--;
+                if (pathHistory[pathIndex] != null)
+                    GoToPath(pathHistory[pathIndex], false);
+                else
+                    GoToComputer();
+            }
+        }
+
+        private void GoForward()
+        {
+            if (pathIndex < pathHistory.Count - 1)
+            {
+                pathIndex++;
+                if (pathHistory[pathIndex] != null)
+                    GoToPath(pathHistory[pathIndex], false);
+                else
+                    GoToComputer();
+            }
         }
 
         private void UpdatePathBar()
@@ -185,6 +237,9 @@ namespace FamiStudio
 
             buttonsPath.Clear();
             buttonPathPaths.Clear();
+
+            buttonBack.Enabled    = pathIndex > 0;
+            buttonForward.Enabled = pathIndex < pathHistory.Count - 1;
 
             if (path != null)
             {
@@ -207,7 +262,7 @@ namespace FamiStudio
                     RemoveControl(tempButton);
                 }
 
-                var maxWidth = width - margin * 3 - buttonComputer.Width;
+                var maxWidth = width - margin * 3 - (buttonComputer.Width + buttonBack.Width + buttonForward.Width);
                 var startButtonIndex = 0;
 
                 // If there is not enough space, only add the end folders.
@@ -231,7 +286,7 @@ namespace FamiStudio
                     }
                 }
 
-                var x = margin * 2 + buttonComputer.Width;
+                var x = margin * 4 + buttonComputer.Width + buttonBack.Width + buttonForward.Width;
 
                 for (int i = startButtonIndex; i < splits.Length; i++)
                 {
@@ -308,7 +363,7 @@ namespace FamiStudio
                         sortByDate = true;
                 }
 
-                GoToPath(path);
+                GoToPath(path, false);
             }
         }
 
@@ -500,6 +555,18 @@ namespace FamiStudio
             return data;
         }
 
+        private void AddPathToHistory(string p)
+        {
+            if (pathIndex != -1 && p == pathHistory[pathIndex])
+                return;
+
+            if (pathIndex < pathHistory.Count - 1)
+                pathHistory.RemoveRange(pathIndex + 1, pathHistory.Count - pathIndex - 1);
+
+            pathHistory.Add(p);
+            pathIndex = pathHistory.Count - 1;
+        }
+
         private void GoToComputer()
         {
             var userDir      = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -541,6 +608,7 @@ namespace FamiStudio
             }
 
             path = null;
+            AddPathToHistory(path);
             gridFiles.UpdateData(GetGridData(files));
             UpdateColumnNames();
             UpdatePathBar();
@@ -566,7 +634,7 @@ namespace FamiStudio
             return false;
         }
         
-        private void GoToPath(string p)
+        private void GoToPath(string p, bool stack = true)
         {
             files.Clear();
             selectedIndex = -1;
@@ -605,6 +673,10 @@ namespace FamiStudio
             textFile.Text = "";
             
             path = p;
+
+            if (stack)
+                AddPathToHistory(path);
+
             gridFiles.UpdateData(GetGridData(files));
             gridFiles.ResetScroll();
             gridFiles.ResetSelectedRow();
@@ -668,6 +740,24 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
+            if (e.Modifiers.IsAltDown)
+            {
+                if (e.Key == Keys.Up)
+                {
+                    GoUpDirectoryLevel();
+                }
+                else if (e.Key == Keys.Left)
+                {
+                    GoBack();
+                }
+                else if (e.Key == Keys.Right)
+                {
+                    GoForward();
+                }
+                
+                e.Handled = true;
+            }
+
             base.OnKeyDown(e);
 
             if (!e.Handled)
