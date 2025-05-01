@@ -186,7 +186,6 @@ namespace FamiStudio
                 new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => { ResetDefaultValue(); })
             });
         }
-#endif
 
         protected void EnterValue()
         {
@@ -198,6 +197,7 @@ namespace FamiStudio
                     grid.UpdateControlValue(this, Value);
             });
         }
+#endif
 
         private void GetValueFromTextBox()
         {
