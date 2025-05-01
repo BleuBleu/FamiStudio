@@ -323,7 +323,7 @@ namespace FamiStudio
             dlg.Properties.AddTextBox("TextBox", "Hello1", 0, false, "This is a long tooltip explaining what this property is all about");
             dlg.Properties.AddColorPicker(Color.Pink);
             dlg.Properties.AddButton("Hey", "This is a button", "Button tooltip");
-            dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, 1, "Integer Tooltip");
+            dlg.Properties.AddNumericUpDown("Integer", 10, 2, 50, 1, 10, "Integer Tooltip");
             dlg.Properties.AddDropDownList("Hey", new[] { "Option1 QQQ", "Option2 QQQ", "Option3 QQQ", "Option4 QQQ" }, "Option3 QQQ", "Dropdown tooltip");
             dlg.Properties.AddRadioButton("This is a radio", "Radio 123", false);
             dlg.Properties.AddRadioButton("This is a radio", "Radio 435", true);
@@ -331,7 +331,7 @@ namespace FamiStudio
             dlg.Properties.BeginAdvancedProperties();
             dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
             dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
-            dlg.Properties.AddSlider("Slider", 50, 0, 100, (v) => $"Allo {0} XXX", "Tooltip for slider");
+            dlg.Properties.AddSlider("Slider", 50, 0, 100, 50, (v) => $"Allo {0} XXX", "Tooltip for slider");
 
             dlg.ShowDialogAsync((r) =>
             {

@@ -212,16 +212,15 @@ namespace FamiStudio
 
         protected override void OnPointerUp(PointerEventArgs e)
         {
-            if (enabled)
+            if (enabled && !e.IsTouchEvent)
             {
-                if (e.Left && !e.IsTouchEvent)
+                if (e.Left)
                 {
                     mouseSelecting = false;
                     ReleasePointer();
                 }
                 else if (e.Right)
                 {
-                    // TODO: Localize
                     App.ShowContextMenuAsync(new[]
                     {
                         new ContextMenuOption("MenuCut",   CutName,   () => Cut()),

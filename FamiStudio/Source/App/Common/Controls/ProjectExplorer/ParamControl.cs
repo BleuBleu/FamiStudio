@@ -47,8 +47,9 @@ namespace FamiStudio
                 var scale = param.GetScaleValue();
                 var value = param.GetValue();
                 var scaledValue = Math.Round(value * scale, 2);
+                var format = scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2";
 
-                Platform.EditTextAsync(param.Name, scaledValue.ToString(), (s) => 
+                Platform.EditTextAsync(param.Name, scaledValue.ToString(format), (s) => 
                 {
                     InvokeValueChangeStart();
                     param.SetValue(param.SnapAndClampValue((int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale)));

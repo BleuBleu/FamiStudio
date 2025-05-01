@@ -25,6 +25,7 @@ namespace FamiStudio
 
         #region Localization
 
+        protected LocalizedString EnterValueContext;
         protected LocalizedString ResetPreviousValueContext;
         protected LocalizedString ResetDefaultValueContext;
 
@@ -77,6 +78,11 @@ namespace FamiStudio
         {
             get { return max; }
             set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
+        }
+
+        public int Default
+        {
+            get { return def; }
         }
 
         protected void UpdateOuterMargins()
@@ -173,6 +179,17 @@ namespace FamiStudio
 #if FAMISTUDIO_MOBILE
         protected override void OnTouchLongPress(PointerEventArgs e)
         {
+            App.ShowContextMenuAsync(new[]
+            {
+                new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(); }),
+                new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => { ResetPreviousValue(); }),
+                new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => { ResetDefaultValue(); })
+            });
+        }
+#endif
+
+        protected void EnterValue()
+        {
             Platform.EditTextAsync(label, Math.Round(Value * scale).ToString(), (s) =>
             {
                 Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
@@ -181,7 +198,6 @@ namespace FamiStudio
                     grid.UpdateControlValue(this, Value);
             });
         }
-#endif
 
         private void GetValueFromTextBox()
         {

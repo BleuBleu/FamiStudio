@@ -119,15 +119,8 @@ namespace FamiStudio
 #if FAMISTUDIO_MOBILE
         protected override void OnTouchLongPress(PointerEventArgs e)
         {
-            var grid  = container as Grid;
-            var scale = Utils.ParseFloatWithTrailingGarbage(format(1));
-            var name  = grid?.GetControlLabel(this) ?? string.Empty;
-
-            Platform.EditTextAsync(name, ((int)Math.Round(Value * scale)).ToString(), (s) =>
-            {
-                Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
-                grid?.UpdateControlValue(this, (int)Value);
-            });
+            if (container is Grid grid)
+                grid.ShowContextMenu(this);
         }
 #endif
 
