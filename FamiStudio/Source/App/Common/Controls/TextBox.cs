@@ -195,18 +195,21 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (e.Left && enabled && !e.IsTouchEvent)
+            if (enabled && !e.IsTouchEvent)
             {
-                var c = PixelToChar(e.X - outerMarginLeft);
-                SetAndMarkDirty(ref caretIndex, c);
-                SetAndMarkDirty(ref selectionStart, c);
-                SetAndMarkDirty(ref selectionLength, 0);
-                ClearSelection();
-                ResetCaretBlink();
-                CapturePointer();
+                if (e.Left)
+                {
+                    var c = PixelToChar(e.X - outerMarginLeft);
+                    SetAndMarkDirty(ref caretIndex, c);
+                    SetAndMarkDirty(ref selectionStart, c);
+                    SetAndMarkDirty(ref selectionLength, 0);
+                    ClearSelection();
+                    ResetCaretBlink();
+                    CapturePointer();
 
-                mouseSelectionChar = c;
-                mouseSelecting = true;
+                    mouseSelectionChar = c;
+                    mouseSelecting = true;
+                }
             }
         }
 
@@ -221,6 +224,7 @@ namespace FamiStudio
                 }
                 else if (e.Right)
                 {
+                    GrabDialogFocus();
                     App.ShowContextMenuAsync(new[]
                     {
                         new ContextMenuOption("MenuCut",   CutName,   () => Cut()),

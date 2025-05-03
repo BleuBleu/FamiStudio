@@ -112,6 +112,7 @@ namespace FamiStudio
 
         private void ActivateItem(int index)
         {
+            SetHoveredItemIndex(-1); // Make sure previous index isn't highlighted on next menu open.
             App.HideContextMenu();
             MarkDirty();
             Platform.VibrateTick();
@@ -157,6 +158,7 @@ namespace FamiStudio
         {
             if (e.Key == Keys.Escape)
             {
+                SetHoveredItemIndex(-1);
                 App.HideContextMenu();
             }
             else 

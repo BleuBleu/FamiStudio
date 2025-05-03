@@ -343,8 +343,8 @@ namespace FamiStudio
         {
             if (index >= scroll + numItemRows || index < scroll)
             {
-                var newScroll = index < scroll ? index : index - numItemRows + 1;
-                scroll = Math.Min(newScroll, ItemCount - numItemRows);
+                var s  = index < scroll ? index : index - numItemRows + 1;
+                scroll = Math.Clamp(s, 0, ItemCount - numItemRows);
             }
 
             SelectedRowUpdated?.Invoke(this, index);
@@ -629,6 +629,7 @@ namespace FamiStudio
 
         protected override void OnLostDialogFocus()
         {
+            SetAndMarkDirty(ref hoverRow, -1);
             ResetSelectedRow();
             base.OnLostDialogFocus();
         }
@@ -644,9 +645,6 @@ namespace FamiStudio
             }
             else if (e.Right)
             {
-                if (hoverRow != -1)
-                    UpdateSelectedRow(hoverRow); // In case up or down were pressed between right-click and release.
-
                 if (hasAnyCheckBoxes)
                 {
                     App.ShowContextMenuAsync(new[]
@@ -666,6 +664,11 @@ namespace FamiStudio
                     });
                     e.MarkHandled();
                 }
+
+                GrabDialogFocus();
+
+                UpdateHover(e);
+                UpdateSelectedRow(hoverRow);
             }
         }
 
@@ -774,12 +777,10 @@ namespace FamiStudio
         private void UpdateHover(PointerEventArgs e)
         {
             PixelToCell(e.X, e.Y, out var row, out var col);
-            if (!e.IsTouchEvent)
-            {
-                SetAndMarkDirty(ref hoverRow, row);
-                SetAndMarkDirty(ref hoverCol, col);
-                SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
-            }
+
+            SetAndMarkDirty(ref hoverRow, row);
+            SetAndMarkDirty(ref hoverCol, col);
+            SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
         }
 
         protected override void OnMouseWheel(PointerEventArgs e)
@@ -801,6 +802,7 @@ namespace FamiStudio
                     e.MarkHandled();
                 }
 
+                GrabDialogFocus();
                 UpdateHover(e);
             }
         }
