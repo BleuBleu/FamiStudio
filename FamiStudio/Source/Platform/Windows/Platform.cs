@@ -7,6 +7,7 @@ using System.Media;
 using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace FamiStudio
 {

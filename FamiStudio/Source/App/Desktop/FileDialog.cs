@@ -634,7 +634,7 @@ namespace FamiStudio
             // MacOS uses OS dialogs, the method is still there to unify code.
             if (!Platform.PathHasAccess(p))
             {
-                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} is not available. Access denied!", "Path not available", MessageBoxButtons.OK);
+                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} is not available. Access denied!", "Path Not Available", MessageBoxButtons.OK);
                 return false;
             }
 
