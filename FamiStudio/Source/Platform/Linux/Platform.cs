@@ -144,6 +144,14 @@ namespace FamiStudio
             FamiStudio.StaticInstance.PlayRawPcmSample(beep, 44100, 1.0f, 1);
         }
 
+        [DllImport("libc", SetLastError = true)]
+        private static extern int access(string pathname, int mode);
+
+        public static bool PathHasAccess(string path, int mode = 4)
+        {
+            return access(path, mode) == 0;
+        }
+
         [DllImport("libc")]
         private static extern int prctl(int option, byte[] arg2, IntPtr arg3, IntPtr arg4, IntPtr arg5);
 

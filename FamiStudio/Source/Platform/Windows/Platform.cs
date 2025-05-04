@@ -337,6 +337,28 @@ namespace FamiStudio
             MessageBeep(0);
         }
 
+        public static bool PathHasAccess(string path, int mode = 0)
+        {
+            try
+            {
+                // Mode is only used in libc, but is passed here to be valid and unify code.
+                if (Directory.Exists(path))
+                {
+                    Directory.EnumerateFileSystemEntries(path).FirstOrDefault();
+                }
+                else if (File.Exists(path))
+                {
+                    using var stream = File.Open(path, FileMode.Open, FileAccess.Read);
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         [DllImport("kernel32.dll")]
         public unsafe static extern bool RtlZeroMemory(void* destination, int length);
 

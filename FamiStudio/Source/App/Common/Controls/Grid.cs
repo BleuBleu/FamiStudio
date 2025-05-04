@@ -344,7 +344,7 @@ namespace FamiStudio
             if (index >= scroll + numItemRows || index < scroll)
             {
                 var s  = index < scroll ? index : index - numItemRows + 1;
-                scroll = Math.Clamp(s, 0, ItemCount - numItemRows);
+                scroll = Math.Clamp(s, 0, numItemRows + ItemCount);
             }
 
             SelectedRowUpdated?.Invoke(this, index);
@@ -528,7 +528,6 @@ namespace FamiStudio
                 if (e.Left || e.Right)
                 {
                     CellClicked?.Invoke(this, e.Left, row, col);
-                    UpdateSelectedRow(row);
                 }
             }
             else if (e.Left && row < 0 && col >= 0)
@@ -536,6 +535,7 @@ namespace FamiStudio
                 HeaderCellClicked?.Invoke(this, col);
             }
 
+            UpdateSelectedRow(row);
             UpdateHover(e);
         }
 

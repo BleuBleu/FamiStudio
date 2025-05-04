@@ -389,10 +389,11 @@ namespace FamiStudio
             }
         }
 
-        private void GridFiles_SelectedRowUpdated(Control sender, int rowIndex)
+        private void GridFiles_SelectedRowUpdated(Control sender, int index)
         {
-            UpdateTextByIndex(rowIndex);
-            searchIndex = rowIndex;
+            Debug.Assert(index < files.Count);
+            UpdateTextByIndex(index);
+            searchIndex = index;
         }
 
         private void TryOpenOrValidate()
@@ -403,27 +404,18 @@ namespace FamiStudio
 
         private bool OpenFolderOrDrive()
         {
-            var f = (searchIndex >= 0 && gridFiles.HasDialogFocus)
-                ? files[searchIndex]
-                : textFile.HasDialogFocus
-                    ? files.FirstOrDefault(file => file.Name.Contains(textFile.Text, StringComparison.OrdinalIgnoreCase))
-                    : null;
-
-            if (f == null)
+            if (string.IsNullOrWhiteSpace(textFile.Text))
                 return false;
 
-            return f.Type switch
+            var f = files.FirstOrDefault(file => file.Name.Contains(textFile.Text, StringComparison.OrdinalIgnoreCase));
+
+            return f?.Type switch
             {
-                EntryType.Drive     => GoToAndReturn(new DriveInfo(f.Name).RootDirectory.FullName),
-                EntryType.Directory => GoToAndReturn(f.Path),
+                EntryType.Drive     => GoToPath(new DriveInfo(f.Name).RootDirectory.FullName),
+                EntryType.Directory => GoToPath(f.Path),
+                null                => false,
                 _                   => false
             };
-        }
-
-        private bool GoToAndReturn(string path)
-        {
-            GoToPath(path);
-            return true;
         }
 
         private void GoUpDirectoryLevel()
@@ -516,8 +508,7 @@ namespace FamiStudio
 
         private void UpdateTextByIndex(int index)
         {
-            var f = files[index];
-            textFile.Text = f.Name;
+            textFile.Text = index >= 0 ? files[index].Name : string.Empty;
         }
 
         private void UpdateColumnNames()
@@ -629,21 +620,31 @@ namespace FamiStudio
             return false;
         }
         
-        private void GoToPath(string p, bool stack = true)
+        private bool GoToPath(string p, bool stack = true)
         {
             if (string.IsNullOrEmpty(p))
             {
                 GoToComputer();
-                return;
+                return false;
             }
 
-            files.Clear();
-            searchIndex = -1;
+            // Linux doesn't work with Try / Catch. Accessing a path without read access crashes.
+            // Workaround by natively checking read permission first. Windows resorts to Try / Catch 
+            // as it doesn't use libc.
+            // MacOS uses OS dialogs, the method is still there to unify code.
+            if (!Platform.PathHasAccess(p))
+            {
+                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} is not available. Access denied!", "Path not available", MessageBoxButtons.OK);
+                return false;
+            }
 
             var dirInfo = new DirectoryInfo(p);
 
-            var dirInfos = dirInfo.GetDirectories();
+            var dirInfos  = dirInfo.GetDirectories();
             var fileInfos = dirInfo.GetFiles();
+
+            files.Clear();
+            searchIndex = -1;
 
             var sortSign = sortDesc ? -1 : 1;
             var comp = sortByDate ?
@@ -683,6 +684,8 @@ namespace FamiStudio
             gridFiles.ResetSelectedRow();
             UpdateColumnNames();
             UpdatePathBar();
+
+            return true;
         }
 
         private void TextSearch(string keyChar)
@@ -700,7 +703,7 @@ namespace FamiStudio
             }
             else if (searchString == keyChar)
             {
-                searchIndex++;
+                searchIndex = (searchIndex + 1) % files.Count;
             }
             else
             {
