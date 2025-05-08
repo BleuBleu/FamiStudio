@@ -453,10 +453,10 @@ namespace FamiStudio
 
                                 project.SetExpansionAudioMask(expansionMask, numN163Channels);
 
-                                if (parameters.TryGetValue("GlobalBassCutoffHz", out var globalBassCutoffHz))
+                                if (parameters.TryGetValue("GlobalBassCutoffHz", out var globalBassCutoffHzStr))
                                 {
                                     project.OverrideBassCutoffHz = true;
-                                    project.BassCutoffHz = int.Parse(globalBassCutoffHz);
+                                    project.BassCutoffHz = int.Parse(globalBassCutoffHzStr);
                                 }
 
                                 for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
