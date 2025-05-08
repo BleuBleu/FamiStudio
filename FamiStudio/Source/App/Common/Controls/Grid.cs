@@ -645,22 +645,23 @@ namespace FamiStudio
             }
             else if (e.Right)
             {
-                if (hasAnyCheckBoxes)
-                {
-                    App.ShowContextMenuAsync(new[]
-                    {
-                        new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
-                        new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
-                    });
-                    e.MarkHandled();
-                }
-                else if (hasAnySliders)
+                var valid = PixelToCell(e.X, e.Y, out var row, out var col);
+                if (valid && columns[col].Type == ColumnType.Slider)
                 {
                     App.ShowContextMenuAsync(new[]
                     {
                         new ContextMenuOption("Type",      EnterValueContext,         () => EnterSliderValue()),
                         new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => ResetSliderPreviousValue()),
                         new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => ResetSliderDefaultValue())
+                    });
+                    e.MarkHandled();
+                }
+                else if (hasAnyCheckBoxes)
+                {
+                    App.ShowContextMenuAsync(new[]
+                    {
+                        new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
+                        new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
                     });
                     e.MarkHandled();
                 }

@@ -715,16 +715,17 @@ namespace FamiStudio
             Width = width;
         }
 
-        public ColumnDesc(string name, float width, int min, int max)
+        public ColumnDesc(string name, float width, int min, int max, int def)
         {
             Name = name;
             Type = ColumnType.NumericUpDown;
             Width = width;
             MinValue = min;
             MaxValue = max;
+            DefaultValue = def;
         }
 
-        public ColumnDesc(string name, float width, int min, int max, Func<double, string> fmt)
+        public ColumnDesc(string name, float width, int min, int max, int def, Func<double, string> fmt)
         {
             Name = name;
             Type = ColumnType.Slider;
@@ -732,6 +733,7 @@ namespace FamiStudio
             Width = width;
             MinValue = min;
             MaxValue = max;
+            DefaultValue = def;
         }
     }
 
