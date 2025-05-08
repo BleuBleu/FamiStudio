@@ -297,7 +297,7 @@ namespace FamiStudio
                     page.SetPropertyVisible(5, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);
                     page.SetPropertyVisible(8, Platform.IsDesktop);
-                    page.SetPropertyVisible(11, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
+                    page.SetPropertyVisible(11, Platform.IsDesktop); // Linux always has it disabled, MacOS and Windows can choose.
                     break;
                 }
                 case ConfigSection.Input:
