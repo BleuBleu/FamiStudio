@@ -61,17 +61,20 @@ namespace FamiStudio
 
                 if (project.UsesN163Expansion)
                     projectLine += GenerateAttribute("NumN163Channels", project.ExpansionNumN163Channels);
+            }
 
-                for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+            if (project.OverrideBassCutoffHz)
+                projectLine += GenerateAttribute("GlobalBassCutoffHz", project.BassCutoffHz);
+
+            for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+            {
+                var mixer = project.ExpansionMixerSettings[i];
+                if (mixer.Override)
                 {
-                    var mixer = project.ExpansionMixerSettings[i];
-                    if (mixer.Override)
-                    {
-                        var expName = ExpansionType.InternalNames[i];
-                        projectLine += GenerateAttribute(expName + "VolumeDb", mixer.VolumeDb);
-                        projectLine += GenerateAttribute(expName + "TrebleDb", mixer.TrebleDb);
-                        projectLine += GenerateAttribute(expName + "TrebleRolloffHz", mixer.TrebleRolloffHz);
-                    }
+                    var expName = ExpansionType.InternalNames[i];
+                    projectLine += GenerateAttribute(expName + "VolumeDb", mixer.VolumeDb);
+                    projectLine += i == ExpansionType.Fds ? GenerateAttribute(expName + "BassCutoffHz", mixer.BassCutoffHz) : GenerateAttribute(expName + "TrebleDb", mixer.TrebleDb);
+                    projectLine += GenerateAttribute(expName + "TrebleRolloffHz", mixer.TrebleRolloffHz);
                 }
             }
 
@@ -450,17 +453,27 @@ namespace FamiStudio
 
                                 project.SetExpansionAudioMask(expansionMask, numN163Channels);
 
+                                if (parameters.TryGetValue("GlobalBassCutoffHz", out var globalBassCutoffHz))
+                                {
+                                    project.OverrideBassCutoffHz = true;
+                                    project.BassCutoffHz = int.Parse(globalBassCutoffHz);
+                                }
+
                                 for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
                                 {
                                     var expName = ExpansionType.InternalNames[i];
+                                    var bassCutoffHzStr = string.Empty;
 
                                     if (parameters.TryGetValue(expName + "VolumeDb", out var volumeDbStr) &&
-                                        parameters.TryGetValue(expName + "TrebleDb", out var trebleDbStr) &&
+                                        (parameters.TryGetValue(expName + "TrebleDb", out var trebleDbStr) || parameters.TryGetValue(expName + "BassCutoffHz", out bassCutoffHzStr)) &&
                                         parameters.TryGetValue(expName + "TrebleRolloffHz", out var trebleRolloffHzStr))
                                     {
                                         project.ExpansionMixerSettings[i].Override = true;
                                         project.ExpansionMixerSettings[i].VolumeDb = float.Parse(volumeDbStr);
-                                        project.ExpansionMixerSettings[i].TrebleDb = float.Parse(trebleDbStr);
+                                        if (i == ExpansionType.Fds)
+                                            project.ExpansionMixerSettings[i].BassCutoffHz = int.Parse(bassCutoffHzStr);
+                                        else
+                                            project.ExpansionMixerSettings[i].TrebleDb = float.Parse(trebleDbStr);
                                         project.ExpansionMixerSettings[i].TrebleRolloffHz = int.Parse(trebleRolloffHzStr);
                                     }
                                 }
