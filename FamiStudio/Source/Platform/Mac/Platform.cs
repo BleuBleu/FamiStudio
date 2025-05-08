@@ -121,14 +121,6 @@ namespace FamiStudio
             MacUtils.Beep();
         }
 
-        [DllImport("libc", SetLastError = true)]
-        private static extern int access(string pathname, int mode);
-
-        public static bool PathHasAccess(string path, int mode = 4)
-        {
-            return access(path, mode) == 0;
-        }
-
         public static unsafe void ZeroMemory(IntPtr p, int len)
         {
             byte* pp = (byte*)p.ToPointer();

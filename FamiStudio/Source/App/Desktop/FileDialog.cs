@@ -628,20 +628,31 @@ namespace FamiStudio
                 return false;
             }
 
-            // Linux doesn't work with Try / Catch. Accessing a path without read access crashes.
-            // Workaround by natively checking read permission first. Windows resorts to Try / Catch 
-            // as it doesn't use libc.
-            // MacOS uses OS dialogs, the method is still there to unify code.
-            if (!Platform.PathHasAccess(p))
+            var dirInfo = new DirectoryInfo(p);
+
+            DirectoryInfo[] dirInfos;
+            FileInfo[] fileInfos;
+
+            // Prevent a crash if a file or directory doesn't have access permissions.
+            try
             {
-                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} is not available. Access denied!", "Path Not Available", MessageBoxButtons.OK);
+                dirInfos = dirInfo.GetDirectories();
+            }
+            catch
+            {
+                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} is not available. Access Denied!", "Path Not Available", MessageBoxButtons.OK);
                 return false;
             }
 
-            var dirInfo = new DirectoryInfo(p);
-
-            var dirInfos  = dirInfo.GetDirectories();
-            var fileInfos = dirInfo.GetFiles();
+            try
+            {
+                fileInfos = dirInfo.GetFiles();
+            }
+            catch
+            {
+                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} contains unreadable files.", "Files Not Avaliable", MessageBoxButtons.OK);
+                return false;
+            }
 
             files.Clear();
             searchIndex = -1;
