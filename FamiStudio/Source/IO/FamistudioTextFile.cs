@@ -45,6 +45,7 @@ namespace FamiStudio
             if (project.Author    != "")    projectLine += GenerateAttribute("Author", project.Author);
             if (project.Copyright != "")    projectLine += GenerateAttribute("Copyright", project.Copyright);
             if (project.PalMode)            projectLine += GenerateAttribute("PAL", true);
+            if (project.Tuning    != 440)   projectLine += GenerateAttribute("Tuning", project.Tuning);
 
             if (project.UsesAnyExpansionAudio)
             {
@@ -431,6 +432,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
+                            if (parameters.TryGetValue("Tuning", out var tuning)) project.Tuning = int.Parse(tuning);
                             if (parameters.TryGetValue("Expansions", out var expansions))
                             {
                                 var expansionMask = 0;
