@@ -680,7 +680,7 @@ namespace FamiStudio
             return true;
         }
 
-        public DPCMSampleMapping MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false)
+        public DPCMSampleMapping MapDPCMSample(int note, DPCMSample sample, int pitch = 15, bool loop = false, int bank = 0)
         {
             Debug.Assert(Note.IsMusicalNote(note));
 
@@ -690,6 +690,7 @@ namespace FamiStudio
                 mapping.Sample = sample;
                 mapping.Pitch = pitch;
                 mapping.Loop = loop;
+                mapping.Sample.Bank = bank;
                 samplesMapping.Add(note, mapping);
                 return mapping;
             }

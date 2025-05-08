@@ -189,7 +189,7 @@ namespace FamiStudio
 
                         if (mapping != null && mapping.Sample != null)
                         {
-                            var mappingStr = $"\t\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(kv.Key))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}";
+                            var mappingStr = $"\t\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(kv.Key))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}{GenerateAttribute("Bank", mapping.Sample.Bank)}";
 
                             if (mapping.OverrideDmcInitialValue)
                                 mappingStr += $"{GenerateAttribute("DmcInitialValue", mapping.DmcInitialValueDiv2)}";
@@ -587,9 +587,11 @@ namespace FamiStudio
                             {
                                 var pitch = 15;
                                 var loop = false;
+                                var bank = 0;
                                 if (parameters.TryGetValue("Pitch", out var pitchStr)) pitch = int.Parse(pitchStr);
                                 if (parameters.TryGetValue("Loop", out var loopStr)) loop = bool.Parse(loopStr);
-                                var mapping = instrument.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
+                                if (parameters.TryGetValue("Bank", out var bankStr)) bank = int.Parse(bankStr);
+                                var mapping = instrument.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop, bank);
                                 if (parameters.TryGetValue("DmcInitialValue", out var dmcInitialStr))
                                 {
                                     mapping.OverrideDmcInitialValue = true;
