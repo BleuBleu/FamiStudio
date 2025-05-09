@@ -341,16 +341,19 @@ namespace FamiStudio
 
         public void UpdateSelectedRow(int index)
         {
-            Debug.Assert(index < ItemCount);
-            
-            if (index >= scroll + numItemRows || index < scroll)
+            if (index != selectedRow)
             {
-                var s  = index < scroll ? index : index - numItemRows + 1;
-                scroll = Math.Clamp(s, 0, numItemRows + ItemCount);
-            }
+                Debug.Assert(index < ItemCount);
+                
+                if (index >= scroll + numItemRows || index < scroll)
+                {
+                    var s  = index < scroll ? index : index - numItemRows + 1;
+                    scroll = Math.Clamp(s, 0, numItemRows + ItemCount);
+                }
 
-            SelectedRowUpdated?.Invoke(this, index);
-            SetAndMarkDirty(ref selectedRow, index);
+                SelectedRowUpdated?.Invoke(this, index);
+                SetAndMarkDirty(ref selectedRow, index);
+            }
         }
 
         public void ResetSelectedRow()
@@ -531,15 +534,13 @@ namespace FamiStudio
                 {
                     CellClicked?.Invoke(this, e.Left, row, col);
                 }
+
+                UpdateSelectedRow(row);
             }
             else if (e.Left && row < 0 && col >= 0)
             {
                 HeaderCellClicked?.Invoke(this, col);
             }
-
-            // Only update the selection if it's within bounds.
-            if (row < ItemCount)
-                UpdateSelectedRow(row);
 
             UpdateHover(e);
         }
@@ -650,31 +651,33 @@ namespace FamiStudio
             }
             else if (e.Right)
             {
-                var valid = PixelToCell(e.X, e.Y, out var row, out var col);
-                if (valid && columns[col].Type == ColumnType.Slider)
+                if (PixelToCell(e.X, e.Y, out var row, out var col))
                 {
-                    App.ShowContextMenuAsync(new[]
+                    if (columns[col].Type == ColumnType.Slider)
                     {
-                        new ContextMenuOption("Type",      EnterValueContext,         () => EnterSliderValue()),
-                        new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => ResetSliderPreviousValue()),
-                        new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => ResetSliderDefaultValue())
-                    });
-                    e.MarkHandled();
-                }
-                else if (hasAnyCheckBoxes)
-                {
-                    App.ShowContextMenuAsync(new[]
+                        App.ShowContextMenuAsync(new[]
+                        {
+                            new ContextMenuOption("Type",      EnterValueContext,         () => EnterSliderValue()),
+                            new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => ResetSliderPreviousValue()),
+                            new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => ResetSliderDefaultValue())
+                        });
+                        e.MarkHandled();
+                    }
+                    else if (hasAnyCheckBoxes)
                     {
-                        new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
-                        new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
-                    });
-                    e.MarkHandled();
-                }
+                        App.ShowContextMenuAsync(new[]
+                        {
+                            new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
+                            new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
+                        });
+                        e.MarkHandled();
+                    }
 
-                GrabDialogFocus();
+                    GrabDialogFocus();
+                    UpdateSelectedRow(row);
+                }
 
                 UpdateHover(e);
-                UpdateSelectedRow(hoverRow);
             }
         }
 
