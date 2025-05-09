@@ -341,6 +341,8 @@ namespace FamiStudio
 
         public void UpdateSelectedRow(int index)
         {
+            Debug.Assert(index < ItemCount);
+            
             if (index >= scroll + numItemRows || index < scroll)
             {
                 var s  = index < scroll ? index : index - numItemRows + 1;
@@ -535,7 +537,10 @@ namespace FamiStudio
                 HeaderCellClicked?.Invoke(this, col);
             }
 
-            UpdateSelectedRow(row);
+            // Only update the selection if it's within bounds.
+            if (row < ItemCount)
+                UpdateSelectedRow(row);
+
             UpdateHover(e);
         }
 
