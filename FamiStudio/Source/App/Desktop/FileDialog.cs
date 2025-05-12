@@ -74,8 +74,53 @@ namespace FamiStudio
 
         public string SelectedPath => filename;
 
+        #region Localization
+
+        // Context menu
+        LocalizedString DeleteLabel;
+        LocalizedString NewFolderLabel;
+
+        // Dialogs
+        LocalizedString CreateFolderTitle;
+        LocalizedString CreateFolderMessage;
+        LocalizedString OverwriteFileTitle;
+        LocalizedString OverwriteFileMessage;
+        LocalizedString DeleteMessage;
+        LocalizedString DeleteFileErrorTitle;
+        LocalizedString DeleteFolderErrorTitle;
+        LocalizedString DeleteErrorMessage;
+        LocalizedString FileNoAccessTitle;
+        LocalizedString FileNoAccessMessage;
+        LocalizedString FolderNoAccessTitle;
+        LocalizedString FolderNoAccessMessage;
+        LocalizedString DirectoryCreateErrorTitle;
+        LocalizedString DirectoryCreateErrorMessage;
+        LocalizedString DirectoryExistsTitle;
+        LocalizedString DirectoryExistsMessage;
+
+        // Directories
+        LocalizedString ComputerLabel;
+        LocalizedString HomeFolderLabel;
+        LocalizedString DesktopFolderLabel;
+        LocalizedString DocumentsFolderLabel;
+        LocalizedString DownloadsFolderLabel;
+
+        // Buttons
+        LocalizedString NameLabel;
+        LocalizedString DateLabel;
+        LocalizedString YesLabel;
+        LocalizedString NoLabel;
+        LocalizedString AcceptLabel;
+        LocalizedString CancelLabel;
+        LocalizedString AscendLabel;
+        LocalizedString DescendLabel;
+
+        #endregion
+
         public FileDialog(FamiStudioWindow win, Mode m, string title, string defaultPath, string extensionList = "") : base(win, title)
         {
+            Localization.Localize(this);
+
             mode = m;
             SplitExtensionList(extensionList, out extensions, out var descriptions);
             Resize(DpiScaling.ScaleForWindow(800), DpiScaling.ScaleForWindow(500));
@@ -122,28 +167,30 @@ namespace FamiStudio
             var x = margin;
             var y = titleBarSizeY + margin;
 
-            buttonBack    = new Button("ArrowLeft", "");
-            buttonBack.Move(x, y, 25, pathButtonSizeY);
+            buttonBack    = new Button("ArrowLeft");
+            buttonBack.Move(x, y, pathButtonSizeY, pathButtonSizeY);
             buttonBack.Click += ButtonBack_Click;
             x += buttonBack.Width + margin;
 
-            buttonForward = new Button("ArrowRight", "");
-            buttonForward.Move(x, y, 25, pathButtonSizeY);
+            buttonForward = new Button("ArrowRight");
+            buttonForward.Move(x, y, pathButtonSizeY, pathButtonSizeY);
             buttonForward.Click += ButtonForward_Click;
             x += buttonForward.Width + margin;
 
-            buttonComputer = new Button("FileComputer", "Computer");
+            buttonComputer = new Button("FileComputer", ComputerLabel);
             buttonComputer.Move(x, y, 100, pathButtonSizeY); 
             buttonComputer.Click += ButtonComputer_Click;
             y += buttonComputer.Height + margin;
 
             gridFiles = new Grid(new[] {
                 new ColumnDesc("",     0.0f, ColumnType.Image),
-                new ColumnDesc("Name", 0.7f, ColumnType.Label) { Ellipsis = true },
-                new ColumnDesc("Date", 0.3f, ColumnType.Label) }, 16, true);
+                new ColumnDesc(NameLabel, 0.7f, ColumnType.Label) { Ellipsis = true },
+                new ColumnDesc(DateLabel, 0.3f, ColumnType.Label) }, 16, true);
             gridFiles.Move(margin, y, widthNoMargin, gridFiles.Height);
             gridFiles.FullRowSelect = true;
+            gridFiles.IsFileDialog  = true;
             gridFiles.CellClicked += GridFiles_CellClicked;
+            gridFiles.EmptyCellClicked += GridFiles_EmptyCellClicked;
             gridFiles.CellDoubleClicked += GridFiles_CellDoubleClicked;
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
             gridFiles.SelectedRowUpdated += GridFiles_SelectedRowUpdated;
@@ -158,17 +205,17 @@ namespace FamiStudio
             dropDownType.Enabled = mode != Mode.Folder;
             y += textFile.Height + margin;
 
-            buttonYes = new Button("Yes", null);
+            buttonYes = new Button(YesLabel, null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(buttonSize, buttonSize);
             buttonYes.Move(Width - buttonSize * 2 - margin * 2, y);
-            buttonYes.ToolTip = "Accept";
+            buttonYes.ToolTip = AcceptLabel;
 
-            buttonNo = new Button("No", null); 
+            buttonNo = new Button(NoLabel, null); 
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(buttonSize, buttonSize);
             buttonNo.Move(Width - buttonSize - margin, y);
-            buttonNo.ToolTip = "Cancel";
+            buttonNo.ToolTip = CancelLabel;
             y += buttonNo.Height + margin;
 
             Resize(Width, y);
@@ -222,6 +269,91 @@ namespace FamiStudio
             }
         }
 
+        private void CreateNewFolder()
+        {
+            var folderName = NewFolderLabel.ToString();
+
+            // Ensure the folder has a unique name.
+            if (Directory.Exists(Path.Combine(path, folderName)))
+            {
+                var i = 1;
+                while (Directory.Exists(Path.Combine(path, folderName + " (" + i + ")")))
+                    ++i;
+
+                folderName += " (" + i + ")";
+            }
+
+            var dlg = new PropertyDialog(ParentWindow, CreateFolderTitle, DpiScaling.ScaleForWindow(240), true, true);
+            dlg.Properties.AddTextBox($"{CreateFolderMessage}:", folderName);
+            dlg.Properties.Build();
+
+            dlg.ShowDialogAsync((r) =>
+            {
+                if (r == DialogResult.OK)
+                {
+                    var name    = dlg.Properties.GetPropertyValue<string>(0).Trim();
+                    var newPath = Path.Combine(path, name);
+
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        if (Directory.Exists(newPath))
+                        {
+                            Platform.MessageBoxAsync(ParentWindow, DirectoryExistsMessage.Format(name), DirectoryExistsTitle, MessageBoxButtons.OK);
+                            return;
+                        }
+
+                        try
+                        {
+                            Directory.CreateDirectory(newPath);
+                        }
+                        catch
+                        {
+                            Platform.MessageBoxAsync(ParentWindow, DirectoryCreateErrorMessage.Format(name), DirectoryCreateErrorTitle, MessageBoxButtons.OK);
+                            return;
+                        }
+
+                        // Refresh the file list and select / highlight the new folder.
+                        GoToPath(path);
+
+                        var idx = files.FindIndex(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+                        gridFiles.UpdateSelectedRow(idx);
+                    }
+                }
+            });
+        }
+
+        private void DeleteFileOrDirectory()
+        {
+            Platform.MessageBoxAsync(ParentWindow, DeleteMessage.Format(textFile.Text), DeleteLabel, MessageBoxButtons.YesNo, (r) =>
+            {
+                if (r == DialogResult.Yes)
+                {
+                    var deletePath  = Path.Combine(path, textFile.Text);
+                    var isDirectory = Directory.Exists(deletePath);
+
+                    try
+                    {  
+                        if (isDirectory)
+                        {
+                            Directory.Delete(deletePath, true);
+                        }
+                        else
+                        {
+                            File.Delete(deletePath);
+                        }
+                    }
+                    catch
+                    {
+                        var title = isDirectory ? DeleteFolderErrorTitle : DeleteFileErrorTitle;
+                        Platform.MessageBoxAsync(ParentWindow, DeleteErrorMessage.Format(textFile.Text), title, MessageBoxButtons.OK);
+                        return;
+                    }
+
+                    GoToPath(path); // Refresh;
+                }
+            });
+        }
+
         private void UpdatePathBar()
         {
             buttonComputer.AutosizeWidth();
@@ -256,7 +388,7 @@ namespace FamiStudio
                     RemoveControl(tempButton);
                 }
 
-                var maxWidth = width - margin * 3 - (buttonComputer.Width + buttonBack.Width + buttonForward.Width);
+                var maxWidth = width - margin * 4 - (buttonComputer.Width + buttonBack.Width + buttonForward.Width);
                 var startButtonIndex = 0;
 
                 // If there is not enough space, only add the end folders.
@@ -367,6 +499,31 @@ namespace FamiStudio
             {
                 UpdateTextByIndex(rowIndex);
             }
+            else
+            {
+                
+                // TODO: Localize.
+                App.ShowContextMenuAsync(new[]
+                {
+                    new ContextMenuOption("FileFolder", NewFolderLabel, () => CreateNewFolder()),
+                    new ContextMenuOption("MenuDelete", DeleteLabel,    () => DeleteFileOrDirectory())
+                });
+            }
+        }
+
+        private void GridFiles_EmptyCellClicked(Control sender, bool left)
+        {
+            textFile.Text = "";
+            gridFiles.ResetSelectedRow();
+
+            if (!left)
+            {
+                // TODO: Localize.
+                App.ShowContextMenuAsync(new[]
+                {
+                    new ContextMenuOption("FileFolder", NewFolderLabel, () => CreateNewFolder()),
+                });
+            }
         }
 
         private void GridFiles_CellDoubleClicked(Control sender, int rowIndex, int colIndex)
@@ -452,7 +609,7 @@ namespace FamiStudio
                     if (!MatchesExtensionList(f, extensions))
                         f += extensions[0].Trim('*');
 
-                    if (!File.Exists(f) || Platform.MessageBox(ParentWindow, $"Overwrite file {Path.GetFileName(f)}?", "Confirm Overwrite", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (!File.Exists(f) || Platform.MessageBox(ParentWindow, OverwriteFileMessage.Format(Path.GetFileName(f)), OverwriteFileTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         filename = f;
                         Close(DialogResult.OK);
@@ -516,8 +673,8 @@ namespace FamiStudio
             var colNames = new[]
             {
                 "",
-                 sortByDate || path == null ? "Name" : sortDesc ? "Name (Desc)" : "Name (Asc)",
-                !sortByDate || path == null ? "Date" : sortDesc ? "Date (Desc)" : "Date (Asc)"
+                 sortByDate || path == null ? NameLabel : sortDesc ? $"{NameLabel} ({DescendLabel})" : $"{NameLabel} ({AscendLabel})",
+                !sortByDate || path == null ? DateLabel : sortDesc ? $"{DateLabel} ({DescendLabel})" : $"{DateLabel} ({AscendLabel})"
             };
 
             gridFiles.RenameColumns(colNames);
@@ -563,13 +720,13 @@ namespace FamiStudio
             searchIndex = -1;
 
             if (Directory.Exists(userDir))
-                files.Add(new FileEntry("FileHome", "Home", userDir, EntryType.Directory));
+                files.Add(new FileEntry("FileHome", HomeFolderLabel, userDir, EntryType.Directory));
             if (Directory.Exists(desktopDir))
-                files.Add(new FileEntry("FileDesktop", "Desktop", desktopDir, EntryType.Directory));
+                files.Add(new FileEntry("FileDesktop", DesktopFolderLabel, desktopDir, EntryType.Directory));
             if (Directory.Exists(downloadDir))
-                files.Add(new FileEntry("FileDownload", "Downloads", downloadDir, EntryType.Directory));
+                files.Add(new FileEntry("FileDownload", DownloadsFolderLabel, downloadDir, EntryType.Directory));
             if (Directory.Exists(documentsDir))
-                files.Add(new FileEntry("FileDocuments", "Documents", documentsDir, EntryType.Directory));
+                files.Add(new FileEntry("FileDocuments", DocumentsFolderLabel, documentsDir, EntryType.Directory));
 
             if (Platform.IsLinux)
             {
@@ -640,7 +797,7 @@ namespace FamiStudio
             }
             catch
             {
-                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} is not available. Access Denied!", "Path Not Available", MessageBoxButtons.OK);
+                Platform.MessageBoxAsync(ParentWindow, FolderNoAccessMessage.Format(Path.GetFileName(p)), FolderNoAccessTitle, MessageBoxButtons.OK);
                 return false;
             }
 
@@ -650,7 +807,7 @@ namespace FamiStudio
             }
             catch
             {
-                Platform.MessageBoxAsync(ParentWindow, $"{Path.GetFileName(p)} contains unreadable files.", "Files Not Avaliable", MessageBoxButtons.OK);
+                Platform.MessageBoxAsync(ParentWindow, FileNoAccessMessage.Format(Path.GetFileName(p)), FileNoAccessTitle, MessageBoxButtons.OK);
                 return false;
             }
 

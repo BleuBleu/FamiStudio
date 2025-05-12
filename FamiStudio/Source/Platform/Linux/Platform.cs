@@ -106,28 +106,26 @@ namespace FamiStudio
 
         public static unsafe string[] ShowPlatformOpenFileDialog(string title, string extensions, ref string defaultPath, bool multiselect)
         {
-            Debug.Assert(false); // Linux has no common dialogs.
-            return null;
+            var dlg = new LinuxDialog(LinuxDialog.DialogMode.Open, title, ref defaultPath, extensions, multiselect);
+            return dlg.SelectedPaths;
         }
 
         public static unsafe string ShowPlatformSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
-            Debug.Assert(false); // Linux has no common dialogs.
-            return null;
+            var dlg = new LinuxDialog(LinuxDialog.DialogMode.Save, title, ref defaultPath, extensions);
+            return dlg.SelectedPaths[0];
         }
 
         public static string ShowPlatformBrowseFolderDialog(string title, ref string defaultPath)
         {
-            Debug.Assert(false); // Linux has no common dialogs.
-            return null;
+            var dlg = new LinuxDialog(LinuxDialog.DialogMode.Folder, title, ref defaultPath);
+            return dlg.SelectedPaths[0];
         }
 
         public static DialogResult PlatformMessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
         {
-            // If we get here, it means an error happened before the window was created.
-            // We have no way to give feedback to the user here. X11 has nothing.
-            Console.WriteLine($"{title} : {text}");
-            return buttons == MessageBoxButtons.OK ? DialogResult.OK : DialogResult.Yes;
+            var dlg = new LinuxDialog(text, title, buttons);
+            return dlg.MessageBoxSelection;
         }
 
         public static void OpenUrl(string url)

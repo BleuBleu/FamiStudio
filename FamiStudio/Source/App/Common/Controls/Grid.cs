@@ -10,16 +10,18 @@ namespace FamiStudio
         public delegate void ValueChangedDelegate(Control sender, int rowIndex, int colIndex, object value);
         public delegate void ButtonPressedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
+        public delegate void EmptyCellClickedDelegate(Control sender, bool left);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
-        public delegate void selectedRowUpdatedDelegate(Control sender, int rowIndex);
+        public delegate void SelectedRowUpdatedDelegate(Control sender, int rowIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
+        public event EmptyCellClickedDelegate EmptyCellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
-        public event selectedRowUpdatedDelegate SelectedRowUpdated;
+        public event SelectedRowUpdatedDelegate SelectedRowUpdated;
 
         private class CellSliderData
         {
@@ -50,6 +52,7 @@ namespace FamiStudio
         private bool hasAnySliders;
         private bool fullRowSelect;
         private bool isClosingList;
+        private bool isFileDialog;
         private Font font;
         private Font fontBold;
         private ColumnDesc[] columns;
@@ -83,6 +86,7 @@ namespace FamiStudio
 
         public int ItemCount => data.GetLength(0);
         public bool FullRowSelect { get => fullRowSelect; set => fullRowSelect = value; }
+        public bool IsFileDialog { get => isFileDialog; set => isFileDialog = value; }
 
         #region Localization
 
@@ -541,6 +545,10 @@ namespace FamiStudio
             {
                 HeaderCellClicked?.Invoke(this, col);
             }
+            else
+            {
+                EmptyCellClicked?.Invoke(this, e.Left);
+            }
 
             UpdateHover(e);
         }
@@ -675,6 +683,11 @@ namespace FamiStudio
 
                     GrabDialogFocus();
                     UpdateSelectedRow(row);
+                    CellClicked?.Invoke(this, e.Left, row, col);
+                }
+                else if (e.Y > rowHeight * numHeaderRows)
+                {
+                    EmptyCellClicked?.Invoke(this, e.Left);
                 }
 
                 UpdateHover(e);

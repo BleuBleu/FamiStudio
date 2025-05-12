@@ -72,7 +72,7 @@ namespace FamiStudio
         public static bool AllowSequencerVerticalScroll = false;
         public static bool ShowImplicitStopNotes = false;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
-        public static bool UseOSDialogs = !Platform.IsLinux;
+        public static bool UseOSDialogs;
 
         // Input section
         public static bool TrackPadControls = false;

@@ -100,6 +100,7 @@
     <Compile Include="Source\IO\WaveFile.cs" />
     <Compile Include="Source\Platform\Desktop\Platform.cs" />
     <Compile Include="Source\Platform\Linux\Platform.cs" />
+    <Compile Include="Source\Platform\Linux\LinuxDialog.cs" />
     <Compile Include="Source\Player\AudioPlayer.cs" />
     <Compile Include="Source\Player\AudioStreamInterface.cs" />
     <Compile Include="Source\Player\BasePlayer.cs" />
