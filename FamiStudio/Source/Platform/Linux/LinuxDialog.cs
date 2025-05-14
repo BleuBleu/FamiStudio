@@ -226,7 +226,7 @@ namespace FamiStudio
 
             return exitCode switch
             {
-                0 => DialogResult.Yes,
+                0 => dialogButtons == MessageBoxButtons.OK ? DialogResult.OK : DialogResult.Yes,
                 1 => DialogResult.No,
                 2 => DialogResult.Cancel,
                 _ => DialogResult.None,
@@ -256,7 +256,7 @@ namespace FamiStudio
 
             if (exitCode == 0)
             {
-                return DialogResult.Yes;
+                return dialogButtons == MessageBoxButtons.OK ? DialogResult.OK : DialogResult.Yes;
             }
             else if (exitCode == 1)
             {
