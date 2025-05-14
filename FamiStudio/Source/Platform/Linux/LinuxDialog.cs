@@ -1,7 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.Reflection;
-using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
@@ -14,14 +12,15 @@ namespace FamiStudio
             Folder = 2,
         }
 
+        private static LinuxDialog dlgInstance;
+
         private FamiStudioWindow window = FamiStudioWindow.Instance;
         private DialogMode dialogMode;
         private string dialogTitle;
         private string dialogText;
-        private string dialogExtensions;
+        private string dialogExts;
         private bool dialogMulti;
         private MessageBoxButtons dialogButtons;
-        object renderLock;
 
         public string[] SelectedPaths { get; private set; }
         public DialogResult MessageBoxSelection { get; private set; }
@@ -37,13 +36,16 @@ namespace FamiStudio
 
         #endregion
 
+        public static bool IsDialogOpen => dlgInstance != null;
+
         public LinuxDialog(DialogMode mode, string title, ref string defaultPath, string extensions = "", bool multiselect = false)
         {
             Localization.Localize(this);
-            dialogMode = mode;
+            dialogMode  = mode;
             dialogTitle = title;
-            dialogExtensions = extensions;
+            dialogExts  = extensions;
             dialogMulti = multiselect;
+            dlgInstance = this;
 
             SelectedPaths = ShowFileDialog(ref defaultPath);
         }
@@ -51,9 +53,10 @@ namespace FamiStudio
         public LinuxDialog(string text, string title, MessageBoxButtons buttons)
         {
             Localization.Localize(this);
-            dialogTitle = title;
-            dialogText = text;
+            dialogTitle   = title;
+            dialogText    = text;
             dialogButtons = buttons;
+            dlgInstance   = this;
 
             MessageBoxSelection = ShowMessageBoxDialog();
         }
@@ -103,17 +106,7 @@ namespace FamiStudio
         private string[] ShowKDialogFileDialog(ref string defaultPath)
         {
             var args = $"--title \"{dialogTitle}\" ";
-            var extPairs = Array.Empty<string>();
-
-            if (string.IsNullOrWhiteSpace(dialogExtensions))
-            {
-                extPairs[0] = "*";
-                extPairs[1] = "All Files";
-            }
-            else
-            {
-                extPairs = dialogExtensions.Split("|");
-            }
+            var extPairs = dialogExts.Split("|");
 
             Debug.Assert(extPairs.Length % 2 == 0);
 
@@ -156,7 +149,7 @@ namespace FamiStudio
         private string[] ShowZenityFileDialog(ref string defaultPath)
         {
             var filters  = "";
-            var extPairs = dialogExtensions.Split("|");
+            var extPairs = dialogExts.Split("|");
 
             if (extPairs.Length > 0)
             {
@@ -231,14 +224,13 @@ namespace FamiStudio
             var result   = ShowDialog("kdialog", args);
             var exitCode = result.Item2;
 
-            if (exitCode == 0)
-                return DialogResult.Yes;
-            else if (exitCode == 1)
-                return DialogResult.No;
-            else if (exitCode == 2)
-                return DialogResult.Cancel;
-
-            return DialogResult.None;
+            return exitCode switch
+            {
+                0 => DialogResult.Yes,
+                1 => DialogResult.No,
+                2 => DialogResult.Cancel,
+                _ => DialogResult.None,
+            };
         }
 
         private DialogResult ShowZenityMessageBoxDialog()
@@ -259,7 +251,7 @@ namespace FamiStudio
                     break;
             }
 
-            var result = ShowDialog("zenity", args);
+            var result   = ShowDialog("zenity", args);
             var exitCode = result.Item2;
 
             if (exitCode == 0)
@@ -270,9 +262,13 @@ namespace FamiStudio
             {
                 // No and Cancel are both exit code 1 on zenity, since it doesn't natively support 3 buttons. "No" returns an empty array.
                 if (result.Item1.Length == 0)
+                {
                     return DialogResult.No;
-                else if (result.Item1[0] == "Cancel")
+                }
+                else if (result.Item1[0] == CancelLabel)
+                {
                     return DialogResult.Cancel;
+                }
             }
 
             return DialogResult.None;
@@ -289,27 +285,17 @@ namespace FamiStudio
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
+            
+            process.Start();
 
-            try
+            while (!process.HasExited)
             {
-                process.Start();
+                window.RunEventLoop(true);
+            }
 
-                // HACK: Fake invisible dialog so the app sees an async dialog in progress.
-                var dlg = new Dialog(window);
-                dlg.Resize(0, 0);
-                dlg.ShowDialogAsync();
-                
-                while (!process.HasExited)
-                    window.RunEventLoop(true);
-                
-                dlg.Close(DialogResult.OK);
-                return (process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries), process.ExitCode);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Dialog error: {ex.Message}");
-                return ([], process.ExitCode);
-            }
+            dlgInstance = null;
+
+            return (process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries), process.ExitCode);
         }
     }
 }

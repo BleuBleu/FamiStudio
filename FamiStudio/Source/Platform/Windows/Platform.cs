@@ -288,6 +288,11 @@ namespace FamiStudio
             return (DialogResult)MessageBox(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
         }
 
+        public static bool PlatformIsOutOfProcessDialogInProgress()
+        {
+            return false;
+        }
+
         public static bool IsVS2019RuntimeInstalled()
         {
             try

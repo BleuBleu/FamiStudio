@@ -128,6 +128,11 @@ namespace FamiStudio
             return dlg.MessageBoxSelection;
         }
 
+        public static bool PlatformIsOutOfProcessDialogInProgress()
+        {
+            return LinuxDialog.IsDialogOpen;
+        }
+
         public static void OpenUrl(string url)
         {
             try

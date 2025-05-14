@@ -272,12 +272,13 @@ namespace FamiStudio
         private void CreateNewFolder()
         {
             var folderName = NewFolderLabel.ToString();
+            var p = path ?? "/";
 
             // Ensure the folder has a unique name.
-            if (Directory.Exists(Path.Combine(path, folderName)))
+            if (Directory.Exists(Path.Combine(p, folderName)))
             {
                 var i = 1;
-                while (Directory.Exists(Path.Combine(path, folderName + " (" + i + ")")))
+                while (Directory.Exists(Path.Combine(p, folderName + " (" + i + ")")))
                     ++i;
 
                 folderName += " (" + i + ")";
@@ -292,7 +293,7 @@ namespace FamiStudio
                 if (r == DialogResult.OK)
                 {
                     var name    = dlg.Properties.GetPropertyValue<string>(0).Trim();
-                    var newPath = Path.Combine(path, name);
+                    var newPath = Path.Combine(p, name);
 
                     if (!string.IsNullOrEmpty(name))
                     {

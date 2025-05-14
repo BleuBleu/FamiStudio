@@ -38,6 +38,7 @@ namespace FamiStudio
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
         public bool IsContextMenuActive => container.IsContextMenuActive;
+        public bool IsOutOfProcessDialogInProgress => Platform.IsOutOfProcessDialogInProgress();
         public bool MobilePianoVisible { get => false; set => value = false; }
         public Point LastMousePosition => new Point(lastCursorX, lastCursorY);
         public Point LastContextMenuPosition => ScreenToWindow(contextMenuPoint);
@@ -457,7 +458,7 @@ namespace FamiStudio
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
         {
-            if (quit)
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
             
             Debug.WriteLine($"BUTTON! Button={button}, Action={action}, Mods={mods}");
@@ -713,7 +714,7 @@ namespace FamiStudio
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
-            if (quit)
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
 
             mods = FixKeyboardMods(mods, key, action);
@@ -989,7 +990,7 @@ namespace FamiStudio
             ProcessPlatformEvents();
             ProcessEvents();
 
-            if (!quit)
+            if (!quit && !IsOutOfProcessDialogInProgress)
             { 
                 Tick();
                 RenderFrameAndSwapBuffer();
