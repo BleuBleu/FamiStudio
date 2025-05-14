@@ -113,13 +113,13 @@ namespace FamiStudio
         public static unsafe string ShowPlatformSaveFileDialog(string title, string extensions, ref string defaultPath)
         {
             var dlg = new LinuxDialog(LinuxDialog.DialogMode.Save, title, ref defaultPath, extensions);
-            return dlg.SelectedPaths[0];
+            return dlg.SelectedPaths?[0];
         }
 
         public static string ShowPlatformBrowseFolderDialog(string title, ref string defaultPath)
         {
             var dlg = new LinuxDialog(LinuxDialog.DialogMode.Folder, title, ref defaultPath);
-            return dlg.SelectedPaths[0];
+            return dlg.SelectedPaths?[0];
         }
 
         public static DialogResult PlatformMessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
