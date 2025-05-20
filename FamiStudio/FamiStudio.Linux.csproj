@@ -899,8 +899,6 @@
     <EmbeddedResource Include="Resources\Atlas\MenuCopy@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCustomPatternSettings.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuCustomPatternSettings@2x.tga" />
-    <EmbeddedResource Include="Resources\Atlas\MenuCut.tga" />
-    <EmbeddedResource Include="Resources\Atlas\MenuCut@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuDelete.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuDelete@2x.tga" />
     <EmbeddedResource Include="Resources\Atlas\MenuDeleteSelection.tga" />

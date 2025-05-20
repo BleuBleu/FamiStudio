@@ -138,11 +138,11 @@ namespace FamiStudio
 
             var result = ShowDialog("kdialog", args);
 
-            if (result.Item1.Length == 0)
+            if (result.files.Length == 0)
                 return null;
 
-            defaultPath = result.Item1[0];
-            return result.Item1;
+            defaultPath = result.files[0];
+            return result.files;
         }
 
         private string[] ShowZenityFileDialog(ref string defaultPath)
@@ -177,11 +177,11 @@ namespace FamiStudio
 
             var result = ShowDialog("zenity", args);
 
-            if (result.Item1.Length == 0)
+            if (result.files.Length == 0)
                 return null;
             
-            defaultPath = result.Item1[0];
-            return result.Item1;
+            defaultPath = result.files[0];
+            return result.files;
         }
 
         private DialogResult ShowMessageBoxDialog()
@@ -221,7 +221,7 @@ namespace FamiStudio
             }
 
             var result   = ShowDialog("kdialog", args);
-            var exitCode = result.Item2;
+            var exitCode = result.exitCode;
 
             return exitCode switch
             {
@@ -251,7 +251,7 @@ namespace FamiStudio
             }
 
             var result   = ShowDialog("zenity", args);
-            var exitCode = result.Item2;
+            var exitCode = result.exitCode;
 
             if (exitCode == 0)
             {
@@ -260,11 +260,11 @@ namespace FamiStudio
             else if (exitCode == 1)
             {
                 // No and Cancel are both exit code 1 on zenity, since it doesn't natively support 3 buttons. "No" returns an empty array.
-                if (result.Item1.Length == 0)
+                if (result.files.Length == 0)
                 {
                     return DialogResult.No;
                 }
-                else if (result.Item1[0] == CancelLabel)
+                else if (result.files[0] == CancelLabel)
                 {
                     return DialogResult.Cancel;
                 }
@@ -273,7 +273,7 @@ namespace FamiStudio
             return DialogResult.None;
         }
 
-        private (string[], int) ShowDialog(string command, string arguments)
+        private static (string[] files, int exitCode) ShowDialog(string command, string arguments)
         {
             using var process = new Process();
             process.StartInfo = new ProcessStartInfo

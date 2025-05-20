@@ -424,7 +424,7 @@ namespace FamiStudio
 
         private void WindowCloseCallback(IntPtr window)
         {
-            if (IsAsyncDialogInProgress)
+            if (IsAsyncDialogInProgress || Platform.IsOutOfProcessDialogInProgress())
             {
                 Platform.Beep();
                 return;

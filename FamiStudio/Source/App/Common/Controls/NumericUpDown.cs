@@ -253,7 +253,7 @@ namespace FamiStudio
             {
                 App.ShowContextMenuAsync(new[]
                 {
-                    new ContextMenuOption("MenuCut",   CutName,   () => Cut()),
+                    new ContextMenuOption("Cut",       CutName,   () => Cut()),
                     new ContextMenuOption("MenuCopy",  CopyName,  () => Copy()),
                     new ContextMenuOption("MenuPaste", PasteName, () => Paste()),
                 });
