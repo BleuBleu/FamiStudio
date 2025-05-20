@@ -261,7 +261,7 @@ namespace FamiStudio
                     page.AddCheckBox(OpenLastProjectLabel.Colon, Settings.OpenLastProjectOnStart, OpenLastTooltip); // 6
                     page.AddCheckBox(AutosaveLabel.Colon, Settings.AutoSaveCopy, AutosaveTooltip); // 7
                     page.AddTextBox(PatternPrefixLabel.Colon, Settings.PatternNamePrefix, 64, false, PatternNamePrefixTooltip); // 8
-                    page.AddNumericUpDown(PatternDigitsLabel.Colon, Settings.PatternNameNumDigits, 1, 4, 1, 1, PatternNameNumDigitsTooltip); // 9
+                    page.AddNumericUpDown(PatternDigitsLabel.Colon, Settings.PatternNameNumDigits, 1, 4, 1, PatternNameNumDigitsTooltip); // 9
                     page.AddButton(null, OpenAutosaveFolderLabel, AutosaveFolderTooltip); // 10
                     page.PropertyClicked += GeneralPage_PropertyClicked;
                     page.SetPropertyVisible(1, Platform.IsDesktop);
@@ -283,7 +283,7 @@ namespace FamiStudio
                     page.AddDropDownList(TimeFormatLabel.Colon, Localization.ToStringArray(TimeFormatStrings), TimeFormatStrings[timeFormatIndex], TimeFormatTooltip); // 1
                     page.AddDropDownList(FollowModeLabel.Colon, Localization.ToStringArray(FollowModeStrings), FollowModeStrings[followModeIndex], FollowModeTooltip);  // 2
                     page.AddDropDownList(FollowViewsLabel.Colon, Localization.ToStringArray(FollowSyncStrings), FollowSyncStrings[followSyncIndex], FollowingViewsTooltip); // 3
-                    page.AddSlider(FollowRangeLabel.Colon, Settings.FollowPercent, 0.05, 0.95, 0.75f, (v) => $"{v:P0}", FollowRangeTooltip); // 4
+                    page.AddSlider(FollowRangeLabel.Colon, Settings.FollowPercent, 0.05, 0.95, (v) => $"{v:P0}", FollowRangeTooltip); // 4
                     page.AddDropDownList(ScrollBarsLabel.Colon, Localization.ToStringArray(ScrollBarsStrings), ScrollBarsStrings[Settings.ScrollBars], ScrollBarsTooltip); // 5
                     page.AddDropDownList(IdealSeqHeightLabel.Colon, IdealSequencerHeightStrings, IdealSequencerHeightStrings[GetSequencerSizeIndex(Settings.IdealSequencerSize)], IdealSequencerHeightTooltip); // 6
                     page.AddDropDownList(DpcmColorModeLabel.Colon, Localization.ToStringArray(DpcmColorModeStrings), DpcmColorModeStrings[Settings.DpcmColorMode], DpcmColorModeTooltip); // 7
@@ -305,8 +305,8 @@ namespace FamiStudio
                     page.AddCheckBox(TrackpadControlsLabel.Colon, Settings.TrackPadControls, TrackpadControlsTooltip); // 0
                     page.AddCheckBox(ReverseTrackpadXLabel.Colon, Settings.ReverseTrackPadX); // 1
                     page.AddCheckBox(ReverseTrackpadYLabel.Colon, Settings.ReverseTrackPadY); // 2
-                    page.AddSlider(TrackpadSensitivityLabel.Colon, Settings.TrackPadMoveSensitity, 1.0, 20.0, 10.0, (v) => $"{v:0.0}"); // 3
-                    page.AddSlider(TrackpadZoomSensitivityLabel.Colon, Settings.TrackPadZoomSensitity, 1.0, 20.0, 10.0, (v) => $"{v:0.0}"); // 4
+                    page.AddSlider(TrackpadSensitivityLabel.Colon, Settings.TrackPadMoveSensitity, 1.0, 20.0, (v) => $"{v:0.0}"); // 3
+                    page.AddSlider(TrackpadZoomSensitivityLabel.Colon, Settings.TrackPadZoomSensitity, 1.0, 20.0, (v) => $"{v:0.0}"); // 4
                     page.AddCheckBox(AltLeftEmulatesMiddle.Colon, Settings.AltLeftForMiddle, AltLeftForMiddleTooltip); // 5
                     page.AddCheckBox(AltRightZoomsInOut.Colon, Settings.AltZoomAllowed, AltZoomAllowedTooltip); // 6
                     page.SetPropertyEnabled(1, Settings.TrackPadControls);
@@ -320,15 +320,15 @@ namespace FamiStudio
                 case ConfigSection.Sound:
                 {
                     page.AddDropDownList(AudioApiLabel.Colon, Platform.GetAvailableAudioAPIs(), Settings.AudioAPI, AudioApiTooltip); // 0
-                    page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, Platform.IsLinux ? 60 : 30, AudioBufferSizeTooltip); // 1
-                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, 2, NumBufferedFramesTooltip); // 2
-                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, 1, StopInstrumentTooltip); // 3
+                    page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, AudioBufferSizeTooltip); // 1
+                    page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, NumBufferedFramesTooltip); // 2
+                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 3
                     page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 4
                     page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 5
                     page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 6
                     page.AddCheckBox(MuteDragSoundsLabel.Colon, Settings.NoDragSoungWhenPlaying, NoDragSoundTooltip); // 7
                     page.AddCheckBox(AccurateSeekLabel.Colon, Settings.AccurateSeek, AccurateSeekTooltip); // 8
-                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 100.0, 50.0, (v) => $"{v/100.0:P0}", MetronomeVolumeTooltip); // 9
+                    page.AddSlider(MetronomeVolumeLabel.Colon, Settings.MetronomeVolume, 1.0, 100.0, (v) => $"{v/100.0:P0}", MetronomeVolumeTooltip); // 9
                     break;
                 }
                 case ConfigSection.Mixer:

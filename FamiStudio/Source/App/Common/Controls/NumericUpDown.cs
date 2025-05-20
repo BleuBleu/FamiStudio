@@ -6,16 +6,13 @@ namespace FamiStudio
 {
     public class NumericUpDown : TextBox
     {
-        public delegate void ValueChangedDelegate(Control sender, int val);
+        public delegate void ValueChangedDelegate(Control sender, float val);
         public event ValueChangedDelegate ValueChanged;
 
         private int val;
         private int min;
         private int max = 10;
         private int inc = 1;
-        private int def;
-        private int prev;
-        private float scale = 1.0f;
         private TextureAtlasRef[] bmp;
         private float captureDuration;
         private int captureButton = -1;
@@ -24,22 +21,16 @@ namespace FamiStudio
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
         #region Localization
-
         protected LocalizedString EnterValueContext;
-        protected LocalizedString ResetPreviousValueContext;
-        protected LocalizedString ResetDefaultValueContext;
 
         #endregion
 
-        public NumericUpDown(int value, int minVal, int maxVal, int increment, int defaultVal, float scale = 1.0f) : base(value, minVal, maxVal, increment, defaultVal, scale)
+        public NumericUpDown(int value, int minVal, int maxVal, int increment) : base(value, minVal, maxVal, increment)
         {
             val = value;
             min = minVal;
             max = maxVal;
             inc = increment;
-            def = defaultVal;
-            prev = value;
-            this.scale = scale;
             
             Debug.Assert(val % increment == 0);
             Debug.Assert(min % increment == 0);
@@ -55,8 +46,9 @@ namespace FamiStudio
         {
             get 
             {
+
                 Debug.Assert(val >= min && val <= max && (val % inc) == 0);
-                return val; 
+                return val;
             }
             set 
             {
@@ -78,11 +70,6 @@ namespace FamiStudio
         {
             get { return max; }
             set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
-        }
-
-        public int Default
-        {
-            get { return def; }
         }
 
         protected void UpdateOuterMargins()
@@ -182,16 +169,14 @@ namespace FamiStudio
             App.ShowContextMenuAsync(new[]
             {
                 new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(); }),
-                new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => { ResetPreviousValue(); }),
-                new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => { ResetDefaultValue(); })
             });
         }
 
         protected void EnterValue()
         {
-            Platform.EditTextAsync(label, Math.Round(Value * scale).ToString(), (s) =>
+            Platform.EditTextAsync(label, Math.Round(Value).ToString(), (s) =>
             {
-                Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
+                Value = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s));
 
                 if (container is Grid grid)
                     grid.UpdateControlValue(this, Value);
@@ -202,14 +187,12 @@ namespace FamiStudio
         private void GetValueFromTextBox()
         {
             ClampNumber();
-            val = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(text) / scale);
+            val = (int)Math.Round(Utils.ParseFloatWithTrailingGarbage(text));
         }
 
         private void ScaleAndSetTextBoxValue()
         {
-            var newVal = scale == 1.0f ? val : (float)Math.Round(val * scale, 2);
-            var format = scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2";
-            text = newVal.ToString(format);
+            text = val.ToString(CultureInfo.InvariantCulture);
         }
 
         private void SetTextBoxValue()
@@ -217,16 +200,6 @@ namespace FamiStudio
             ScaleAndSetTextBoxValue();
             SelectAll();
             caretIndex = text.Length;
-        }
-
-        protected void ResetPreviousValue()
-        {
-            Value = prev;
-        }
-
-        protected void ResetDefaultValue()
-        {
-            Value = def;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -278,14 +251,11 @@ namespace FamiStudio
             }
             else if (e.Right)
             {
-                // TODO: Localize
                 App.ShowContextMenuAsync(new[]
                 {
                     new ContextMenuOption("MenuCut",   CutName,   () => Cut()),
                     new ContextMenuOption("MenuCopy",  CopyName,  () => Copy()),
                     new ContextMenuOption("MenuPaste", PasteName, () => Paste()),
-                    new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => ResetPreviousValue()),
-                    new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => ResetDefaultValue()),
                 });
             }
             else

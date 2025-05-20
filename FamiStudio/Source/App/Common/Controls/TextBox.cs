@@ -33,8 +33,6 @@ namespace FamiStudio
         protected int numberMin;
         protected int numberMax;
         protected int numberInc;
-        protected int numberDef;
-        protected float numberScale;
         protected bool mouseSelecting;
         protected bool caretBlink = true;
         protected bool numeric;
@@ -78,10 +76,9 @@ namespace FamiStudio
             text = txt;
             maxLength = maxLen;
             supportsDoubleClick = true;
-            supportsTripleClick = true;
         }
 
-        public TextBox(int value, int minVal, int maxVal, int increment, int defaultVal, float scale)
+        public TextBox(int value, int minVal, int maxVal, int increment)
         {
             Localization.Localize(this);
             height = DpiScaling.ScaleForWindow(24);
@@ -90,8 +87,6 @@ namespace FamiStudio
             numberMin = minVal;
             numberMax = maxVal;
             numberInc = increment;
-            numberDef = defaultVal;
-            numberScale = scale;
         }
 
         public string Text
@@ -124,11 +119,10 @@ namespace FamiStudio
                         ? Utils.ParseFloatWithTrailingGarbage(text) 
                         : Utils.ParseIntWithTrailingGarbage(text);
 
-                var snap   = Utils.RoundDown((int)Math.Round(val / numberScale), numberInc);
-                var clamp  = Utils.Clamp(snap * numberScale, numberMin * numberScale, numberMax * numberScale);
-                var format = numberScale % 1 == 0 ? "F0" : numberScale % 0.1f == 0 ? "F1" : "F2";
+                var snap   = Utils.RoundDown((int)Math.Round(val), numberInc);;
+                var clamp  = Utils.Clamp(snap, numberMin, numberMax);
 
-                if (SetAndMarkDirty(ref text, clamp.ToString(format, CultureInfo.InvariantCulture)))
+                if (SetAndMarkDirty(ref text, clamp.ToString(CultureInfo.InvariantCulture)))
                 {
                     caretIndex = Utils.Clamp(caretIndex, 0, text.Length);
                     selectionStart = -1;
@@ -139,7 +133,7 @@ namespace FamiStudio
 
         protected void SetAndFormatTextForScaleValue(double s)
         {
-            text = s.ToString(numberScale % 1 == 0 ? "F0" : numberScale % 0.1f == 0 ? "F1" : "F2");
+            text = s.ToString(CultureInfo.InvariantCulture);
             caretIndex = Math.Min(caretIndex, text.Length);
         }
 
@@ -252,12 +246,6 @@ namespace FamiStudio
 
                 MarkDirty();
             }
-        }
-
-        protected override void OnMouseTripleClick(PointerEventArgs e)
-        {
-            SelectAll();
-            e.MarkHandled();
         }
 
         protected int FindWordStart(int c, int dir)

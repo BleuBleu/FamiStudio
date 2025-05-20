@@ -3603,7 +3603,7 @@ namespace FamiStudio
 
             dlg.Properties.AddColoredTextBox(song.Name, song.Color); // 0
             dlg.Properties.AddColorPicker(song.Color); // 1
-            dlg.Properties.AddNumericUpDown(SongLengthLabel.Colon, song.Length, 1, Song.MaxLength, 1, 16, SongLengthTooltip); // 2
+            dlg.Properties.AddNumericUpDown(SongLengthLabel.Colon, song.Length, 1, Song.MaxLength, 1, SongLengthTooltip); // 2
             tempoProperties.AddProperties();
             dlg.Properties.Build();
 

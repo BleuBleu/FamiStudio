@@ -45,8 +45,6 @@ namespace FamiStudio
         private int pathButtonSizeY = DpiScaling.ScaleForWindow(24);
         private int buttonSize      = DpiScaling.ScaleForWindow(36);
 
-        private Button       buttonBack;
-        private Button       buttonForward;
         private Button       buttonComputer;
         private Grid         gridFiles;
         private TextBox      textFile;
@@ -65,38 +63,21 @@ namespace FamiStudio
         private string path;
         private string[] extensions;
         private List<FileEntry> files = new List<FileEntry>();
-        private int searchIndex;
-        private string searchString;
-        private DateTime prevTime;
+        private int fileIndex;
 
         private List<string> pathHistory = new List<string>();
-        private int pathIndex = -1;
 
         public string SelectedPath => filename;
 
         #region Localization
 
-        // Context menu
-        LocalizedString DeleteLabel;
-        LocalizedString NewFolderLabel;
-
         // Dialogs
-        LocalizedString CreateFolderTitle;
-        LocalizedString CreateFolderMessage;
         LocalizedString OverwriteFileTitle;
         LocalizedString OverwriteFileMessage;
-        LocalizedString DeleteMessage;
-        LocalizedString DeleteFileErrorTitle;
-        LocalizedString DeleteFolderErrorTitle;
-        LocalizedString DeleteErrorMessage;
         LocalizedString FileNoAccessTitle;
         LocalizedString FileNoAccessMessage;
         LocalizedString FolderNoAccessTitle;
         LocalizedString FolderNoAccessMessage;
-        LocalizedString DirectoryCreateErrorTitle;
-        LocalizedString DirectoryCreateErrorMessage;
-        LocalizedString DirectoryExistsTitle;
-        LocalizedString DirectoryExistsMessage;
 
         // Directories
         LocalizedString ComputerLabel;
@@ -164,21 +145,10 @@ namespace FamiStudio
         private void CreateControls(string[] descriptions)
         {
             var widthNoMargin = width - margin * 2;
-            var x = margin;
             var y = titleBarSizeY + margin;
 
-            buttonBack    = new Button("ArrowLeft");
-            buttonBack.Move(x, y, pathButtonSizeY, pathButtonSizeY);
-            buttonBack.Click += ButtonBack_Click;
-            x += buttonBack.Width + margin;
-
-            buttonForward = new Button("ArrowRight");
-            buttonForward.Move(x, y, pathButtonSizeY, pathButtonSizeY);
-            buttonForward.Click += ButtonForward_Click;
-            x += buttonForward.Width + margin;
-
             buttonComputer = new Button("FileComputer", ComputerLabel);
-            buttonComputer.Move(x, y, 100, pathButtonSizeY); 
+            buttonComputer.Move(margin, y, 100, pathButtonSizeY); 
             buttonComputer.Click += ButtonComputer_Click;
             y += buttonComputer.Height + margin;
 
@@ -223,8 +193,6 @@ namespace FamiStudio
 
             AddControl(buttonYes);
             AddControl(buttonNo);
-            AddControl(buttonBack);
-            AddControl(buttonForward);
             AddControl(buttonComputer);
             AddControl(gridFiles);
             AddControl(textFile);
@@ -236,123 +204,9 @@ namespace FamiStudio
             gridFiles.GrabDialogFocus();
         }
 
-        private void ButtonBack_Click(Control sender)
-        {
-            GoBack();
-        }
-
-        private void ButtonForward_Click(Control sender)
-        {
-            GoForward();
-        }
-
         private void ButtonComputer_Click(Control sender)
         {
             GoToComputer();
-        }
-
-        private void GoBack()
-        {
-            if (pathIndex > 0)
-            {
-                pathIndex--;
-                    GoToPath(pathHistory[pathIndex], false);
-            }
-        }
-
-        private void GoForward()
-        {
-            if (pathIndex < pathHistory.Count - 1)
-            {
-                pathIndex++;
-                GoToPath(pathHistory[pathIndex], false);
-            }
-        }
-
-        private void CreateNewFolder()
-        {
-            var folderName = NewFolderLabel.ToString();
-            var p = path ?? "/";
-
-            // Ensure the folder has a unique name.
-            if (Directory.Exists(Path.Combine(p, folderName)))
-            {
-                var i = 1;
-                while (Directory.Exists(Path.Combine(p, folderName + " (" + i + ")")))
-                    ++i;
-
-                folderName += " (" + i + ")";
-            }
-
-            var dlg = new PropertyDialog(ParentWindow, CreateFolderTitle, DpiScaling.ScaleForWindow(240), true, true);
-            dlg.Properties.AddTextBox($"{CreateFolderMessage}:", folderName);
-            dlg.Properties.Build();
-
-            dlg.ShowDialogAsync((r) =>
-            {
-                if (r == DialogResult.OK)
-                {
-                    var name    = dlg.Properties.GetPropertyValue<string>(0).Trim();
-                    var newPath = Path.Combine(p, name);
-
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        if (Directory.Exists(newPath))
-                        {
-                            Platform.MessageBoxAsync(ParentWindow, DirectoryExistsMessage.Format(name), DirectoryExistsTitle, MessageBoxButtons.OK);
-                            return;
-                        }
-
-                        try
-                        {
-                            Directory.CreateDirectory(newPath);
-                        }
-                        catch
-                        {
-                            Platform.MessageBoxAsync(ParentWindow, DirectoryCreateErrorMessage.Format(name), DirectoryCreateErrorTitle, MessageBoxButtons.OK);
-                            return;
-                        }
-
-                        // Refresh the file list and select / highlight the new folder.
-                        GoToPath(path);
-
-                        var idx = files.FindIndex(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
-                        gridFiles.UpdateSelectedRow(idx);
-                    }
-                }
-            });
-        }
-
-        private void DeleteFileOrDirectory()
-        {
-            Platform.MessageBoxAsync(ParentWindow, DeleteMessage.Format(textFile.Text), DeleteLabel, MessageBoxButtons.YesNo, (r) =>
-            {
-                if (r == DialogResult.Yes)
-                {
-                    var deletePath  = Path.Combine(path, textFile.Text);
-                    var isDirectory = Directory.Exists(deletePath);
-
-                    try
-                    {  
-                        if (isDirectory)
-                        {
-                            Directory.Delete(deletePath, true);
-                        }
-                        else
-                        {
-                            File.Delete(deletePath);
-                        }
-                    }
-                    catch
-                    {
-                        var title = isDirectory ? DeleteFolderErrorTitle : DeleteFileErrorTitle;
-                        Platform.MessageBoxAsync(ParentWindow, DeleteErrorMessage.Format(textFile.Text), title, MessageBoxButtons.OK);
-                        return;
-                    }
-
-                    GoToPath(path); // Refresh;
-                }
-            });
         }
 
         private void UpdatePathBar()
@@ -364,9 +218,6 @@ namespace FamiStudio
 
             buttonsPath.Clear();
             buttonPathPaths.Clear();
-
-            buttonBack.Enabled    = pathIndex > 0;
-            buttonForward.Enabled = pathIndex < pathHistory.Count - 1;
 
             if (path != null)
             {
@@ -389,7 +240,7 @@ namespace FamiStudio
                     RemoveControl(tempButton);
                 }
 
-                var maxWidth = width - margin * 4 - (buttonComputer.Width + buttonBack.Width + buttonForward.Width);
+                var maxWidth = width - margin * 2 - buttonComputer.Width;
                 var startButtonIndex = 0;
 
                 // If there is not enough space, only add the end folders.
@@ -413,7 +264,7 @@ namespace FamiStudio
                     }
                 }
 
-                var x = margin * 4 + buttonComputer.Width + buttonBack.Width + buttonForward.Width;
+                var x = margin * 2 + buttonComputer.Width;
 
                 for (int i = startButtonIndex; i < splits.Length; i++)
                 {
@@ -500,31 +351,12 @@ namespace FamiStudio
             {
                 UpdateTextByIndex(rowIndex);
             }
-            else
-            {
-                
-                // TODO: Localize.
-                App.ShowContextMenuAsync(new[]
-                {
-                    new ContextMenuOption("FileFolder", NewFolderLabel, () => CreateNewFolder()),
-                    new ContextMenuOption("MenuDelete", DeleteLabel,    () => DeleteFileOrDirectory())
-                });
-            }
         }
 
         private void GridFiles_EmptyCellClicked(Control sender, bool left)
         {
             textFile.Text = "";
             gridFiles.ResetSelectedRow();
-
-            if (!left)
-            {
-                // TODO: Localize.
-                App.ShowContextMenuAsync(new[]
-                {
-                    new ContextMenuOption("FileFolder", NewFolderLabel, () => CreateNewFolder()),
-                });
-            }
         }
 
         private void GridFiles_CellDoubleClicked(Control sender, int rowIndex, int colIndex)
@@ -551,7 +383,7 @@ namespace FamiStudio
         {
             Debug.Assert(index < files.Count);
             UpdateTextByIndex(index);
-            searchIndex = index;
+            fileIndex = index;
         }
 
         private void TryOpenOrValidate()
@@ -574,14 +406,6 @@ namespace FamiStudio
                 null                => false,
                 _                   => false
             };
-        }
-
-        private void GoUpDirectoryLevel()
-        {
-            var p = Path.GetDirectoryName(path);
-
-            if (Path.Exists(p))
-                GoToPath(p);
         }
 
         private bool ValidateAndClose()
@@ -631,37 +455,12 @@ namespace FamiStudio
             return false;
         }
 
-        protected override void OnChar(CharEventArgs e)
-        {
-            base.OnChar(e);
-            if (gridFiles.HasDialogFocus)
-            {
-                TextSearch(e.Char.ToString());
-            }
-            else if (textFile.HasDialogFocus)
-            {
-                AutoFillText();
-            }
-        }
-
         private void ToggleFocus()
         {
             if (gridFiles.HasDialogFocus && textFile.Enabled)
                 textFile.GrabDialogFocus();
             else if (textFile.HasDialogFocus)
                 gridFiles.GrabDialogFocus();
-        }
-
-        private void AutoFillText()
-        {
-            var input = textFile.Text;
-            var match = files.FirstOrDefault(f => f.Name.StartsWith(input, StringComparison.CurrentCultureIgnoreCase));
-
-            if (match != null)
-            {
-                textFile.Text = match.Name;
-                textFile.SetSelection(input.Length, match.Name.Length - input.Length);
-            }
         }
 
         private void UpdateTextByIndex(int index)
@@ -698,18 +497,6 @@ namespace FamiStudio
             return data;
         }
 
-        private void AddPathToHistory(string p)
-        {
-            if (pathIndex != -1 && p == pathHistory[pathIndex])
-                return;
-
-            if (pathIndex < pathHistory.Count - 1)
-                pathHistory.RemoveRange(pathIndex + 1, pathHistory.Count - pathIndex - 1);
-
-            pathHistory.Add(p);
-            pathIndex = pathHistory.Count - 1;
-        }
-
         private void GoToComputer()
         {
             var userDir      = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -718,7 +505,7 @@ namespace FamiStudio
             var downloadDir  = Path.Combine(userDir, "Downloads");
 
             files.Clear();
-            searchIndex = -1;
+            fileIndex = -1;
 
             if (Directory.Exists(userDir))
                 files.Add(new FileEntry("FileHome", HomeFolderLabel, userDir, EntryType.Directory));
@@ -752,7 +539,6 @@ namespace FamiStudio
             }
 
             path = null;
-            AddPathToHistory(path);
             gridFiles.UpdateData(GetGridData(files));
             UpdateColumnNames();
             UpdatePathBar();
@@ -813,7 +599,7 @@ namespace FamiStudio
             }
 
             files.Clear();
-            searchIndex = -1;
+            fileIndex = -1;
 
             var sortSign = sortDesc ? -1 : 1;
             var comp = sortByDate ?
@@ -845,9 +631,6 @@ namespace FamiStudio
             
             path = p;
 
-            if (stack)
-                AddPathToHistory(path);
-
             gridFiles.UpdateData(GetGridData(files));
             gridFiles.ResetScroll();
             gridFiles.ResetSelectedRow();
@@ -855,50 +638,6 @@ namespace FamiStudio
             UpdatePathBar();
 
             return true;
-        }
-
-        private void TextSearch(string keyChar)
-        {
-            var now = DateTime.Now;
-            var resetSearch = (now - prevTime) >= TimeSpan.FromSeconds(1) || searchString.Length == 0;
-
-            if (resetSearch)
-            {
-                if (string.IsNullOrWhiteSpace(keyChar))
-                    return;
-
-                searchString = keyChar;
-                searchIndex = 0;
-            }
-            else if (searchString == keyChar)
-            {
-                searchIndex = (searchIndex + 1) % files.Count;
-            }
-            else
-            {
-                searchString += keyChar;
-            }
-
-            prevTime = now;
-            Debug.Assert(searchIndex >= 0 && searchIndex < files.Count);
-
-            // Make sure the search wraps when starting on a non-zero value.
-            for (var offset = 0; offset < files.Count; offset++)
-            {
-                var i = (searchIndex + offset) % files.Count;
-
-                if (files[i].Name.StartsWith(searchString, StringComparison.CurrentCultureIgnoreCase))
-                {
-                    textFile.Text = files[i].Name;
-                    gridFiles.UpdateSelectedRow(i);
-                    searchIndex = i;
-                    break;
-                }
-
-                // No match found.
-                if (offset == files.Count - 1)
-                    Platform.Beep();
-            }
         }
 
         private void ButtonYes_Click(Control sender)
@@ -913,24 +652,6 @@ namespace FamiStudio
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.Modifiers.IsAltDown)
-            {
-                if (e.Key == Keys.Up)
-                {
-                    GoUpDirectoryLevel();
-                }
-                else if (e.Key == Keys.Left)
-                {
-                    GoBack();
-                }
-                else if (e.Key == Keys.Right)
-                {
-                    GoForward();
-                }
-                
-                e.Handled = true;
-            }
-
             base.OnKeyDown(e);
 
             if (!e.Handled)
@@ -942,14 +663,6 @@ namespace FamiStudio
                 else if (e.Key == Keys.Escape)
                 {
                     Close(DialogResult.Cancel);
-                }
-                else if (e.Key == Keys.Backspace && gridFiles.HasDialogFocus)
-                {
-                    GoUpDirectoryLevel();
-                }
-                else if (e.Key == Keys.Tab)
-                {
-                    ToggleFocus();
                 }
             }
         }

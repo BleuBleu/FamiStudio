@@ -113,7 +113,7 @@ namespace FamiStudio
                     page.AddTextBox(CopyrightLabel.Colon, project.Copyright, 31); // 2
                     page.AddDropDownList(TempoModeLabel.Colon, TempoType.Names, TempoType.Names[project.TempoMode], TempoModeTooltip); // 3
                     page.AddDropDownList(MachineLabel.Colon, Localization.ToStringArray(MachineType.LocalizedNames, MachineType.CountNoDual), MachineType.LocalizedNames[project.PalMode ? MachineType.PAL : MachineType.NTSC], AuthoringMachineTooltip); // 4
-                    page.AddNumericUpDown(TuningLabel, project.Tuning, 300, 580, 1, 440, TuningTooltip); // 5
+                    page.AddNumericUpDown(TuningLabel, project.Tuning, 300, 580, 1, TuningTooltip); // 5
                     page.SetPropertyEnabled(4, project.UsesFamiStudioTempo);
                     page.PropertyChanged += Info_PropertyChanged;
                     break;
@@ -131,7 +131,7 @@ namespace FamiStudio
 
                     page.ShowWarnings = true;
                     page.AddCheckBoxList(ExpansionLabel.Colon, expNames, expBools, ExpansionAudioTooltip); // 0
-                    page.AddNumericUpDown(N163ChannelsLabel.Colon, project.ExpansionNumN163Channels, 1, 8, 1, 1, ExpansionNumChannelsTooltip); // 1
+                    page.AddNumericUpDown(N163ChannelsLabel.Colon, project.ExpansionNumN163Channels, 1, 8, 1, ExpansionNumChannelsTooltip); // 1
                     page.SetPropertyEnabled(1, project.UsesExpansionAudio(ExpansionType.N163));
                     page.PropertyChanged += Expansion_PropertyChanged;
                     UpdateExpansionWarnings(page);

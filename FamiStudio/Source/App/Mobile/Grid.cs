@@ -22,12 +22,9 @@ namespace FamiStudio
         private CellSliderData[,] cellSliderData;
         private bool[,] gridDisabled;
         private object[,] data;
-        private object[,] prevData;
         private GridOptions options;
 
         LocalizedString EnterValueContext;
-        LocalizedString ResetPreviousValueContext;
-        LocalizedString ResetDefaultValueContext;
 
         public object[,] Data => data;
 
@@ -36,7 +33,6 @@ namespace FamiStudio
             public int MinValue;
             public int MaxValue;
             public Func<double, string> Formatter;
-            public int DefaultValue;
         }
 
         public Grid(Container parent, ColumnDesc[] cols, object[,] d, GridOptions opts = GridOptions.None)
@@ -46,7 +42,6 @@ namespace FamiStudio
             columns = cols;
             options = opts;
             data = d;
-            prevData = (object[,])data.Clone();
             gridControls = new Control[data.GetLength(0), data.GetLength(1)];
             gridDisabled = new bool[data.GetLength(0), data.GetLength(1)];
         }
@@ -171,18 +166,16 @@ namespace FamiStudio
                         {
                             var min = col.MinValue;
                             var max = col.MaxValue;
-                            var def = col.DefaultValue;
                             var fmt = col.Formatter;
 
                             if (cellSliderData != null && cellSliderData[r, c] != null)
                             {
                                 min = cellSliderData[r, c].MinValue;
                                 max = cellSliderData[r, c].MaxValue;
-                                def = cellSliderData[r, c].DefaultValue;
                                 fmt = cellSliderData[r, c].Formatter;
                             }
 
-                            var slider = new Slider((int)data[r, c], min, max, def, fmt);
+                            var slider = new Slider((int)data[r, c], min, max, fmt);
                             slider.ValueChanged += Slider_ValueChanged;
                             localRowHeight = slider.Height;
                             ctrl = slider;
@@ -190,7 +183,7 @@ namespace FamiStudio
                         }
                         case ColumnType.NumericUpDown:
                         {
-                            var upDown = new NumericUpDown((int)data[r, c], col.MinValue, col.MaxValue, col.DefaultValue, 1);
+                            var upDown = new NumericUpDown((int)data[r, c], col.MinValue, col.MaxValue, 1);
                             upDown.ValueChanged += UpDown_ValueChanged;
                             ctrl = upDown;
                             break;
@@ -328,28 +321,11 @@ namespace FamiStudio
             }
         }
 
-        private void ResetDefaultValue(Control sender)
-        {
-            if (sender is Slider slider)
-            {
-                var scale = Utils.ParseFloatWithTrailingGarbage(slider.Format(1));
-                UpdateControlValue(sender, (int)Math.Round(slider.DefaultValue / scale));
-            }
-        }
-
-        private void ResetPreviousValue(Control sender)
-        {
-            if (GetGridCoordForControl(sender, out var row, out var col))
-                SetData(row, col, prevData[row, col]);
-        }
-
         public virtual void ShowContextMenu(Control sender)
         {
             App.ShowContextMenuAsync(new[]
             {
                 new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(sender); }),
-                new ContextMenuOption("MenuReset", ResetPreviousValueContext, () => { ResetPreviousValue(sender); }),
-                new ContextMenuOption("MenuReset", ResetDefaultValueContext,  () => { ResetDefaultValue(sender); })
             });
         }
 
@@ -422,12 +398,12 @@ namespace FamiStudio
             }
         }
 
-        public void OverrideCellSlider(int row, int col, int min, int max, int def, Func<double, string> fmt)
+        public void OverrideCellSlider(int row, int col, int min, int max, Func<double, string> fmt)
         {
             if (cellSliderData == null)
                 cellSliderData = new CellSliderData[data.GetLength(0), data.GetLength(1)];
 
-            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, DefaultValue = def, Formatter = fmt };
+            cellSliderData[row, col] = new CellSliderData() { MinValue = min, MaxValue = max, Formatter = fmt };
 
             var slider = gridControls[row, col] as Slider;
 
@@ -436,7 +412,6 @@ namespace FamiStudio
                 slider.Min = min;
                 slider.Max = max;
                 slider.Format = fmt;
-                slider.DefaultValue = def;
             }
         }
 

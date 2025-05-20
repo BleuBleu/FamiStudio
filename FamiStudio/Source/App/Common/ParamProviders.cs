@@ -11,7 +11,6 @@ namespace FamiStudio
         private int MaxValue;
         public int DefaultValue;
         public int SnapValue;
-        public float ScaleValue;
         public int CustomHeight;
         public bool IsList;
         public bool IsEmpty;
@@ -51,7 +50,7 @@ namespace FamiStudio
             return Utils.Clamp(value, GetMinValue(), GetMaxValue());
         }
 
-        protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, int snap = 1, float scale = 1.0f)
+        protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, int snap = 1)
         {
             Name = name;
             ToolTip = tooltip;
@@ -60,12 +59,10 @@ namespace FamiStudio
             DefaultValue = defaultVal;
             IsList = list;
             SnapValue = snap;
-            ScaleValue = scale;
             GetValueString = () => GetValue().ToString();
             GetMinValue = () => MinValue;
             GetMaxValue = () => MaxValue;
             GetDefaultValue = () => DefaultValue;
-            GetScaleValue = () => ScaleValue;
             IsEnabled = () => true;
         }
 
@@ -77,8 +74,8 @@ namespace FamiStudio
 
     public class InstrumentParamInfo : ParamInfo
     {
-        public InstrumentParamInfo(Instrument inst, string name, int minVal, int maxVal, int defaultVal, string tooltip = null, bool list = false, int snap = 1, float scale = 1.0f) :
-            base(name, minVal, maxVal, defaultVal, tooltip, list, snap, scale)
+        public InstrumentParamInfo(Instrument inst, string name, int minVal, int maxVal, int defaultVal, string tooltip = null, bool list = false, int snap = 1) :
+            base(name, minVal, maxVal, defaultVal, tooltip, list, snap)
         {
         }
 
@@ -563,8 +560,8 @@ namespace FamiStudio
 
     public class DPCMSampleParamInfo : ParamInfo
     {
-        public DPCMSampleParamInfo(DPCMSample sample, string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, float scale = 1.0f) :
-            base(name, minVal, maxVal, defaultVal, tooltip, list, 1, scale)
+        public DPCMSampleParamInfo(DPCMSample sample, string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false) :
+            base(name, minVal, maxVal, defaultVal, tooltip, list, 1)
         {
         }
     }
@@ -618,7 +615,7 @@ namespace FamiStudio
                     { GetValue = () => { return sample.DmcInitialValueDiv2; }, SetValue = (v) => { sample.DmcInitialValueDiv2 = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, VolumeAdjustLabel, 0, 200, 100, VolumeAdjustTooltip)
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, FineTuningLabel, 1900, 2100, 2000, FineTuningTooltip, false, 0.05f)
+                new DPCMSampleParamInfo(sample, FineTuningLabel, 1900, 2100, 2000, FineTuningTooltip, false)
                     { GetValue = () => { return (int)Math.Round(sample.FinePitch * 2000); }, SetValue = (v) => { sample.FinePitch = v / 2000.0f; sample.Process(); }, GetValueString = () => { return (sample.FinePitch * 100.0f).ToString("N2") + "%"; } },
                 new DPCMSampleParamInfo(sample, ProcessPalLabel, 0, 1, 0, ProcessPalTooltip)
                     { GetValue = () => { return  sample.PalProcessing ? 1 : 0; }, SetValue = (v) => { sample.PalProcessing = v != 0; sample.Process(); } },

@@ -28,7 +28,6 @@ namespace FamiStudio
         private bool stereo;
         private volatile float[] geometry;
         private volatile bool hasNonZeroData = false;
-        private FamiStudioWindow window = FamiStudioWindow.Instance;
 
         private Dictionary<int, short[]> mixDownBuffers = new Dictionary<int, short[]>();
 
@@ -91,7 +90,7 @@ namespace FamiStudio
                     // On desktop, the main window stops ticking whenever a dialog is present.
                     // Oscilloscope updates will not be rendered during this time, so we don't
                     // need to process it. Mobile handles this differently.
-                    if (Platform.IsDesktop && window.IsAsyncDialogInProgress) 
+                    if (Platform.IsDesktop && FamiStudioWindow.Instance.IsAsyncDialogInProgress) 
                         break;
                     
                     if (sampleQueue.TryDequeue(out var pair))

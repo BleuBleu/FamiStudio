@@ -38,7 +38,6 @@ namespace FamiStudio
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
         public bool IsContextMenuActive => container.IsContextMenuActive;
-        public bool IsOutOfProcessDialogInProgress => Platform.IsOutOfProcessDialogInProgress();
         public bool MobilePianoVisible { get => false; set => value = false; }
         public Point LastMousePosition => new Point(lastCursorX, lastCursorY);
         public Point LastContextMenuPosition => ScreenToWindow(contextMenuPoint);
@@ -458,7 +457,7 @@ namespace FamiStudio
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
         {
-            if (quit || IsOutOfProcessDialogInProgress)
+            if (quit || Platform.IsOutOfProcessDialogInProgress())
                 return;
             
             Debug.WriteLine($"BUTTON! Button={button}, Action={action}, Mods={mods}");
@@ -488,35 +487,22 @@ namespace FamiStudio
                     Math.Abs(lastClickX - lastCursorX) < 4 &&
                     Math.Abs(lastClickY - lastCursorY) < 4;
 
-                // Double-clicks are always sent. Triple-clicks are only sent if the control supports it.
-                // This prevents cancelling subsequent double-clicks, similar to how operating systems behave.
                 var doubleClick = multiClick && lastClickButton == button;
-                var tripleClick = multiClick && lastClickButton == -1 && ctrlIsValid && ctrl.SupportsTripleClick;
 
-                if (!doubleClick && !tripleClick) 
+                if (!doubleClick) 
                 {
                     lastClickX = lastCursorX;
                     lastClickY = lastCursorY;
                 }
 
-                lastClickButton = tripleClick ? -2 : doubleClick ? -1 : button;
+                lastClickButton = doubleClick ? -1 : button;
                 lastClickTime = now;
 
                 if (ctrlIsValid)
                 {
                     SetActiveControl(ctrl);
 
-                    if (tripleClick)
-                    {
-                        // We only support left-click for multi-clicks.
-                        if (button == GLFW_MOUSE_BUTTON_LEFT)
-                        {
-                            Debug.WriteLine($"TRIPLE CLICK!");
-
-                            ctrl.SendMouseTripleClick(new PointerEventArgs(MakeButtonFlags(button), cx, cy));
-                        }
-                    }
-                    else if (doubleClick)
+                    if (doubleClick)
                     {
                         // We only support left-click for multi-clicks.
                         if (button == GLFW_MOUSE_BUTTON_LEFT)
@@ -714,7 +700,7 @@ namespace FamiStudio
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
-            if (quit || IsOutOfProcessDialogInProgress)
+            if (quit || Platform.IsOutOfProcessDialogInProgress())
                 return;
 
             mods = FixKeyboardMods(mods, key, action);
@@ -990,7 +976,7 @@ namespace FamiStudio
             ProcessPlatformEvents();
             ProcessEvents();
 
-            if (!quit && !IsOutOfProcessDialogInProgress)
+            if (!quit && !Platform.IsOutOfProcessDialogInProgress())
             { 
                 Tick();
                 RenderFrameAndSwapBuffer();

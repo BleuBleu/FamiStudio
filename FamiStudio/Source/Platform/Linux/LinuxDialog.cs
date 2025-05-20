@@ -14,7 +14,6 @@ namespace FamiStudio
 
         private static LinuxDialog dlgInstance;
 
-        private FamiStudioWindow window = FamiStudioWindow.Instance;
         private DialogMode dialogMode;
         private string dialogTitle;
         private string dialogText;
@@ -97,7 +96,7 @@ namespace FamiStudio
                 return ShowZenityFileDialog(ref defaultPath);
             }
 
-            var dlg = new MessageDialog(window, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
+            var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
             dlg.ShowDialog();
 
             return null;
@@ -196,7 +195,7 @@ namespace FamiStudio
                 return ShowZenityMessageBoxDialog();
             }
 
-            var dlg = new MessageDialog(window, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
+            var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
             dlg.ShowDialog();
 
             return DialogResult.None;
@@ -290,7 +289,7 @@ namespace FamiStudio
 
             while (!process.HasExited)
             {
-                window.RunEventLoop(true);
+                FamiStudioWindow.Instance.RunEventLoop(true);
             }
 
             dlgInstance = null;

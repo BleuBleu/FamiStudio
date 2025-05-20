@@ -12,20 +12,16 @@ namespace FamiStudio
         private double min;
         private double max;
         private double val;
-        private double def;
-        private double prev;
         private int captureX;
         private Func<double, string> format;
         private bool changing;
         private bool dragging;
 
-        public Slider(double value, double minValue, double maxValue, double defaultValue, Func<double, string> fmt = null)
+        public Slider(double value, double minValue, double maxValue, Func<double, string> fmt = null)
         {
             min = minValue;
             max = maxValue;
             val = value;
-            def = defaultValue;
-            prev = value;
             format = fmt == null ? (o) => o.ToString() : fmt;
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 14 : 24);
             supportsLongPress = true;
@@ -33,23 +29,12 @@ namespace FamiStudio
 
         public double Min { get => min; set => SetAndMarkDirty(ref min, value); }
         public double Max { get => max; set => SetAndMarkDirty(ref max, value); }
-        public double DefaultValue { get => def; set => SetAndMarkDirty(ref def, value); }
         public Func<double, string> Format { get => format; set { format = value; MarkDirty(); } }
 
         public double Value
         {
             get { return val; }
             set { if (SetAndMarkDirty(ref val, Utils.Clamp(value, min, max))) ValueChanged?.Invoke(this, val); }
-        }
-
-        protected void ResetPreviousValue()
-        {
-            Value = prev;
-        }
-
-        protected void ResetDefaultValue()
-        {
-            Value = def;
         }
 
         protected override void OnPointerDown(PointerEventArgs e)
@@ -80,16 +65,6 @@ namespace FamiStudio
                 dragging = false;
                 changing = false;
                 ReleasePointer();
-                e.MarkHandled();
-            }
-            else if (e.Right)
-            {
-                // TODO: Localize
-                App.ShowContextMenuAsync(new[]
-                {
-                    new ContextMenuOption("MenuReset", "ResetPreviousValueContext", () => ResetPreviousValue()),
-                    new ContextMenuOption("MenuReset", "ResetDefaultValueContext",  () => ResetDefaultValue())
-                });
                 e.MarkHandled();
             }
         }

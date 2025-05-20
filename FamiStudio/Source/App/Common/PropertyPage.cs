@@ -177,9 +177,9 @@ namespace FamiStudio
             return new ImageBox(image);
         }
 
-        private NumericUpDown CreateNumericUpDown(int value, int min, int max, int inc, int def, string label = null, string tooltip = null, float scale = 1.0f)
+        private NumericUpDown CreateNumericUpDown(int value, int min, int max, int inc, string label = null, string tooltip = null)
         {
-            var upDown = new NumericUpDown(value, min, max, inc, def, scale);
+            var upDown = new NumericUpDown(value, min, max, inc);
 
             upDown.ValueChanged += UpDown_ValueChanged;
             upDown.ToolTip = tooltip;
@@ -200,7 +200,7 @@ namespace FamiStudio
             return radio;
         }
 
-        private void UpDown_ValueChanged(Control sender, int val)
+        private void UpDown_ValueChanged(Control sender, float val)
         {
             int idx = GetPropertyIndexForControl(sender);
             PropertyChanged?.Invoke(this, idx, -1, -1, val);
@@ -360,14 +360,14 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
-        public int AddNumericUpDown(string label, int value, int min, int max, int increment, int def, string tooltip = null, float scale = 1.0f)
+        public int AddNumericUpDown(string label, int value, int min, int max, int increment, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.NumericUpDown,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateNumericUpDown(value, min, max, increment, def, label, tooltip, scale)
+                    control = CreateNumericUpDown(value, min, max, increment, label, tooltip)
                 });
             return properties.Count - 1;
         }
@@ -471,9 +471,9 @@ namespace FamiStudio
             return -1;
         }
 
-        private Slider CreateSlider(double value, double min, double max, double def, Func<double, string> fmt = null, string tooltip = null)
+        private Slider CreateSlider(double value, double min, double max, Func<double, string> fmt = null, string tooltip = null)
         {
-            var slider = new Slider(value, min, max, def, fmt);
+            var slider = new Slider(value, min, max, fmt);
             slider.ValueChanged += Slider_ValueChanged;
             slider.ToolTip = tooltip;
             return slider;
@@ -485,14 +485,14 @@ namespace FamiStudio
             PropertyChanged?.Invoke(this, idx, -1, -1, value);
         }
 
-        public int AddSlider(string label, double value, double min, double max, double def, Func<double, string> fmt = null, string tooltip = null)
+        public int AddSlider(string label, double value, double min, double max, Func<double, string> fmt = null, string tooltip = null)
         {
             properties.Add(
                 new Property()
                 {
                     type = PropertyType.Slider,
                     label = label != null ? CreateLabel(label, tooltip) : null,
-                    control = CreateSlider(value, min, max, def, fmt, tooltip),
+                    control = CreateSlider(value, min, max, fmt, tooltip),
                 });
             return properties.Count - 1;
         }
@@ -694,7 +694,6 @@ namespace FamiStudio
         public Func<double, string> Formatter = DefaultFormat;
         public int MinValue;
         public int MaxValue;
-        public int DefaultValue;
 
         private static string DefaultFormat(double v) => v.ToString();
 
@@ -715,17 +714,16 @@ namespace FamiStudio
             Width = width;
         }
 
-        public ColumnDesc(string name, float width, int min, int max, int def)
+        public ColumnDesc(string name, float width, int min, int max)
         {
             Name = name;
             Type = ColumnType.NumericUpDown;
             Width = width;
             MinValue = min;
             MaxValue = max;
-            DefaultValue = def;
         }
 
-        public ColumnDesc(string name, float width, int min, int max, int def, Func<double, string> fmt)
+        public ColumnDesc(string name, float width, int min, int max, Func<double, string> fmt)
         {
             Name = name;
             Type = ColumnType.Slider;
@@ -733,7 +731,6 @@ namespace FamiStudio
             Width = width;
             MinValue = min;
             MaxValue = max;
-            DefaultValue = def;
         }
     }
 

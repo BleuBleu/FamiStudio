@@ -42,7 +42,7 @@ namespace FamiStudio
             dialog.Properties.AddLabelCheckBox(MixWithExistingLabel.Colon, mix, 0, MixWithExistingTooltip); // 0
             dialog.Properties.AddLabelCheckBox(PasteNotesLabel.Colon, notes, 0, PasteNotesTooltip); // 1
             dialog.Properties.AddCheckBoxList(EffectsToPasteLabel.Colon, effectList.ToArray(), checkedList.ToArray(), "Select the effects to paste."); // 2
-            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, 1, RepeatTooltip); // 5
+            dialog.Properties.AddNumericUpDown(RepeatLabel.Colon, 1, 1, 32, 1, RepeatTooltip); // 5
             dialog.Properties.Build();
         }
 
