@@ -308,6 +308,7 @@ namespace FamiStudio
             GetGridCoordForControl(sender, out var row, out var col);
             if (sender is Slider slider)
             {
+                // Scale value based on the format, then rescale and store as int.
                 var scale = Utils.ParseFloatWithTrailingGarbage(slider.Format(1));
                 var name  = GetControlLabel(sender) ?? string.Empty;
                 var fmt   = scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2";

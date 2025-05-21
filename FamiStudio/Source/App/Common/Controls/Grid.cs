@@ -571,10 +571,10 @@ namespace FamiStudio
             if (FindColumnIndexByType(ColumnType.Slider, out var col))
             {
                 GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt);
-                
-                // Scale according to format in settings, then revert scale and store actual setting as int.
-                var value = (int)data[selectedRow, col];
+
+                // Scale value based on the format, then rescale and store as int.
                 var scale = Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1));
+                var value = (int)data[selectedRow, col];
                 var dlg   = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value * scale, min * scale, max * scale, true, scale);
                 
                 dlg.ShowDialogAsync((r) =>
