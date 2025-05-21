@@ -331,7 +331,7 @@ namespace FamiStudio
             dlg.Properties.BeginAdvancedProperties();
             dlg.Properties.AddCheckBoxList("Check box list", new[] { "Check1", "Check2", "Check3", "Check4" }, new[] { false, true, true, false });
             dlg.Properties.AddCheckBox("CheckBox1", true, "Checkbox tooltip!");
-            dlg.Properties.AddSlider("Slider", 50, 0, 100, 50, (v) => $"Allo {0} XXX", "Tooltip for slider");
+            dlg.Properties.AddSlider("Slider", 50, 0, 100, (v) => $"Allo {0} XXX", "Tooltip for slider");
 
             dlg.ShowDialogAsync((r) =>
             {

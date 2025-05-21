@@ -617,7 +617,7 @@ namespace FamiStudio
                 new DPCMSampleParamInfo(sample, VolumeAdjustLabel, 0, 200, 100, VolumeAdjustTooltip)
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, FineTuningLabel, 0, 200, 100, FineTuningTooltip, false, false)
-                    { GetValue = () => { return (int)Math.Round(sample.FinePitch * 2000); }, SetValue = (v) => { sample.FinePitch = v / 2000.0f; sample.Process(); }, GetValueString = () => { return (sample.FinePitch * 100.0f).ToString("N2") + "%"; } },
+                    { GetValue = () => { return (int)Math.Round((sample.FinePitch - 0.95f) * 2000); }, SetValue = (v) => { sample.FinePitch = (v / 2000.0f) + 0.95f; sample.Process(); }, GetValueString = () => { return (sample.FinePitch * 100.0f).ToString("N2") + "%"; } },
                 new DPCMSampleParamInfo(sample, ProcessPalLabel, 0, 1, 0, ProcessPalTooltip)
                     { GetValue = () => { return  sample.PalProcessing ? 1 : 0; }, SetValue = (v) => { sample.PalProcessing = v != 0; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, TrimZeroVolumeLabel, 0, 1, 0, TrimZeroVolumeTooltip)

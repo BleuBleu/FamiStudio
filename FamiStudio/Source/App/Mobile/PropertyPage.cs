@@ -52,10 +52,10 @@ namespace FamiStudio
             //grid.SetRowColor(rowIdx, color);
         }
 
-        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, int def, Func<double, string> fmt)
+        public void OverrideCellSlider(int propIdx, int rowIdx, int colIdx, int min, int max, Func<double, string> fmt)
         {
             var grid = properties[propIdx].control as Grid;
-            grid.OverrideCellSlider(rowIdx, colIdx, min, max, def, fmt);
+            grid.OverrideCellSlider(rowIdx, colIdx, min, max, fmt);
         }
 
         private Grid CreateGrid(ColumnDesc[] columnDescs, object[,] data, string tooltip = null, GridOptions options = GridOptions.None)

@@ -267,11 +267,11 @@ namespace FamiStudio
             }
         }
 
-        private void UpDown_ValueChanged(Control sender, int val)
+        private void UpDown_ValueChanged(Control sender, float val)
         {
             if (GetGridCoordForControl(sender, out int row, out int col))
             {
-                data[row, col] = val;
+                data[row, col] = (int)val;
                 ValueChanged?.Invoke(this, row, col, val);
             }
         }
