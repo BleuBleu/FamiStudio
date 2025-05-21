@@ -42,7 +42,6 @@ namespace FamiStudio
         private int numItemRows;
         private int numHeaderRows;
         private object[,] data;
-        private object[,] prevData;
         private int[] columnWidths;
         private int[] columnOffsets;
         private byte columnEnabledMask;
@@ -250,7 +249,6 @@ namespace FamiStudio
                 data.GetLength(1) != newData.GetLength(1);
 
             data = newData;
-            prevData = (object[,])newData.Clone();
 
             Debug.Assert(data.GetLength(1) == columns.Length);
 
