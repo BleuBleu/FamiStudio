@@ -193,7 +193,8 @@ namespace FamiStudio
 
         private void SetTextBoxValue()
         {
-            text = val.ToString(CultureInfo.InvariantCulture);
+            var fmt = inc % 1 == 0 ? "F0" : inc % 0.1f == 0 ? "F1" : "F2";
+            text = val.ToString(fmt);
             SelectAll();
             caretIndex = text.Length;
         }
