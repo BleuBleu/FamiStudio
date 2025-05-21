@@ -572,15 +572,16 @@ namespace FamiStudio
             {
                 GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt);
                 
+                // Scale according to format in settings, then revert scale and store actual setting as int.
                 var value = (int)data[selectedRow, col];
                 var scale = Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1));
-                var dlg   = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value, min, max, true);
+                var dlg   = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value * scale, min * scale, max * scale, true, scale);
                 
                 dlg.ShowDialogAsync((r) =>
                 {
                     if (r == DialogResult.OK)
                     {
-                        data[selectedRow, col] = dlg.Value;
+                        data[selectedRow, col] = (int)Math.Round(dlg.Value / scale);
                         MarkDirty();
                     }
                 });

@@ -230,7 +230,17 @@ namespace FamiStudio
             return (x / factor) * factor;
         }
 
+        public static float RoundDownFloat(float x, float factor)
+        {
+            return (x / factor) * factor;
+        }
+
         public static int RoundUp(int x, int factor)
+        {
+            return ((x + factor - 1) / factor) * factor;
+        }
+
+        public static float RoundUpFloat(float x, float factor)
         {
             return ((x + factor - 1) / factor) * factor;
         }

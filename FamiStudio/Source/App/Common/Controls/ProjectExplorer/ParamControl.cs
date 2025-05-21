@@ -44,15 +44,10 @@ namespace FamiStudio
         {
             if (Platform.IsMobile)
             {
-                var scale = param.GetScaleValue();
-                var value = param.GetValue();
-                var scaledValue = Math.Round(value * scale, 2);
-                var format = scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2";
-
-                Platform.EditTextAsync(param.Name, scaledValue.ToString(format), (s) => 
+                Platform.EditTextAsync(param.Name, param.GetValue().ToString(), (s) => 
                 {
                     InvokeValueChangeStart();
-                    param.SetValue(param.SnapAndClampValue((int)Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale)));
+                    param.SetValue(param.SnapAndClampValue(Utils.ParseIntWithTrailingGarbage(s)));
                     InvokeValueChangeEnd();
                     MarkDirty();
                 });
@@ -65,7 +60,7 @@ namespace FamiStudio
                     if (r == DialogResult.OK)
                     {
                         InvokeValueChangeStart();
-                        param.SetValue(param.SnapAndClampValue(dlg.Value));
+                        param.SetValue(param.SnapAndClampValue((int)dlg.Value));
                         InvokeValueChangeEnd();
                         MarkDirty();
                     }

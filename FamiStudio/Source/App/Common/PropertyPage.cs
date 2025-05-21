@@ -177,7 +177,7 @@ namespace FamiStudio
             return new ImageBox(image);
         }
 
-        private NumericUpDown CreateNumericUpDown(int value, int min, int max, int inc, string label = null, string tooltip = null)
+        private NumericUpDown CreateNumericUpDown(float value, float min, float max, float inc, string label = null, string tooltip = null)
         {
             var upDown = new NumericUpDown(value, min, max, inc);
 
@@ -372,6 +372,18 @@ namespace FamiStudio
             return properties.Count - 1;
         }
 
+        public int AddNumericUpDownFloat(string label, float value, float min, float max, float increment, string tooltip = null)
+        {
+            properties.Add(
+                new Property()
+                {
+                    type = PropertyType.NumericUpDownFloat,
+                    label = label != null ? CreateLabel(label, tooltip) : null,
+                    control = CreateNumericUpDown(value, min, max, increment, label, tooltip)
+                });
+            return properties.Count - 1;
+        }
+
         public int AddProgressBar(string label)
         {
             properties.Add(
@@ -551,6 +563,8 @@ namespace FamiStudio
                     return (prop.control as TextBox).Text;
                 case PropertyType.NumericUpDown:
                     return (int)(prop.control as NumericUpDown).Value;
+                case PropertyType.NumericUpDownFloat:
+                    return (prop.control as NumericUpDown).Value;
                 case PropertyType.Slider:
                     return (prop.control as Slider).Value;
                 case PropertyType.Radio:
@@ -632,6 +646,7 @@ namespace FamiStudio
         FileTextBox,
         ColoredTextBox,
         NumericUpDown,
+        NumericUpDownFloat,
         Slider,
         CheckBox,
         DropDownList,

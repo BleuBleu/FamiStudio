@@ -7911,7 +7911,7 @@ namespace FamiStudio
                 if (r == DialogResult.OK)
                 {
                     var noteSelected = IsNoteSelected(location);
-                    var newVal = dlg.Value;
+                    var newVal = (int)dlg.Value;
 
                     if (noteSelected && SelectionCoversMultiplePatterns())
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);

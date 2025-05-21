@@ -30,9 +30,9 @@ namespace FamiStudio
         protected int textAreaWidthNoMargin;
         protected int maxLength;
         protected int mouseSelectionChar;
-        protected int numberMin;
-        protected int numberMax;
-        protected int numberInc;
+        protected float numberMin;
+        protected float numberMax;
+        protected float numberInc;
         protected bool mouseSelecting;
         protected bool caretBlink = true;
         protected bool numeric;
@@ -78,7 +78,7 @@ namespace FamiStudio
             supportsDoubleClick = true;
         }
 
-        public TextBox(int value, int minVal, int maxVal, int increment)
+        public TextBox(float value, float minVal, float maxVal, float increment)
         {
             Localization.Localize(this);
             height = DpiScaling.ScaleForWindow(24);
@@ -119,7 +119,7 @@ namespace FamiStudio
                         ? Utils.ParseFloatWithTrailingGarbage(text) 
                         : Utils.ParseIntWithTrailingGarbage(text);
 
-                var snap   = Utils.RoundDown((int)Math.Round(val), numberInc);;
+                var snap   = Utils.RoundDownFloat(val, numberInc);;
                 var clamp  = Utils.Clamp(snap, numberMin, numberMax);
 
                 if (SetAndMarkDirty(ref text, clamp.ToString(CultureInfo.InvariantCulture)))
@@ -221,7 +221,7 @@ namespace FamiStudio
                     GrabDialogFocus();
                     App.ShowContextMenuAsync(new[]
                     {
-                        new ContextMenuOption("Cut",       CutName,   () => Cut()),
+                        new ContextMenuOption("MenuCut",   CutName,   () => Cut()),
                         new ContextMenuOption("MenuCopy",  CopyName,  () => Copy()),
                         new ContextMenuOption("MenuPaste", PasteName, () => Paste()),
                     });
