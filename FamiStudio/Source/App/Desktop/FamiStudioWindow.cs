@@ -38,6 +38,7 @@ namespace FamiStudio
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
         public bool IsContextMenuActive => container.IsContextMenuActive;
+        public bool IsOutOfProcessDialogInProgress => Platform.IsOutOfProcessDialogInProgress();
         public bool MobilePianoVisible { get => false; set => value = false; }
         public Point LastMousePosition => new Point(lastCursorX, lastCursorY);
         public Point LastContextMenuPosition => ScreenToWindow(contextMenuPoint);
@@ -424,7 +425,7 @@ namespace FamiStudio
 
         private void WindowCloseCallback(IntPtr window)
         {
-            if (IsAsyncDialogInProgress || Platform.IsOutOfProcessDialogInProgress())
+            if (IsAsyncDialogInProgress || IsOutOfProcessDialogInProgress)
             {
                 Platform.Beep();
                 return;
@@ -457,7 +458,7 @@ namespace FamiStudio
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
         {
-            if (quit || Platform.IsOutOfProcessDialogInProgress())
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
             
             Debug.WriteLine($"BUTTON! Button={button}, Action={action}, Mods={mods}");
@@ -700,7 +701,7 @@ namespace FamiStudio
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
-            if (quit || Platform.IsOutOfProcessDialogInProgress())
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
 
             mods = FixKeyboardMods(mods, key, action);
@@ -729,7 +730,7 @@ namespace FamiStudio
 
         private void CharCallback(IntPtr window, uint codepoint)
         {
-            if (quit)
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
 
             //Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
@@ -976,7 +977,7 @@ namespace FamiStudio
             ProcessPlatformEvents();
             ProcessEvents();
 
-            if (!quit && !Platform.IsOutOfProcessDialogInProgress())
+            if (!quit && !IsOutOfProcessDialogInProgress)
             { 
                 Tick();
                 RenderFrameAndSwapBuffer();
