@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace FamiStudio
 {
@@ -13,6 +14,10 @@ namespace FamiStudio
         }
 
         private static LinuxDialog dlgInstance;
+        
+        private const string flatpakInfo = "/.flatpak-info";
+        private const string displayInfo = "DISPLAY";
+        private const string flatpakId   = "FLATPAK_ID";
 
         private DialogMode dialogMode;
         private string dialogTitle;
@@ -20,7 +25,7 @@ namespace FamiStudio
         private string dialogExts;
         private bool dialogMulti;
         private MessageBoxButtons dialogButtons;
-
+        private string flatpakPath;
         public string[] SelectedPaths { get; private set; }
         public DialogResult MessageBoxSelection { get; private set; }
 
@@ -44,7 +49,6 @@ namespace FamiStudio
             dialogTitle = title;
             dialogExts  = extensions;
             dialogMulti = multiselect;
-            dlgInstance = this;
 
             SelectedPaths = ShowFileDialog(ref defaultPath);
         }
@@ -55,8 +59,6 @@ namespace FamiStudio
             dialogTitle   = title;
             dialogText    = text;
             dialogButtons = buttons;
-            dlgInstance   = this;
-
             MessageBoxSelection = ShowMessageBoxDialog();
         }
 
@@ -85,8 +87,48 @@ namespace FamiStudio
             }
         }
 
+        private static bool IsDisplayAvailable()
+        {
+            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(displayInfo));
+        }
+
+        private static bool IsFlatpak()
+        {
+            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(flatpakId));
+        }
+
+        private void UpdateDefaultPathForFlatpak(ref string defaultPath)
+        {
+            try
+            {
+                if (!File.Exists(flatpakInfo))
+                    return;
+
+                var lines = File.ReadAllLines(flatpakInfo);
+
+                foreach (var line in lines)
+                {
+                    if (line.StartsWith("app-path="))
+                    {
+                        var appPath = line.Split('=', 2)[1].Trim();
+                        defaultPath = defaultPath.Replace("/app/bin", $"{appPath}/bin");
+                        flatpakPath = defaultPath[..(defaultPath.IndexOf("/bin") + 4)];
+                        break; 
+                    }
+                }
+            }
+            catch { }
+        }
+
         private string[] ShowFileDialog(ref string defaultPath)
         {
+            if (!IsDisplayAvailable())
+                return null;
+
+            // The external process can't see the flatpak path, so we temporarily use the real system path.
+            if (IsFlatpak() && defaultPath.StartsWith("/app/bin"))
+                UpdateDefaultPathForFlatpak(ref defaultPath);
+
             if (IsCommandAvailable("kdialog"))
             {
                 return ShowKDialogFileDialog(ref defaultPath);
@@ -138,11 +180,11 @@ namespace FamiStudio
 
             var result = ShowDialog("kdialog", args);
 
-            if (result.files.Length == 0)
+            if (result.value.Length == 0)
                 return null;
 
-            defaultPath = result.files[0];
-            return result.files;
+            defaultPath = result.value[0];
+            return result.value;
         }
 
         private string[] ShowZenityFileDialog(ref string defaultPath)
@@ -177,15 +219,18 @@ namespace FamiStudio
 
             var result = ShowDialog("zenity", args);
 
-            if (result.files.Length == 0)
+            if (result.value.Length == 0)
                 return null;
             
-            defaultPath = result.files[0];
-            return result.files;
+            defaultPath = result.value[0];
+            return result.value;
         }
 
         private DialogResult ShowMessageBoxDialog()
         {
+            if (!IsDisplayAvailable())
+                return DialogResult.None;
+                
             if (IsCommandAvailable("kdialog"))
             {
                 return ShowKDialogMessageBoxDialog();
@@ -260,11 +305,11 @@ namespace FamiStudio
             else if (exitCode == 1)
             {
                 // No and Cancel are both exit code 1 on zenity, since it doesn't natively support 3 buttons. "No" returns an empty array.
-                if (result.files.Length == 0)
+                if (result.value.Length == 0)
                 {
                     return DialogResult.No;
                 }
-                else if (result.files[0] == CancelLabel)
+                else if (result.value[0] == CancelLabel)
                 {
                     return DialogResult.Cancel;
                 }
@@ -273,7 +318,7 @@ namespace FamiStudio
             return DialogResult.None;
         }
 
-        private static (string[] files, int exitCode) ShowDialog(string command, string arguments)
+        private (string[] value, int exitCode) ShowDialog(string command, string arguments)
         {
             using var process = new Process();
             process.StartInfo = new ProcessStartInfo
@@ -284,7 +329,8 @@ namespace FamiStudio
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-            
+
+            dlgInstance = this;
             process.Start();
 
             while (!process.HasExited)
@@ -293,8 +339,19 @@ namespace FamiStudio
             }
 
             dlgInstance = null;
+            var results = process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            return (process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries), process.ExitCode);
+            // If we're using flatpak and changed the path, revert any paths that use it so the sandbox can find them.
+            if (!string.IsNullOrEmpty(flatpakPath))
+            {
+                for (var i = 0; i < results.Length; i++)
+                {
+                    if (results[i].StartsWith(flatpakPath))
+                        results[i] = results[i].Replace(flatpakPath, "/app/bin");
+                }
+            }
+
+            return (results, process.ExitCode);
         }
     }
 }
