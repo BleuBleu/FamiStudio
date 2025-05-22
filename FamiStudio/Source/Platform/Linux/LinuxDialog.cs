@@ -111,8 +111,8 @@ namespace FamiStudio
                     if (line.StartsWith("app-path="))
                     {
                         var appPath = line.Split('=', 2)[1].Trim();
-                        defaultPath = defaultPath.Replace("/app/bin", $"{appPath}/bin");
-                        flatpakPath = defaultPath[..(defaultPath.IndexOf("/bin") + 4)];
+                        defaultPath = defaultPath.Replace("/app", $"{appPath}");
+                        flatpakPath = defaultPath[..defaultPath.IndexOf("/bin")];
                         break; 
                     }
                 }
@@ -126,7 +126,7 @@ namespace FamiStudio
                 return null;
 
             // The external process can't see the flatpak path, so we temporarily use the real system path.
-            if (IsFlatpak() && defaultPath.StartsWith("/app/bin"))
+            if (IsFlatpak() && defaultPath.StartsWith("/app"))
                 UpdateDefaultPathForFlatpak(ref defaultPath);
 
             if (IsCommandAvailable("kdialog"))
@@ -347,7 +347,7 @@ namespace FamiStudio
                 for (var i = 0; i < results.Length; i++)
                 {
                     if (results[i].StartsWith(flatpakPath))
-                        results[i] = results[i].Replace(flatpakPath, "/app/bin");
+                        results[i] = results[i].Replace(flatpakPath, "/app");
                 }
             }
 
