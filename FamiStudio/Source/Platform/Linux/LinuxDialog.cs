@@ -183,7 +183,7 @@ namespace FamiStudio
             if (result.value.Length == 0)
                 return null;
 
-            defaultPath = result.value[0];
+            defaultPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
             return result.value;
         }
 
@@ -222,7 +222,7 @@ namespace FamiStudio
             if (result.value.Length == 0)
                 return null;
             
-            defaultPath = result.value[0];
+            defaultPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
             return result.value;
         }
 
