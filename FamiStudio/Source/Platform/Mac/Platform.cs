@@ -107,7 +107,7 @@ namespace FamiStudio
             return MacUtils.ShowAlert(text, title, buttons);
         }
 
-        public static bool PlatformIsOutOfProcessDialogInProgress()
+        public static bool IsOutOfProcessDialogInProgress()
         {
             return false;
         }

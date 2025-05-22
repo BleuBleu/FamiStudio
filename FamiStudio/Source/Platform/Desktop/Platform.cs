@@ -194,11 +194,6 @@ namespace FamiStudio
             }
         }
 
-        public static bool IsOutOfProcessDialogInProgress()
-        {
-            return PlatformIsOutOfProcessDialogInProgress();
-        }
-
         public static void DelayedMessageBoxAsync(string text, string title)
         {
         }

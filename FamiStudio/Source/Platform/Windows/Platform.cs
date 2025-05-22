@@ -288,7 +288,7 @@ namespace FamiStudio
             return (DialogResult)MessageBox(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
         }
 
-        public static bool PlatformIsOutOfProcessDialogInProgress()
+        public static bool IsOutOfProcessDialogInProgress()
         {
             return false;
         }
