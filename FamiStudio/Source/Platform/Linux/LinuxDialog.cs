@@ -161,8 +161,8 @@ namespace FamiStudio
             var filters = "";
             for (int i = 0; i < extPairs.Length - 1; i += 2)
             {
-                string name    = extPairs[i].Split(" (")[0];;
-                string pattern = extPairs[i + 1].Replace(";", " ");
+                var name    = extPairs[i].Split(" (")[0];;
+                var pattern = extPairs[i + 1].Replace(";", " ");
                 filters += $"{name} {pattern}|";
             }
 

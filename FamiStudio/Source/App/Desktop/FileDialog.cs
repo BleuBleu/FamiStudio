@@ -63,9 +63,6 @@ namespace FamiStudio
         private string path;
         private string[] extensions;
         private List<FileEntry> files = new List<FileEntry>();
-        private int fileIndex;
-
-        private List<string> pathHistory = new List<string>();
 
         public string SelectedPath => filename;
 
@@ -383,7 +380,6 @@ namespace FamiStudio
         {
             Debug.Assert(index < files.Count);
             UpdateTextByIndex(index);
-            fileIndex = index;
         }
 
         private void TryOpenOrValidate()
@@ -455,14 +451,6 @@ namespace FamiStudio
             return false;
         }
 
-        private void ToggleFocus()
-        {
-            if (gridFiles.HasDialogFocus && textFile.Enabled)
-                textFile.GrabDialogFocus();
-            else if (textFile.HasDialogFocus)
-                gridFiles.GrabDialogFocus();
-        }
-
         private void UpdateTextByIndex(int index)
         {
             textFile.Text = index >= 0 ? files[index].Name : string.Empty;
@@ -505,7 +493,6 @@ namespace FamiStudio
             var downloadDir  = Path.Combine(userDir, "Downloads");
 
             files.Clear();
-            fileIndex = -1;
 
             if (Directory.Exists(userDir))
                 files.Add(new FileEntry("FileHome", HomeFolderLabel, userDir, EntryType.Directory));
@@ -599,7 +586,6 @@ namespace FamiStudio
             }
 
             files.Clear();
-            fileIndex = -1;
 
             var sortSign = sortDesc ? -1 : 1;
             var comp = sortByDate ?
