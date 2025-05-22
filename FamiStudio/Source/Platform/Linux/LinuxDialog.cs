@@ -108,18 +108,18 @@ namespace FamiStudio
         {
             try
             {
-                if (!File.Exists(FlatpakInfoPath))
-                    return;
-
-                var lines = File.ReadAllLines(FlatpakInfoPath);
-
-                foreach (var line in lines)
+                if (File.Exists(FlatpakInfoPath))
                 {
-                    if (line.StartsWith("app-path="))
+                    var lines = File.ReadAllLines(FlatpakInfoPath);
+                    
+                    foreach (var line in lines)
                     {
-                        flatpakPath = line.Split('=', 2)[1].Trim(); // System flatpak path.
-                        dialogPath  = dialogPath.Replace(FlatpakPrefix, flatpakPath);
-                        break;
+                        if (line.StartsWith("app-path="))
+                        {
+                            flatpakPath = line.Split('=', 2)[1].Trim(); // System flatpak path.
+                            dialogPath = dialogPath.Replace(FlatpakPrefix, flatpakPath);
+                            break;
+                        }
                     }
                 }
             }
@@ -131,7 +131,8 @@ namespace FamiStudio
             if (!IsDisplayAvailable())
                 return null;
 
-            // The external process can't see the flatpak app path, so we use the real system path for it.
+            // If we're using flatpak and are within the sandboxed "/app" path, the 
+            // external process can't see it. We use the real system path to it instead.
             if (IsFlatpak() && dialogPath.StartsWith(FlatpakPrefix))
                 SetFlatpakPaths();
 
@@ -347,7 +348,8 @@ namespace FamiStudio
             dlgInstance = null;
             var results = process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            // If we're using flatpak, revert retuls to sandbox paths so they can be found.
+            // If we're using flatpak, we may have converted the sandbox "/app" path
+            // to a system one. If so, convert it back so the sandbox can find it.
             if (!string.IsNullOrEmpty(flatpakPath))
             {
                 for (var i = 0; i < results.Length; i++)
