@@ -193,8 +193,7 @@ namespace FamiStudio
 
         private void SetTextBoxValue()
         {
-            var fmt = inc % 1 == 0 ? "F0" : inc % 0.1f == 0 ? "F1" : "F2";
-            text = val.ToString(fmt);
+            text = val.ToString("0.#");
             SelectAll();
             caretIndex = text.Length;
         }

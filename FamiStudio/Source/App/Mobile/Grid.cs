@@ -311,10 +311,9 @@ namespace FamiStudio
                 // Scale value based on the format, then rescale and store as int.
                 var scale = Utils.ParseFloatWithTrailingGarbage(slider.Format(1));
                 var name  = GetControlLabel(sender) ?? string.Empty;
-                var fmt   = scale % 1 == 0 ? "F0" : scale % 0.1f == 0 ? "F1" : "F2";
                 var val   = Math.Round(slider.Value * scale, 2);
 
-                Platform.EditTextAsync(name, val.ToString(fmt), (s) =>
+                Platform.EditTextAsync(name, val.ToString("0.#"), (s) =>
                 {
                     slider.Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
                     UpdateControlValue(this, (int)slider.Value);
