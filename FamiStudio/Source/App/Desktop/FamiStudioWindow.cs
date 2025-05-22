@@ -467,7 +467,7 @@ namespace FamiStudio
 
             if (action == GLFW_PRESS)
             {
-                if (captureControl != null || IsContextMenuActive)
+                if (captureControl != null)
                     return;
 
                 // Abort delayed right-click if left-clicking, to avoid a double capture.
