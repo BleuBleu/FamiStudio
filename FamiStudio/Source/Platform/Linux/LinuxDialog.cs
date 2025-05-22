@@ -349,7 +349,7 @@ namespace FamiStudio
             var results = process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
             // If we're using flatpak, we may have converted the sandbox "/app" path
-            // to a system one. If so, convert it back so the sandbox can find it.
+            // to a system one. If so, convert the results so the sandbox can find them.
             if (!string.IsNullOrEmpty(flatpakPath))
             {
                 for (var i = 0; i < results.Length; i++)
