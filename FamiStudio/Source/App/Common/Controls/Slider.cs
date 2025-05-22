@@ -80,14 +80,14 @@ namespace FamiStudio
 
             if (changing)
             {
-                Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+                Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
                 e.MarkHandled();
             }
         }
 
         protected override void OnTouchClick(PointerEventArgs e)
         {
-            Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+            Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
             e.MarkHandled();
         }
 
