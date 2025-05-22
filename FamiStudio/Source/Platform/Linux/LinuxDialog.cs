@@ -15,17 +15,21 @@ namespace FamiStudio
 
         private static LinuxDialog dlgInstance;
         
-        private const string flatpakInfo = "/.flatpak-info";
-        private const string displayInfo = "DISPLAY";
-        private const string flatpakId   = "FLATPAK_ID";
+        private const string FlatpakInfoPath = "/.flatpak-info";
+        private const string FlatpakPrefix = "/app";
+        private const string FlatpakIdEnvVar = "FLATPAK_ID";
+        private const string DisplayEnvVar = "DISPLAY";
 
         private DialogMode dialogMode;
         private string dialogTitle;
         private string dialogText;
         private string dialogExts;
-        private bool dialogMulti;
-        private MessageBoxButtons dialogButtons;
+        private string dialogPath;
         private string flatpakPath;
+        private bool dialogMulti;
+
+        private MessageBoxButtons dialogButtons;
+
         public string[] SelectedPaths { get; private set; }
         public DialogResult MessageBoxSelection { get; private set; }
 
@@ -49,8 +53,11 @@ namespace FamiStudio
             dialogTitle = title;
             dialogExts  = extensions;
             dialogMulti = multiselect;
+            dialogPath  = defaultPath;
 
-            SelectedPaths = ShowFileDialog(ref defaultPath);
+            SelectedPaths = ShowFileDialog();
+
+            defaultPath = dialogPath; 
         }
 
         public LinuxDialog(string text, string title, MessageBoxButtons buttons)
@@ -89,53 +96,52 @@ namespace FamiStudio
 
         private static bool IsDisplayAvailable()
         {
-            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(displayInfo));
+            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(DisplayEnvVar));
         }
 
         private static bool IsFlatpak()
         {
-            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(flatpakId));
+            return !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(FlatpakIdEnvVar));
         }
 
-        private void UpdateDefaultPathForFlatpak(ref string defaultPath)
+        private void SetFlatpakPaths()
         {
             try
             {
-                if (!File.Exists(flatpakInfo))
+                if (!File.Exists(FlatpakInfoPath))
                     return;
 
-                var lines = File.ReadAllLines(flatpakInfo);
+                var lines = File.ReadAllLines(FlatpakInfoPath);
 
                 foreach (var line in lines)
                 {
                     if (line.StartsWith("app-path="))
                     {
-                        var appPath = line.Split('=', 2)[1].Trim();
-                        defaultPath = defaultPath.Replace("/app", $"{appPath}");
-                        flatpakPath = defaultPath[..defaultPath.IndexOf("/bin")];
-                        break; 
+                        flatpakPath = line.Split('=', 2)[1].Trim(); // System flatpak path.
+                        dialogPath  = dialogPath.Replace(FlatpakPrefix, flatpakPath);
+                        break;
                     }
                 }
             }
             catch { }
         }
 
-        private string[] ShowFileDialog(ref string defaultPath)
+        private string[] ShowFileDialog()
         {
             if (!IsDisplayAvailable())
                 return null;
 
-            // The external process can't see the flatpak path, so we temporarily use the real system path.
-            if (IsFlatpak() && defaultPath.StartsWith("/app"))
-                UpdateDefaultPathForFlatpak(ref defaultPath);
+            // The external process can't see the flatpak app path, so we use the real system path for it.
+            if (IsFlatpak() && dialogPath.StartsWith(FlatpakPrefix))
+                SetFlatpakPaths();
 
             if (IsCommandAvailable("kdialog"))
             {
-                return ShowKDialogFileDialog(ref defaultPath);
+                return ShowKDialogFileDialog();
             }
             else if (IsCommandAvailable("zenity"))
             {
-                return ShowZenityFileDialog(ref defaultPath);
+                return ShowZenityFileDialog();
             }
 
             var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
@@ -144,7 +150,7 @@ namespace FamiStudio
             return null;
         }
 
-        private string[] ShowKDialogFileDialog(ref string defaultPath)
+        private string[] ShowKDialogFileDialog()
         {
             var args = $"--title \"{dialogTitle}\" ";
             var extPairs = dialogExts.Split("|");
@@ -165,16 +171,16 @@ namespace FamiStudio
             {
                 case DialogMode.Open:
                     args += dialogMulti 
-                        ? $"--getopenfilename \"{defaultPath}\" \"{filters}\" --multiple --separate-output"
-                        : $"--getopenfilename \"{defaultPath}\" \"{filters}\"";
+                        ? $"--getopenfilename \"{dialogPath}\" \"{filters}\" --multiple --separate-output"
+                        : $"--getopenfilename \"{dialogPath}\" \"{filters}\"";
                     break;
 
                 case DialogMode.Save:
-                    args += $"--getsavefilename \"{defaultPath}\" \"{filters}\"";
+                    args += $"--getsavefilename \"{dialogPath}\" \"{filters}\"";
                     break;
 
                 case DialogMode.Folder:
-                    args += $"--getexistingdirectory \"{defaultPath}\"";
+                    args += $"--getexistingdirectory \"{dialogPath}\"";
                     break;
             }
 
@@ -183,11 +189,11 @@ namespace FamiStudio
             if (result.value.Length == 0)
                 return null;
 
-            defaultPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
+            dialogPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
             return result.value;
         }
 
-        private string[] ShowZenityFileDialog(ref string defaultPath)
+        private string[] ShowZenityFileDialog()
         {
             var filters  = "";
             var extPairs = dialogExts.Split("|");
@@ -200,7 +206,7 @@ namespace FamiStudio
                     filters += "--file-filter=\"" + (extPairs[i] + "|" + extPairs[i + 1]).Replace(";", " ").Trim() + "\" ";
             }
 
-            var args = $"--file-selection --title=\"{dialogTitle}\" --filename=\"{defaultPath.TrimEnd('/')}/\" {filters} ";
+            var args = $"--file-selection --title=\"{dialogTitle}\" --filename=\"{dialogPath.TrimEnd('/')}/\" {filters} ";
 
             switch (dialogMode)
             {
@@ -222,7 +228,7 @@ namespace FamiStudio
             if (result.value.Length == 0)
                 return null;
             
-            defaultPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
+            dialogPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
             return result.value;
         }
 
@@ -341,14 +347,11 @@ namespace FamiStudio
             dlgInstance = null;
             var results = process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-            // If we're using flatpak and changed the path, revert any paths that use it so the sandbox can find them.
+            // If we're using flatpak, revert retuls to sandbox paths so they can be found.
             if (!string.IsNullOrEmpty(flatpakPath))
             {
                 for (var i = 0; i < results.Length; i++)
-                {
-                    if (results[i].StartsWith(flatpakPath))
-                        results[i] = results[i].Replace(flatpakPath, "/app");
-                }
+                    results[i] = results[i].Replace(flatpakPath, FlatpakPrefix);
             }
 
             return (results, process.ExitCode);
