@@ -9194,7 +9194,7 @@ namespace FamiStudio
 
         private void UpdateMoveNoteRelease(int x, int y, bool final)
         {
-            GetLocationForCoord(x, y, out var location, out var noteValue, false);
+            GetLocationForCoord(x, y, out var location, out var noteValue, true);
 
             var selection = captureOperation == CaptureOperation.MoveSelectionNoteRelease;
 

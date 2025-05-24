@@ -1,6 +1,5 @@
 4.4.0
 =====
-- Respect snapping for releases.
 - Bug when samples are not referenced by anything.
 - Ask kawashin for new demo song
 - Crash MIDI dialog + switch app on Android.
