@@ -1225,7 +1225,7 @@ FAMISTUDIO_N163_REG_WAVE      = $7e
 FAMISTUDIO_N163_REG_VOLUME    = $7f
 
 FAMISTUDIO_S5B_ADDR       = $c000
-FAMISTUDIO_S5B_DATA       = $e001 ; To avoid VRC7 conflict.
+FAMISTUDIO_S5B_DATA       = $f000 ; [MULTI] To avoid VRC7 conflict.
 FAMISTUDIO_S5B_REG_LO_A   = $00
 FAMISTUDIO_S5B_REG_HI_A   = $01
 FAMISTUDIO_S5B_REG_LO_B   = $02
@@ -3775,6 +3775,10 @@ famistudio_update_s5b_channel_sound:
     sta famistudio_s5b_env_override
 
 @done:
+    ; [MULTI] BEGIN : Select a dummy register to remove conflicts with N163.
+    lda #FAMISTUDIO_S5B_REG_IO_A
+    sta FAMISTUDIO_S5B_ADDR    
+    ; [MULTI] END
     rts
 
 .endif

@@ -181,7 +181,7 @@ namespace FamiStudio
         public const int N163_REG_VOLUME    = 0x7f;
         
         public const int S5B_ADDR           = 0xc000;
-        public const int S5B_DATA           = 0xe001; // E001 to prevent conflict with VRC7.
+        public const int S5B_DATA           = 0xf000; // F000 to prevent conflict with VRC7.
                                             
         public const int S5B_REG_LO_A          = 0x00;
         public const int S5B_REG_HI_A          = 0x01;
