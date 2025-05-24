@@ -2,9 +2,11 @@
 =====
 - Bug when samples are not referenced by anything.
 - Ask kawashin for new demo song
-- Crash MIDI dialog + switch app on Android.
-	https://discord.com/channels/747649221879922840/747649222354010173/1344853516765761597
 - Add MMC5 mapper change to 4.1.0 change log.
+
+Testing:
+- Test release snap on mobile
+- 
 
 4.4.0 Changelog
 ===============
