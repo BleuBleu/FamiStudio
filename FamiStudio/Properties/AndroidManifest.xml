@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="60" android:versionName="4.3.3" package="org.famistudio" android:installLocation="auto">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="61" android:versionName="4.4.0" package="org.famistudio" android:installLocation="auto">
 	<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34" />
 	<uses-permission android:name="android.permission.VIBRATE" />
 	<uses-permission android:name="android.permission.WAKE_LOCK" />

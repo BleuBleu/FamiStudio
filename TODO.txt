@@ -1,7 +1,6 @@
 4.4.0
 =====
-- Bug when samples are not referenced by anything.
-- Ask kawashin for new demo song
+- Multi-expansio conflict.
 
 Testing:
 - Test release snap on mobile
@@ -9,7 +8,6 @@ Testing:
 - Re-export SoundEngine demo song data + recompile + listen to make sure samples work.
 - Re-compile ROM/NSF
 - Test NSF/ROM with DPCM samples
-- 
 
 4.4.0 Changelog
 ===============
