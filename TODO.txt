@@ -1,4 +1,4 @@
-4.3.4
+4.4.0
 =====
 - Respect snapping for releases.
 - Bug when samples are not referenced by anything.
@@ -6,6 +6,19 @@
 - Crash MIDI dialog + switch app on Android.
 	https://discord.com/channels/747649221879922840/747649222354010173/1344853516765761597
 - Add MMC5 mapper change to 4.1.0 change log.
+
+4.4.0 Changelog
+===============
+* FDS multiwave support
+* DPCM options for "Trim to 16" and "Trim to 16+1"
+* Separate bass filter for FDS
+* PWM for FDS, including a fourth PWM preset
+* VGM FDS import support
+* NSF/VGM import tuning option
+* Linux support for kdialog and zenity for dialogs
+* MAYBE : Added keyboard inputs to some grid controls and to dropdown menus
+* MAYBE : Added fine-tuning for grid sliders (ctrl + drag)
+* MAYBE : Added option to input values for mixer sliders
 
 Linux notes 
 =========== 
