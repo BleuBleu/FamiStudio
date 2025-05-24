@@ -240,6 +240,10 @@ Changes/Fixes:
 	* Portuguese (BeepsNBoops contribution)
 	* Simplified chinese (xwjcool123 and FRC contribution)
 
+Breaking/Behavior changes:
+
+* ROM export now uses MMC5 mapper instead of MMC3 for MMC5, ESPM and 2A03. This was done to better support DPCM bank switching.
+
 System Requirement Changes:
 
 * Windows version is now 64-bit and targets .NET 5.0.

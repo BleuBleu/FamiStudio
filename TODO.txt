@@ -2,7 +2,6 @@
 =====
 - Bug when samples are not referenced by anything.
 - Ask kawashin for new demo song
-- Add MMC5 mapper change to 4.1.0 change log.
 
 Testing:
 - Test release snap on mobile
