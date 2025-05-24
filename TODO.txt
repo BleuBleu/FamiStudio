@@ -1,7 +1,6 @@
 4.4.0
 =====
 - Multi-expansio conflict.
-- 
 
 Testing:
 - Test release snap on mobile
@@ -10,6 +9,7 @@ Testing:
 - Re-compile ROM/NSF
 - Test NSF/ROM with DPCM samples
 - Re-run unit tests.
+- Re-test S5B NSF import.
 
 4.4.0 Changelog
 ===============
