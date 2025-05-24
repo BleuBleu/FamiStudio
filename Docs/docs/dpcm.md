@@ -61,6 +61,10 @@ Once a sample is loaded, it can be expanded by clicking the little arrow to reve
 
 	* **Round to 16 + 1** : The sample will be resampled in a way that the end of sample aligned to 16 bytes (plus one). This may affect the pitch slightly. This is a good mode to create looping samples.
 
+	* **Trim to 16** : The sample will be aligned to a multiple of 16 bytes. Any remaining bytes from a multiple of 16 will be trimmed. One extra byte of garbage will play every time the sample is played, but this is usually not audible.
+	
+	* **Trim to 16 + 1** : The sample will be aligned to a multiple of 16 bytes (plus one). Any remaining bytes from a multiple of 16 will be trimmed. One extra byte will be added to prevent playing a byte of garbage, but it will waste 15 bytes.
+
 * **DMC Initial Value** : Initial value of the DMC counter (0-63, values are actually 1/2 of what the hardware uses). This can be tweaked to that the first value matches the initial value of the WAV file, or to off the entire DMC data as a whole.
 
 * **Volume Adjust** : Global volume adjustment, from 0% to 200%. 

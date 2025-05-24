@@ -7,10 +7,10 @@ namespace FamiStudio
     class ValueInputDialog
     {
         private PropertyDialog dialog;
-        private int minValue;
-        private int maxValue;
+        private float minValue;
+        private float maxValue;
 
-        public unsafe ValueInputDialog(FamiStudioWindow win, Point pt, string paramName, int value, int min, int max, bool leftAlign)
+        public unsafe ValueInputDialog(FamiStudioWindow win, Point pt, string paramName, float value, float min, float max, bool leftAlign, float inc = 1.0f)
         {
             minValue = min;
             maxValue = max;
@@ -25,7 +25,7 @@ namespace FamiStudio
             }
             else
             {
-                dialog.Properties.AddNumericUpDown(null, value, min, max, 1); // 0
+                dialog.Properties.AddNumericUpDownFloat(null, value, min, max, inc, null); // 0
             }
 
             dialog.Properties.Build();
@@ -41,15 +41,15 @@ namespace FamiStudio
             dialog.ShowDialogAsync(callback);
         }
 
-        private int GetValue()
+        private float GetValue()
         {
             var rawValue = Platform.IsMobile?
                 Utils.ParseIntWithTrailingGarbage(dialog.Properties.GetPropertyValue<string>(0)) :
-                dialog.Properties.GetPropertyValue<int>(0);
+                dialog.Properties.GetPropertyValue<float>(0);
 
             return Utils.Clamp(rawValue, minValue, maxValue);
         }
 
-        public int Value => GetValue();
+        public float Value => GetValue();
     }
 }

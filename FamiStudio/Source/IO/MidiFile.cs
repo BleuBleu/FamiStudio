@@ -335,7 +335,7 @@ namespace FamiStudio
 
             var chunkLen  = ReadInt32();
             var type      = ReadInt16();
-            var numTracks = ReadInt16();
+            numTracks     = ReadInt16();
             var ticks     = ReadInt16();
 
             Debug.Assert(type != 2);
@@ -375,7 +375,7 @@ namespace FamiStudio
                     break;
                 }
 
-                // Various text messages.
+                // Various text messages. Though some of the latter are rarely used, they're still reserved for this purpose.
                 case 0x01:
                 case 0x02:
                 case 0x03:
@@ -385,6 +385,12 @@ namespace FamiStudio
                 case 0x07:
                 case 0x08:
                 case 0x09:
+                case 0x0A:
+                case 0x0B:
+                case 0x0C:
+                case 0x0D:
+                case 0x0E:
+                case 0x0F:
                 {
                     var len  = ReadVarLen();
                     var name = Encoding.ASCII.GetString(bytes, idx, len); idx += len;
@@ -661,7 +667,7 @@ namespace FamiStudio
         {
             var track = 0;
 
-            while (idx < bytes.Length)
+            while (idx < bytes.Length && track < numTracks)
             {
                 var chunkType = Encoding.ASCII.GetString(bytes, idx, 4); idx += 4;
                 var chunkLen = ReadInt32();
@@ -688,7 +694,7 @@ namespace FamiStudio
             // Favor note OFF before note ON to avoid false polyphony warnings.
             noteEvents.Sort((e1, e2) => e1.tick == e2.tick ? e1.on.CompareTo(e2.on) : e1.tick.CompareTo(e2.tick)); 
 
-            numTracks = track;
+            Debug.Assert(numTracks == track);
 
             return true;
         }
@@ -985,6 +991,8 @@ namespace FamiStudio
             var prgChangeIndex = 0;
             var prevVolume = (byte)15;
             var activeNote = -1;
+            var prevIndex  = -1;
+            var prevPattern = -1;
 
             for (int i = 0; i < noteEvents.Count; i++)
             {
@@ -1068,13 +1076,29 @@ namespace FamiStudio
 
                     //var quantizedNoteIndex = Utils.Clamp((int)Math.Round(beatLength * noteIndex), 0, song.GetPatternLength(patternIdx) - 1);
                     var quantizedNoteIndex = (int)(beatLength * noteIndex);
+                    var patternLength = song.GetPatternLength(patternIdx);
 
-                    if (patternIdx == patternInfos.Count - 1 && quantizedNoteIndex >= song.GetPatternLength(patternIdx))
+                    // HACK: Edge case. Extremely short notes can have a stop note occur in the same frame.
+                    if (quantizedNoteIndex == prevIndex && patternIdx == prevPattern && note.IsStop && pattern.Notes[quantizedNoteIndex].IsMusical)
+                    {
+                        // Push the stop note forward to the next frame, if available.
+                        if (++quantizedNoteIndex >= patternLength && patternIdx < patternInfos.Count - 1)
+                        {
+                            quantizedNoteIndex = 0;
+                            pattern = channel.PatternInstances[patternIdx + 1] ?? channel.CreatePattern();
+                            channel.PatternInstances[patternIdx + 1] = pattern;
+                        }
+                    }
+
+                    if (patternIdx == patternInfos.Count - 1 && quantizedNoteIndex >= patternLength)
                         break;
 
-                    Debug.Assert(quantizedNoteIndex <= song.GetPatternLength(patternIdx));
+                    Debug.Assert(quantizedNoteIndex <= patternLength);
 
                     pattern.Notes[quantizedNoteIndex] = note;
+                    
+                    prevIndex   = quantizedNoteIndex;
+                    prevPattern = patternIdx;
                 }
             }
         }
@@ -1334,12 +1358,12 @@ namespace FamiStudio
             bytes.Add((byte)val);
         }
 
-        private void WriteHeaderChunk()
+        private void WriteHeaderChunk(int count)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MThd"));
             WriteInt32(6);
             WriteInt16(1);
-            WriteInt16((short)(song.Channels.Length + 1));
+            WriteInt16((short)(count + 1));
             WriteInt16(TicksPerQuarterNote);
         }
 
@@ -1445,7 +1469,7 @@ namespace FamiStudio
             SetInt32(bytes.Count - chunckStartIdx - 4, chunckStartIdx);
         }
 
-        private void WriteChannelTrack(int channelIdx, List<int> patternInfos, int instrumentMode, int[] instrumentMapping, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
+        private void WriteChannelTrack(int channelIdx, int sourceIdx, List<int> patternInfos, int instrumentMode, int[] instrumentMapping, bool volumeAsVelocity, bool slideToPitchWheel, int pitchWheelRange)
         {
             bytes.AddRange(Encoding.ASCII.GetBytes("MTrk"));
 
@@ -1457,12 +1481,12 @@ namespace FamiStudio
             WriteTextEvent(3, song.Channels[channelIdx].Name);
 
             WriteVarLen(0);
-            WritePitchBendRange(channelIdx, pitchWheelRange);
+            WritePitchBendRange(sourceIdx, pitchWheelRange);
 
             if (instrumentMode == MidiExportInstrumentMode.Channel)
             {
                 WriteVarLen(0);
-                WriteProgramChangeEvent(channelIdx, instrumentMapping[channelIdx]);
+                WriteProgramChangeEvent(sourceIdx, instrumentMapping[channelIdx]);
             }
 
             var tick = 0;
@@ -1503,7 +1527,7 @@ namespace FamiStudio
                             slideNumFrames--;
 
                             WriteVarLen(tick - lastEventTick);
-                            WritePitchWheelEvent(channelIdx, slidePitch);
+                            WritePitchWheelEvent(sourceIdx, slidePitch);
                             lastEventTick = tick;
 
                             if (slideNumFrames == 0)
@@ -1523,7 +1547,7 @@ namespace FamiStudio
                         if (lastActiveNote >= 0)
                         {
                             WriteVarLen(tick - lastEventTick);
-                            WriteNoteEvent(false, channelIdx, lastActiveNote, 127);
+                            WriteNoteEvent(false, sourceIdx, lastActiveNote, 127);
                             lastEventTick = tick;
                             lastActiveNote = -1;
                         }
@@ -1533,7 +1557,7 @@ namespace FamiStudio
                             if (slideNeedReset)
                             {
                                 WriteVarLen(tick - lastEventTick);
-                                WritePitchWheelEvent(channelIdx, 8192);
+                                WritePitchWheelEvent(sourceIdx, 8192);
                                 lastEventTick = tick;
                                 slideNeedReset = false;
                             }
@@ -1544,7 +1568,7 @@ namespace FamiStudio
                                 note.Instrument != lastInstrument)
                             {
                                 WriteVarLen(tick - lastEventTick);
-                                WriteProgramChangeEvent(channelIdx, instrumentMapping[project.Instruments.IndexOf(note.Instrument)]);
+                                WriteProgramChangeEvent(sourceIdx, instrumentMapping[project.Instruments.IndexOf(note.Instrument)]);
 
                                 lastEventTick = tick;
                                 lastInstrument = note.Instrument;
@@ -1567,13 +1591,13 @@ namespace FamiStudio
                                 slideNumFrames = slideDuration - 1;
 
                                 WriteVarLen(tick - lastEventTick);
-                                WritePitchWheelEvent(channelIdx, slidePitch);
+                                WritePitchWheelEvent(sourceIdx, slidePitch);
                                 lastEventTick = tick;
                             }
 
                             // Write note.
                             WriteVarLen(tick - lastEventTick);
-                            WriteNoteEvent(note.IsMusical, channelIdx, note.Value + 11, volume);
+                            WriteNoteEvent(note.IsMusical, sourceIdx, note.Value + 11, volume);
                             lastEventTick = tick;
                             lastActiveNote = note.Value + 11;
                         }
@@ -1616,11 +1640,27 @@ namespace FamiStudio
             project.ConvertToSimpleNotes();
             song = project.Songs[0];
 
-            WriteHeaderChunk();
+            // Find any channels that contain patterns. They will be assigned sequentially to the next available channel.
+            var usedChannels = song.Channels
+                .Select((c, i) => new { Channel = c, Index = i })
+                .Where(x => x.Channel.HasAnyPatternInstances)
+                .ToList();
+
+            WriteHeaderChunk(usedChannels.Count);
             WriteControlTrack(out var patternInfos);
 
-            for (int i = 0; i < song.Channels.Length; i++)
-                WriteChannelTrack(i, patternInfos, instrumentMode, instrumentMapping, volumeAsVelocity, slideToPitchWheel, pitchWheelRange);
+            var channel = 0;
+            foreach (var c in usedChannels)
+            {
+                WriteChannelTrack(
+                    c.Index, channel++, patternInfos, instrumentMode, instrumentMapping, volumeAsVelocity, slideToPitchWheel, pitchWheelRange);
+
+                if (channel >= 16)
+                {
+                    Log.LogMessage(LogSeverity.Warning, $"Song uses {usedChannels.Count} channels. Only the first 16 will be exported.");
+                    break;
+                }
+            }
 
             File.WriteAllBytes(filename, bytes.ToArray());
         }

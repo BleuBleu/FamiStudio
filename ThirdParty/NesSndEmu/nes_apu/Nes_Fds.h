@@ -55,6 +55,8 @@ private:
 		int pending_volume_env;
 		int volume_env;
 		int trigger;
+		int mod_lo;
+		int mod_hi;
 
 		int wav_period() const 
 		{

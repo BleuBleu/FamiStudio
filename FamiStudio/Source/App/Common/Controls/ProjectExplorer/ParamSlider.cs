@@ -37,6 +37,7 @@ namespace FamiStudio
             bmpPlus  = ParentWindow.Graphics.GetTextureAtlasRef("ButtonPlus");
             buttonSize = DpiScaling.ScaleCustom(bmpMinus.ElementSize.Width, bmpScale);
             height = buttonSize - (Platform.IsMobile ? DpiScaling.ScaleForWindow(2) : 0);
+            supportsDoubleClick = true;
         }
 
         // -1 = left, 1 = right, 0 = outside
@@ -95,6 +96,11 @@ namespace FamiStudio
                     }
                 }
             }
+        }
+
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
+        {
+            OnPointerDown(e);
         }
 
         protected override void OnPointerUp(PointerEventArgs e)
@@ -160,11 +166,18 @@ namespace FamiStudio
 
         public override void ShowParamContextMenu()
         {
-            App.ShowContextMenuAsync(new[]
+            if (param.CanInputValue)
             {
-                new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
-                new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
-            });
+                App.ShowContextMenuAsync(new[]
+                {
+                    new ContextMenuOption("Type",      EnterValueContext,        () => { EnterParamValue(); }),
+                    new ContextMenuOption("MenuReset", ResetDefaultValueContext, () => { ResetParamDefaultValue(); })
+                });
+            }
+            else
+            {
+                base.ShowParamContextMenu();
+            }
         }
 
         private void ChangeValue(int x)

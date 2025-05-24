@@ -38,6 +38,7 @@ namespace FamiStudio
         public bool IsLandscape => true;
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
         public bool IsContextMenuActive => container.IsContextMenuActive;
+        public bool IsOutOfProcessDialogInProgress => Platform.IsOutOfProcessDialogInProgress();
         public bool MobilePianoVisible { get => false; set => value = false; }
         public Point LastMousePosition => new Point(lastCursorX, lastCursorY);
         public Point LastContextMenuPosition => ScreenToWindow(contextMenuPoint);
@@ -424,7 +425,7 @@ namespace FamiStudio
 
         private void WindowCloseCallback(IntPtr window)
         {
-            if (IsAsyncDialogInProgress)
+            if (IsAsyncDialogInProgress || IsOutOfProcessDialogInProgress)
             {
                 Platform.Beep();
                 return;
@@ -457,7 +458,7 @@ namespace FamiStudio
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
         {
-            if (quit)
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
             
             Debug.WriteLine($"BUTTON! Button={button}, Action={action}, Mods={mods}");
@@ -469,40 +470,42 @@ namespace FamiStudio
                 if (captureControl != null)
                     return;
 
+                // Abort delayed right-click if left-clicking, to avoid a double capture.
+                if (button == GLFW_MOUSE_BUTTON_LEFT)
+                    ClearDelayedRightClick();
+
                 var ctrl = container.GetControlAt(lastCursorX, lastCursorY, out int cx, out int cy);
+                var ctrlIsValid = ctrl != null;
                 container.ConditionalHideContextMenu(ctrl);
 
                 lastButtonPress = button; 
 
-                // Double click emulation.
+                // Multi-click emulation. 
                 var now = glfwGetTime();
                 var delay = now - lastClickTime;
 
-                var doubleClick = 
-                    button == lastClickButton &&
-                    delay <= Platform.DoubleClickTime &&
+                var multiClick = delay <= Platform.DoubleClickTime &&
                     Math.Abs(lastClickX - lastCursorX) < 4 &&
                     Math.Abs(lastClickY - lastCursorY) < 4;
 
-                if (doubleClick)
+                var doubleClick = multiClick && lastClickButton == button;
+
+                if (!doubleClick) 
                 {
-                    lastClickButton = -1;
-                }
-                else
-                {
-                    lastClickButton = button;
-                    lastClickTime = now;
                     lastClickX = lastCursorX;
                     lastClickY = lastCursorY;
                 }
 
-                if (ctrl != null)
+                lastClickButton = doubleClick ? -1 : button;
+                lastClickTime = now;
+
+                if (ctrlIsValid)
                 {
                     SetActiveControl(ctrl);
 
                     if (doubleClick)
                     {
-                        // We dont support anything other and double-left click.
+                        // We only support left-click for multi-clicks.
                         if (button == GLFW_MOUSE_BUTTON_LEFT)
                         {
                             Debug.WriteLine($"DOUBLE CLICK!");
@@ -680,15 +683,25 @@ namespace FamiStudio
         
         private void SendKeyUpOrDown(Control ctrl, KeyEventArgs e, bool down)
         {
-            if (down)
-                ctrl.SendKeyDown(e);
+            if (IsContextMenuActive)
+            {
+                if (down)
+                    container.ContextMenu.SendKeyDown(e);
+                else
+                    container.ContextMenu.SendKeyUp(e);
+            }
             else
-                ctrl.SendKeyUp(e);
+            {
+                if (down)
+                    ctrl.SendKeyDown(e);
+                else
+                    ctrl.SendKeyUp(e);
+            }
         }
 
         private void KeyCallback(IntPtr window, int key, int scancode, int action, int mods)
         {
-            if (quit)
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
 
             mods = FixKeyboardMods(mods, key, action);
@@ -717,7 +730,7 @@ namespace FamiStudio
 
         private void CharCallback(IntPtr window, uint codepoint)
         {
-            if (quit)
+            if (quit || IsOutOfProcessDialogInProgress)
                 return;
 
             //Debug.WriteLine($"CHAR! Key = {codepoint}, Char = {((char)codepoint).ToString()}");
@@ -964,7 +977,7 @@ namespace FamiStudio
             ProcessPlatformEvents();
             ProcessEvents();
 
-            if (!quit)
+            if (!quit && !IsOutOfProcessDialogInProgress)
             { 
                 Tick();
                 RenderFrameAndSwapBuffer();

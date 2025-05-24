@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace FamiStudio
 {
@@ -477,15 +478,13 @@ namespace FamiStudio
                     switch (i)
                     {
                         case EnvelopeType.N163Waveform:
+                        case EnvelopeType.FdsWaveform:
                         case EnvelopeType.WaveformRepeat:
                             // Handled as special case below since multiple-waveform must be splitted and
                             // repeat envelope must be converted.
                             break;
                         case EnvelopeType.FdsModulation:
                             processed = env.BuildFdsModulationTable().Select(m => (byte)m).ToArray();
-                            break;
-                        case EnvelopeType.FdsWaveform:
-                            processed = env.Values.Take(env.Length).Select(m => (byte)m).ToArray();
                             break;
                         case EnvelopeType.S5BMixer:
                             processed = ProcessEnvelope(ProcessMixerEnvelope(env), false, false);
@@ -514,8 +513,8 @@ namespace FamiStudio
                     }
                 }
 
-                // Special case for N163 multiple waveforms.
-                if (instrument.IsN163)
+                // Special case for N163/FDS multiple waveforms.
+                if (instrument.IsN163 || instrument.IsFds)
                 {
                     var envType = instrument.IsN163 ? EnvelopeType.N163Waveform : EnvelopeType.FdsWaveform;
                     var envRepeat = instrument.Envelopes[EnvelopeType.WaveformRepeat];
@@ -683,28 +682,31 @@ namespace FamiStudio
 
                         if (instrument.IsFds)
                         {
-                            var fdsWavEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsWaveform]]);
+                            var repeatEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.WaveformRepeat]]);
                             var fdsModEnvIdx = uniqueEnvelopes.IndexOfKey(instrumentEnvelopes[instrument.Envelopes[EnvelopeType.FdsModulation]]);
 
-                            lines.Add($"\t{dw} {llp}env{fdsWavEnvIdx}");
-                            lines.Add($"\t{db} {instrument.FdsMasterVolume}");
+                            lines.Add($"\t{dw} {llp}env{repeatEnvIdx}");
+                            lines.Add($"\t{db} {(instrument.FdsModDepth << 2) | instrument.FdsMasterVolume}");
+                            lines.Add($"\t{dw} {llp}fds_inst{instrumentCountExp}_waves");
                             lines.Add($"\t{dw} {llp}env{fdsModEnvIdx}");
-                            lines.Add($"\t{db} {(instrument.FdsAutoMod ? 1 : 0)}");
 
                             if (instrument.FdsAutoMod)
                             {
                                 var numer = (int)instrument.FdsAutoModNumer;
                                 var denom = (int)instrument.FdsAutoModDenom;
                                 Utils.SimplifyFraction(ref numer, ref denom); // 2/4 is same as 1/2
-                                lines.Add($"\t{db} {numer}, {denom}");
+                                
+                                // Set bit 7 of numer for automod enabled
+                                lines.Add($"\t{db} {0x80 | numer}, {denom}");
                                 usesFdsAutoMod = true;
                             }
                             else
                             {
+                                // Bit 7 of the first byte will be clear here (no automod)
                                 lines.Add($"\t{dw} {instrument.FdsModSpeed}");
                             }
 
-                            lines.Add($"\t{db} {instrument.FdsModDepth}, {instrument.FdsModDelay}");
+                            lines.Add($"\t{db} {instrument.FdsModDelay}");
                         }
                         else if (instrument.IsN163)
                         {
@@ -807,20 +809,22 @@ namespace FamiStudio
 
             lines.Add("");
 
-            // Write the N163 multiple waveforms.
-            if (project.UsesN163Expansion)
+            // Write the N163/FDS multiple waveforms.
+            if (project.UsesN163Expansion || project.UsesFdsExpansion)
             {
                 foreach (var instrument in project.Instruments)
                 {
-                    if (instrument.IsN163)
+                    if (instrument.IsN163 || instrument.IsFds)
                     {
-                        lines.Add($"{llp}n163_inst{instrumentIndices[instrument]}_waves:");
+                        var name = instrument.IsN163 ? "n163" : "fds";
+                        
+                        lines.Add($"{ll}{name}_inst{instrumentIndices[instrument]}_waves:");
 
                         var waves = instrumentWaveforms[instrument];
                         for (int i = 0; i < waves.Length; i++)
                         {
                             var waveIdx = uniqueEnvelopes.IndexOfKey(waves[i]);
-                            lines.Add($"\t{dw} {llp}env{waveIdx}");
+                            lines.Add($"\t{dw} {ll}env{waveIdx}");
                         }
 
                         size += waves.Length * 2;
@@ -2247,7 +2251,13 @@ namespace FamiStudio
             }
             
             var usedFlags = kernel == FamiToneKernel.FamiStudio ? GetRequiredFlags() : new List<string>();
-            var flagComments = usedFlags.Select((s) => $"; {s}").ToList();
+            var pattern = @"FAMISTUDIO_\S+\s*=\s*[1-8]";
+
+            List<string> flagComments = [$"; Required flags for {project.Name}:"];
+            flagComments.AddRange
+            (
+                usedFlags.SelectMany(flag => Regex.Matches(flag, pattern).Cast<Match>()).Select(match => $"; {match.Value}")
+            );
 
             lines.InsertRange(1, flagComments);
 

@@ -47,13 +47,16 @@ namespace FamiStudio
                                 note.HasDeltaCounter = false; // HACK : Clear so we don't set multiple times.
                             }
 
-                            NesApu.CurrentSample[apuIdx] = sample.ProcessedData;
+                            lock (DPCMSample.ProcessedDataLock)
+                            {
+                                NesApu.CurrentSample[apuIdx] = sample.ProcessedData;
 
-                            WriteRegister(NesApu.APU_DMC_START, 0, 4, sample.Id);
-                            WriteRegister(NesApu.APU_DMC_LEN, sample.ProcessedData.Length >> 4);
-                            WriteRegister(NesApu.APU_DMC_FREQ, mapping.Pitch | (mapping.Loop ? 0x40 : 0x00));
-                            WriteRegister(NesApu.APU_DMC_RAW, dmcInitialValue);
-                            WriteRegister(NesApu.APU_SND_CHN, 0x1f);
+                                WriteRegister(NesApu.APU_DMC_START, 0, 4, sample.Id);
+                                WriteRegister(NesApu.APU_DMC_LEN, sample.ProcessedData.Length >> 4);
+                                WriteRegister(NesApu.APU_DMC_FREQ, mapping.Pitch | (mapping.Loop ? 0x40 : 0x00));
+                                WriteRegister(NesApu.APU_DMC_RAW, dmcInitialValue);
+                                WriteRegister(NesApu.APU_SND_CHN, 0x1f);
+                            }
 
                             setCounter = true;
                         }

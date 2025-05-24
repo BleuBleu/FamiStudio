@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -65,8 +66,39 @@ namespace FamiStudio
 
         public string SelectedPath => filename;
 
+        #region Localization
+
+        // Dialogs
+        LocalizedString OverwriteFileTitle;
+        LocalizedString OverwriteFileMessage;
+        LocalizedString FileNoAccessTitle;
+        LocalizedString FileNoAccessMessage;
+        LocalizedString FolderNoAccessTitle;
+        LocalizedString FolderNoAccessMessage;
+
+        // Directories
+        LocalizedString ComputerLabel;
+        LocalizedString HomeFolderLabel;
+        LocalizedString DesktopFolderLabel;
+        LocalizedString DocumentsFolderLabel;
+        LocalizedString DownloadsFolderLabel;
+
+        // Buttons
+        LocalizedString NameLabel;
+        LocalizedString DateLabel;
+        LocalizedString YesLabel;
+        LocalizedString NoLabel;
+        LocalizedString AcceptLabel;
+        LocalizedString CancelLabel;
+        LocalizedString AscendLabel;
+        LocalizedString DescendLabel;
+
+        #endregion
+
         public FileDialog(FamiStudioWindow win, Mode m, string title, string defaultPath, string extensionList = "") : base(win, title)
         {
+            Localization.Localize(this);
+
             mode = m;
             SplitExtensionList(extensionList, out extensions, out var descriptions);
             Resize(DpiScaling.ScaleForWindow(800), DpiScaling.ScaleForWindow(500));
@@ -112,31 +144,27 @@ namespace FamiStudio
             var widthNoMargin = width - margin * 2;
             var y = titleBarSizeY + margin;
 
-            buttonComputer = new Button("FileComputer", "Computer");
+            buttonComputer = new Button("FileComputer", ComputerLabel);
             buttonComputer.Move(margin, y, 100, pathButtonSizeY); 
             buttonComputer.Click += ButtonComputer_Click;
             y += buttonComputer.Height + margin;
 
             gridFiles = new Grid(new[] {
                 new ColumnDesc("",     0.0f, ColumnType.Image),
-                new ColumnDesc("Name", 0.7f, ColumnType.Label) { Ellipsis = true },
-                new ColumnDesc("Date", 0.3f, ColumnType.Label) }, 16, true);
+                new ColumnDesc(NameLabel, 0.7f, ColumnType.Label) { Ellipsis = true },
+                new ColumnDesc(DateLabel, 0.3f, ColumnType.Label) }, 16, true);
             gridFiles.Move(margin, y, widthNoMargin, gridFiles.Height);
             gridFiles.FullRowSelect = true;
+            gridFiles.IsFileDialog  = true;
             gridFiles.CellClicked += GridFiles_CellClicked;
+            gridFiles.EmptyCellClicked += GridFiles_EmptyCellClicked;
             gridFiles.CellDoubleClicked += GridFiles_CellDoubleClicked;
             gridFiles.HeaderCellClicked += GridFiles_HeaderCellClicked;
+            gridFiles.SelectedRowUpdated += GridFiles_SelectedRowUpdated;
             y += gridFiles.Height + margin;
 
             textFile = new TextBox("");
             textFile.Move(margin, y, widthNoMargin / 3, textFile.Height);
-
-            if (mode != Mode.Save)
-            {
-                textFile.Enabled = false;
-                if (mode == Mode.Open)
-                    textFile.DisabledColor = textFile.ForeColor;
-            }
 
             dropDownType = new DropDown( descriptions, 0);
             dropDownType.Move(margin * 2 + textFile.Width, y, widthNoMargin - margin - textFile.Width, textFile.Height);
@@ -144,17 +172,17 @@ namespace FamiStudio
             dropDownType.Enabled = mode != Mode.Folder;
             y += textFile.Height + margin;
 
-            buttonYes = new Button("Yes", null);
+            buttonYes = new Button(YesLabel, null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(buttonSize, buttonSize);
             buttonYes.Move(Width - buttonSize * 2 - margin * 2, y);
-            buttonYes.ToolTip = "Accept";
+            buttonYes.ToolTip = AcceptLabel;
 
-            buttonNo = new Button("No", null); 
+            buttonNo = new Button(NoLabel, null); 
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(buttonSize, buttonSize);
             buttonNo.Move(Width - buttonSize - margin, y);
-            buttonNo.ToolTip = "Cancel";
+            buttonNo.ToolTip = CancelLabel;
             y += buttonNo.Height + margin;
 
             Resize(Width, y);
@@ -169,6 +197,8 @@ namespace FamiStudio
 
             UpdatePathBar();
             CenterToWindow();
+
+            gridFiles.GrabDialogFocus();
         }
 
         private void ButtonComputer_Click(Control sender)
@@ -207,7 +237,7 @@ namespace FamiStudio
                     RemoveControl(tempButton);
                 }
 
-                var maxWidth = width - margin * 3 - buttonComputer.Width;
+                var maxWidth = width - margin * 2 - buttonComputer.Width;
                 var startButtonIndex = 0;
 
                 // If there is not enough space, only add the end folders.
@@ -308,7 +338,7 @@ namespace FamiStudio
                         sortByDate = true;
                 }
 
-                GoToPath(path);
+                GoToPath(path, false);
             }
         }
 
@@ -316,11 +346,14 @@ namespace FamiStudio
         {
             if (left)
             {
-                var f = files[rowIndex];
-
-                if (f.Type == EntryType.File)
-                    textFile.Text = f.Name;
+                UpdateTextByIndex(rowIndex);
             }
+        }
+
+        private void GridFiles_EmptyCellClicked(Control sender, bool left)
+        {
+            textFile.Text = "";
+            gridFiles.ResetSelectedRow();
         }
 
         private void GridFiles_CellDoubleClicked(Control sender, int rowIndex, int colIndex)
@@ -341,6 +374,34 @@ namespace FamiStudio
                 textFile.Text = f.Name;
                 ValidateAndClose();
             }
+        }
+
+        private void GridFiles_SelectedRowUpdated(Control sender, int index)
+        {
+            Debug.Assert(index < files.Count);
+            UpdateTextByIndex(index);
+        }
+
+        private void TryOpenOrValidate()
+        {
+            if (!OpenFolderOrDrive())
+                ValidateAndClose();
+        }
+
+        private bool OpenFolderOrDrive()
+        {
+            if (string.IsNullOrWhiteSpace(textFile.Text))
+                return false;
+
+            var f = files.FirstOrDefault(file => file.Name.Contains(textFile.Text, StringComparison.OrdinalIgnoreCase));
+
+            return f?.Type switch
+            {
+                EntryType.Drive     => GoToPath(new DriveInfo(f.Name).RootDirectory.FullName),
+                EntryType.Directory => GoToPath(f.Path),
+                null                => false,
+                _                   => false
+            };
         }
 
         private bool ValidateAndClose()
@@ -369,7 +430,7 @@ namespace FamiStudio
                     if (!MatchesExtensionList(f, extensions))
                         f += extensions[0].Trim('*');
 
-                    if (!File.Exists(f) || Platform.MessageBox(ParentWindow, $"Overwrite file {Path.GetFileName(f)}?", "Confirm Overwrite", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    if (!File.Exists(f) || Platform.MessageBox(ParentWindow, OverwriteFileMessage.Format(Path.GetFileName(f)), OverwriteFileTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         filename = f;
                         Close(DialogResult.OK);
@@ -390,13 +451,18 @@ namespace FamiStudio
             return false;
         }
 
+        private void UpdateTextByIndex(int index)
+        {
+            textFile.Text = index >= 0 ? files[index].Name : string.Empty;
+        }
+
         private void UpdateColumnNames()
         {
             var colNames = new[]
             {
                 "",
-                 sortByDate || path == null ? "Name" : sortDesc ? "Name (Desc)" : "Name (Asc)",
-                !sortByDate || path == null ? "Date" : sortDesc ? "Date (Desc)" : "Date (Asc)"
+                 sortByDate || path == null ? NameLabel : sortDesc ? $"{NameLabel} ({DescendLabel})" : $"{NameLabel} ({AscendLabel})",
+                !sortByDate || path == null ? DateLabel : sortDesc ? $"{DateLabel} ({DescendLabel})" : $"{DateLabel} ({AscendLabel})"
             };
 
             gridFiles.RenameColumns(colNames);
@@ -429,13 +495,13 @@ namespace FamiStudio
             files.Clear();
 
             if (Directory.Exists(userDir))
-                files.Add(new FileEntry("FileHome", "Home", userDir, EntryType.Directory));
+                files.Add(new FileEntry("FileHome", HomeFolderLabel, userDir, EntryType.Directory));
             if (Directory.Exists(desktopDir))
-                files.Add(new FileEntry("FileDesktop", "Desktop", desktopDir, EntryType.Directory));
+                files.Add(new FileEntry("FileDesktop", DesktopFolderLabel, desktopDir, EntryType.Directory));
             if (Directory.Exists(downloadDir))
-                files.Add(new FileEntry("FileDownload", "Downloads", downloadDir, EntryType.Directory));
+                files.Add(new FileEntry("FileDownload", DownloadsFolderLabel, downloadDir, EntryType.Directory));
             if (Directory.Exists(documentsDir))
-                files.Add(new FileEntry("FileDocuments", "Documents", documentsDir, EntryType.Directory));
+                files.Add(new FileEntry("FileDocuments", DocumentsFolderLabel, documentsDir, EntryType.Directory));
 
             if (Platform.IsLinux)
             {
@@ -485,14 +551,41 @@ namespace FamiStudio
             return false;
         }
         
-        private void GoToPath(string p)
+        private bool GoToPath(string p, bool stack = true)
         {
-            files.Clear();
+            if (string.IsNullOrEmpty(p))
+            {
+                GoToComputer();
+                return false;
+            }
 
             var dirInfo = new DirectoryInfo(p);
 
-            var dirInfos = dirInfo.GetDirectories();
-            var fileInfos = dirInfo.GetFiles();
+            DirectoryInfo[] dirInfos;
+            FileInfo[] fileInfos;
+
+            // Prevent a crash if a file or directory doesn't have access permissions.
+            try
+            {
+                dirInfos = dirInfo.GetDirectories();
+            }
+            catch
+            {
+                Platform.MessageBoxAsync(ParentWindow, FolderNoAccessMessage.Format(Path.GetFileName(p)), FolderNoAccessTitle, MessageBoxButtons.OK);
+                return false;
+            }
+
+            try
+            {
+                fileInfos = dirInfo.GetFiles();
+            }
+            catch
+            {
+                Platform.MessageBoxAsync(ParentWindow, FileNoAccessMessage.Format(Path.GetFileName(p)), FileNoAccessTitle, MessageBoxButtons.OK);
+                return false;
+            }
+
+            files.Clear();
 
             var sortSign = sortDesc ? -1 : 1;
             var comp = sortByDate ?
@@ -519,22 +612,23 @@ namespace FamiStudio
                 }
             }
 
-            if (mode == Mode.Open)
-            {
-                filename = null;
-                textFile.Text = "";
-            }
-
+            filename = null;
+            textFile.Text = "";
+            
             path = p;
+
             gridFiles.UpdateData(GetGridData(files));
             gridFiles.ResetScroll();
+            gridFiles.ResetSelectedRow();
             UpdateColumnNames();
             UpdatePathBar();
+
+            return true;
         }
 
         private void ButtonYes_Click(Control sender)
         {
-            ValidateAndClose();
+            TryOpenOrValidate();
         }
 
         private void ButtonNo_Click(Control sender)
@@ -546,14 +640,16 @@ namespace FamiStudio
         {
             base.OnKeyDown(e);
 
-            if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+            if (!e.Handled)
             {
-                ValidateAndClose();
-            }
-
-            if (!e.Handled && e.Key == Keys.Escape)
-            {
-                Close(DialogResult.Cancel);
+                if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+                {
+                    TryOpenOrValidate();
+                }
+                else if (e.Key == Keys.Escape)
+                {
+                    Close(DialogResult.Cancel);
+                }
             }
         }
     }

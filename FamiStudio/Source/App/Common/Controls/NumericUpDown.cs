@@ -6,13 +6,13 @@ namespace FamiStudio
 {
     public class NumericUpDown : TextBox
     {
-        public delegate void ValueChangedDelegate(Control sender, int val);
+        public delegate void ValueChangedDelegate(Control sender, float val);
         public event ValueChangedDelegate ValueChanged;
 
-        private int val;
-        private int min;
-        private int max = 10;
-        private int inc = 1;
+        private float val;
+        private float min;
+        private float max = 10.0f;
+        private float inc = 1.0f;
         private TextureAtlasRef[] bmp;
         private float captureDuration;
         private int captureButton = -1;
@@ -20,15 +20,21 @@ namespace FamiStudio
 
         protected int textBoxMargin = DpiScaling.ScaleForWindow(2);
 
-        public NumericUpDown(int value, int minVal, int maxVal, int increment) : base(value, minVal, maxVal, increment)
+        #region Localization
+        protected LocalizedString EnterValueContext;
+
+        #endregion
+
+        public NumericUpDown(float value, float minVal, float maxVal, float increment) : base(value, minVal, maxVal, increment)
         {
             val = value;
             min = minVal;
             max = maxVal;
             inc = increment;
-            Debug.Assert(val % increment == 0);
-            Debug.Assert(min % increment == 0);
-            Debug.Assert(max % increment == 0);
+            
+            //Debug.Assert(val % increment == 0);
+            //Debug.Assert(min % increment == 0);
+            //Debug.Assert(max % increment == 0);
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
             allowMobileEdit = false;
             supportsDoubleClick = true;
@@ -36,16 +42,18 @@ namespace FamiStudio
             SetTextBoxValue();
         }
 
-        public int Value
+        public float Value
         {
             get 
             {
-                Debug.Assert(val >= min && val <= max && (val % inc) == 0);
-                return val; 
+                //Debug.Assert(val >= min && val <= max && (val % inc) == 0);
+                Debug.Assert(val >= min && val <= max);
+                return val;
             }
             set 
             {
-                if (SetAndMarkDirty(ref val, Utils.Clamp(Utils.RoundDown(value, inc), min, max)))
+                var newValue = (float)Math.Round(Utils.RoundDownFloat(value, inc), 2);
+                if (SetAndMarkDirty(ref val, Utils.Clamp(newValue, min, max)))
                 {
                     SetTextBoxValue();
                     ValueChanged?.Invoke(this, val);
@@ -53,13 +61,13 @@ namespace FamiStudio
             }
         }
 
-        public int Minimum
+        public float Minimum
         {
             get { return min; }
             set { min = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
         }
 
-        public int Maximum
+        public float Maximum
         {
             get { return max; }
             set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
@@ -128,10 +136,10 @@ namespace FamiStudio
                 // Then increment every 50ms (in steps of 10 after a while).
                 else if (lastDuration > 0.5f && ((int)((lastDuration - 0.5f) * 20) != (int)((captureDuration - 0.5f) * 20)))
                 {
-                    Value += (captureButton == 0 ? -inc : inc) * (lastDuration >= 1.5f && (Value % (10 * inc)) == 0 ? 10 * inc : 1 * inc);
+                    Value += (captureButton == 0 ? -inc : inc) * (lastDuration >= 1.5f && (Value % (10 * inc)) == 0 ? 10 : 1);
                 }
             }
-            else
+            else if (!HasDialogFocus)
             {
                 SetTickEnabled(false);
             }
@@ -149,7 +157,6 @@ namespace FamiStudio
                 captureDuration = 0;
                 Value += captureButton == 0 ? -inc : inc;
                 CapturePointer();
-                SetTickEnabled(true);
             }
             else
             {
@@ -157,28 +164,63 @@ namespace FamiStudio
             }
         }
 
+#if FAMISTUDIO_MOBILE
+        protected override void OnTouchLongPress(PointerEventArgs e)
+        {
+            App.ShowContextMenuAsync(new[]
+            {
+                new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(); }),
+            });
+        }
+
+        protected void EnterValue()
+        {
+            Platform.EditTextAsync(label, Math.Round(Value).ToString(), (s) =>
+            {
+                Value = Utils.ParseFloatWithTrailingGarbage(s);
+
+                if (container is Grid grid)
+                    grid.UpdateControlValue(this, Value);
+            });
+        }
+#endif
+
         private void GetValueFromTextBox()
         {
             ClampNumber();
-            val = Utils.ParseIntWithTrailingGarbage(text);
+            val = Utils.ParseFloatWithTrailingGarbage(text);
         }
 
         private void SetTextBoxValue()
         {
-            text = val.ToString(CultureInfo.InvariantCulture);
+            text = val.ToString("0.#");
             SelectAll();
             caretIndex = text.Length;
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (!e.Handled && (e.Key == Keys.Up || e.Key == Keys.Down))
+            {
+                GetValueFromTextBox();
+                var mult = e.Modifiers.IsShiftDown ? inc * 10 : inc * 1;
+                var sign = e.Key == Keys.Up ? 1 : -1;
+                Value += mult * sign;
+            }
         }
 
         protected override void OnAcquiredDialogFocus()
         {
             SelectAll();
             caretIndex = text.Length;
+            SetTickEnabled(true);
         }
 
         protected override void OnLostDialogFocus()
         {
             GetValueFromTextBox();
+            SetTickEnabled(false);
         }
 
         protected override void OnMouseDoubleClick(PointerEventArgs e)
@@ -201,8 +243,16 @@ namespace FamiStudio
             {
                 captureButton = -1;
                 ReleasePointer();
-                SetTickEnabled(false);
                 MarkDirty();
+            }
+            else if (e.Right)
+            {
+                App.ShowContextMenuAsync(new[]
+                {
+                    new ContextMenuOption("MenuCut",   CutName,   () => Cut()),
+                    new ContextMenuOption("MenuCopy",  CopyName,  () => Copy()),
+                    new ContextMenuOption("MenuPaste", PasteName, () => Paste()),
+                });
             }
             else
             {
