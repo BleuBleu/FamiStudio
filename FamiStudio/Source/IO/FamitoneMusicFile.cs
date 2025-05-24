@@ -32,7 +32,6 @@ namespace FamiStudio
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
         private Dictionary<DPCMSampleMapping, int> sampleMappingIndices = new Dictionary<DPCMSampleMapping, int>();
-        private Dictionary<DPCMSample, int> sampleOffsetsPreCleanup = new Dictionary<DPCMSample, int>();
         private string noArpeggioEnvelopeName;
 
         private int kernel = FamiToneKernel.FamiStudio;
@@ -149,40 +148,31 @@ namespace FamiStudio
             }
         }
 
-        private void GatherDPCMSampleOffsets()
-        {
-            // Since we will be deleting instruments that are unused for this song, that will mess up
-            // the offset of the samples in the big binary sample data. We store the real offsets before
-            // the cleanup and well reuse those when building the DPCM sample table.
-            foreach (var sample in project.Samples)
-            {
-                sampleOffsetsPreCleanup.Add(sample, project.GetSampleBankOffset(sample));
-            }
-        }
-
         private void GatherDPCMMappings()
         {
             if (project.UsesSamples)
             {
                 var maxMappings = kernel == FamiToneKernel.FamiStudio && project.SoundEngineUsesExtendedDpcm ? MaxDPMCSampleMappingsExt : MaxDPMCSampleMappingsBase;
 
-                // Gather all unique mappings.
+                // Gather all unique mappings. Since we don't clean up the mappings to keep stable offsets
+                // between song export, we scan here to find only the ones that are actually used by the song.
                 // TODO : Sort them by number of uses and favor the most commonly used ones for single-byte notes.
-                foreach (var inst in project.Instruments)
+                foreach (var song in project.Songs)
                 {
-                    if (inst.HasAnyMappedSamples)
-                    {
-                        foreach (var kv in inst.SamplesMapping)
-                        {
-                            if (kv.Value.Sample != null && !sampleMappingIndices.ContainsKey(kv.Value))
-                            {
-                                sampleMappingIndices.Add(kv.Value, 0);
+                    var channel = song.Channels[ChannelType.Dpcm];
 
-                                if (sampleMappingIndices.Count >= maxMappings)
-                                {
-                                    Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
-                                    break;
-                                }
+                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                    {
+                        var instrument = it.Note.Instrument;
+                        var mapping = instrument.GetDPCMMapping(it.Note.Value);
+                        if (mapping != null && !sampleMappingIndices.ContainsKey(mapping))
+                        {
+                            sampleMappingIndices.Add(mapping, 0);
+
+                            if (sampleMappingIndices.Count >= maxMappings)
+                            {
+                                Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
+                                break;
                             }
                         }
                     }
@@ -868,7 +858,7 @@ namespace FamiStudio
                 for (int i = 0; i < sortedUniqueMappings.Length; i++)
                 {
                     var mapping = sortedUniqueMappings[i];
-                    var offset = sampleOffsetsPreCleanup[mapping.Sample];
+                    var offset = project.GetSampleBankOffset(mapping.Sample);
 
                     var sampleOffset = Math.Max(0, offset) >> 6;
                     var sampleSize = mapping.Sample.ProcessedData.Length >> 4;
@@ -2098,10 +2088,14 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
-            GatherDPCMSampleOffsets();
-            project.DeleteAllSongsBut(songIds);
-            RemoveUnsupportedFeatures();
+            // When exporting with separate files, we want to make sure all songs can use the same .DMC file(s) and have consistent offsets.
+            // 1. Before deleting all but the song we want, we first run a cleanup to remove any samples not used by any song.
+            // 2. We then delete all the unwanted songs.
+            // 3. Afterwards are careful to not delete any unreferenced samples.
             project.Cleanup();
+            project.DeleteAllSongsBut(songIds, false);
+            project.Cleanup(false);
+            RemoveUnsupportedFeatures();
             project.MergeIdenticalInstruments();
             project.RemoveDpcmNotesWithoutMapping();
             project.PermanentlyApplyGrooves();

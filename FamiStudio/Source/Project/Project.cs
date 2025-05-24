@@ -1511,12 +1511,16 @@ namespace FamiStudio
             }
         }
 
-        public void Cleanup()
+        public void Cleanup(bool removeUnusedSamples = true)
         {
             DeleteUnusedInstruments();
-            UnmapUnusedSamples();
-            DeleteUnmappedSamples();
             DeleteUnusedArpeggios();
+
+            if (removeUnusedSamples)
+            {
+                UnmapUnusedSamples();
+                DeleteUnmappedSamples();
+            }
         }
 
         public bool MergeProject(Project otherProject)

@@ -5,6 +5,10 @@
 
 Testing:
 - Test release snap on mobile
+- Bump ROM version
+- Re-export SoundEngine demo song data + recompile + listen to make sure samples work.
+- Re-compile ROM/NSF
+- Test NSF/ROM with DPCM samples
 - 
 
 4.4.0 Changelog
