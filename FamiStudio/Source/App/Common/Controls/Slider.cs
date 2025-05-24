@@ -39,7 +39,7 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (enabled)
+            if (enabled && e.Left)
             {
                 if (e.IsTouchEvent)
                 {
@@ -80,16 +80,24 @@ namespace FamiStudio
 
             if (changing)
             {
-                Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+                Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
                 e.MarkHandled();
             }
         }
 
         protected override void OnTouchClick(PointerEventArgs e)
         {
-            Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+            Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
             e.MarkHandled();
         }
+
+#if FAMISTUDIO_MOBILE
+        protected override void OnTouchLongPress(PointerEventArgs e)
+        {
+            if (container is Grid grid)
+                grid.ShowContextMenu(this);
+        }
+#endif
 
         protected override void OnRender(Graphics g)
         {

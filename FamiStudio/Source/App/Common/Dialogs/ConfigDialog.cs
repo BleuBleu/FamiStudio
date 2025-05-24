@@ -297,7 +297,7 @@ namespace FamiStudio
                     page.SetPropertyVisible(5, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);
                     page.SetPropertyVisible(8, Platform.IsDesktop);
-                    page.SetPropertyVisible(11, Platform.IsDesktop && Platform.IsWindows); // Linux always has it disabled, MacOS always enabled, Windows can choose.
+                    page.SetPropertyVisible(11, Platform.IsDesktop);
                     break;
                 }
                 case ConfigSection.Input:
@@ -369,7 +369,7 @@ namespace FamiStudio
                     page.AddGrid(DoubleClickLabel, new[] { new ColumnDesc(ActionColumn, 0.46f), new ColumnDesc(KeyColumn, 0.27f), new ColumnDesc(KeyAltColumn, 0.27f) }, GetKeyboardShortcutStrings(), 14, null, GridOptions.None, PropertyFlags.MultiLineLabel); // 0
                     page.AddButton(null, ResetDefaultLabel); // 1
                     page.PropertyClicked += KeyboardPage_PropertyClicked;
-                    page.SetColumnEnabled(0, 0, false);
+                    //page.SetColumnEnabled(0, 0, false); // Not sure why this was disabled? Makes sense for it to be valid.
                     break;
                 }
                 case ConfigSection.Mobile:

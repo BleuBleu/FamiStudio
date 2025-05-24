@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -12,6 +13,8 @@ namespace FamiStudio
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
 
+        private bool init;
+
         private int margin = DpiScaling.ScaleForWindow(4);
 
         private ColumnDesc[] columns;
@@ -20,6 +23,8 @@ namespace FamiStudio
         private bool[,] gridDisabled;
         private object[,] data;
         private GridOptions options;
+
+        LocalizedString EnterValueContext;
 
         public object[,] Data => data;
 
@@ -32,6 +37,7 @@ namespace FamiStudio
 
         public Grid(Container parent, ColumnDesc[] cols, object[,] d, GridOptions opts = GridOptions.None)
         {
+            Localization.Localize(this);
             clipRegion = false;
             columns = cols;
             options = opts;
@@ -261,11 +267,11 @@ namespace FamiStudio
             }
         }
 
-        private void UpDown_ValueChanged(Control sender, int val)
+        private void UpDown_ValueChanged(Control sender, float val)
         {
             if (GetGridCoordForControl(sender, out int row, out int col))
             {
-                data[row, col] = val;
+                data[row, col] = (int)val;
                 ValueChanged?.Invoke(this, row, col, val);
             }
         }
@@ -295,6 +301,32 @@ namespace FamiStudio
             {
                 ButtonPressed?.Invoke(this, row, col);
             }
+        }
+
+        private void EnterValue(Control sender)
+        {
+            GetGridCoordForControl(sender, out var row, out var col);
+            if (sender is Slider slider)
+            {
+                // Scale value based on the format, then rescale and store as int.
+                var scale = Utils.ParseFloatWithTrailingGarbage(slider.Format(1));
+                var name  = GetControlLabel(sender) ?? string.Empty;
+                var val   = Math.Round(slider.Value * scale, 2);
+
+                Platform.EditTextAsync(name, val.ToString("0.#"), (s) =>
+                {
+                    slider.Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
+                    UpdateControlValue(this, (int)slider.Value);
+                });
+            }
+        }
+
+        public virtual void ShowContextMenu(Control sender)
+        {
+            App.ShowContextMenuAsync(new[]
+            {
+                new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(sender); }),
+            });
         }
 
         public void SetData(int row, int col, object d)
@@ -383,6 +415,24 @@ namespace FamiStudio
             }
         }
 
+        public void UpdateControlValue(Control sender, object val)
+        {
+            if (GetGridCoordForControl(sender, out var row, out var col))
+                SetData(row, col, val);
+        }
+
+        public string GetControlLabel(Control sender)
+        {
+            var col = columns
+                .Select((column, index) => new { column, index })
+                .FirstOrDefault(x => x.column.Type == ColumnType.Label)?.index ?? -1;
+
+            if (GetGridCoordForControl(sender, out var row, out _) && col != -1)
+                return (string)data[row, col];
+
+            return string.Empty;
+        }
+
         protected override void OnResize(EventArgs e)
         {
             ConditionalRecreateAllControls();
@@ -390,7 +440,13 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            RecreateAllControls();
+            // Prevents EditTextAsync from recreating the controls, otherwise coords are lost and values don't update.
+            if (!init)
+            {
+                RecreateAllControls();
+            }
+
+            init = true;
         }
 
         public void UpdateData(object[,] newData)

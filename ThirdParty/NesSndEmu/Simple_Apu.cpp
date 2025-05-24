@@ -183,11 +183,19 @@ void Simple_Apu::treble_eq(int expansion, double treble_amount, int treble_freq,
 	}
 }
 
-void Simple_Apu::bass_freq(int bass_freq)
+void Simple_Apu::bass_freq(int expansion, int bass_freq)
 {
+	// FDS is a special case and has its own bass filter.
+	// Not sure yet for other expansions, but they share
+	// the same blip buffer anyway.
+	if (expansion == expansion_fds)
+	{
+		buf_fds.bass_freq(bass_freq);
+		return;
+	}
+
 	buf.bass_freq(bass_freq);
 	buf_exp.bass_freq(bass_freq);
-	buf_fds.bass_freq(bass_freq);
 	buf_tnd[0].bass_freq(bass_freq);
 	buf_tnd[1].bass_freq(bass_freq);
 	buf_tnd[2].bass_freq(bass_freq);
@@ -535,13 +543,13 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 				long nonlinear_tnd = pack_sample(enabled_channels_non_linear_mix * tnd_volume);
 
 				// Write final result in tnd[0] so that the remaining code can proceed as usual.
-				*p[0]++ = (tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd);
+				*p[0]++ = (tnd_skip ? 0 : nonlinear_tnd - prev_nonlinear_tnd);
 				 p[1]++;
 				 p[2]++;
 
 				prev_nonlinear_tnd = nonlinear_tnd;
 
-				if (tnd_skip > 0)
+				if (tnd_skip)
 					tnd_skip--;
 			}
 		}
@@ -554,10 +562,10 @@ long Simple_Apu::read_samples( sample_t* out, long count )
 			{
 				tnd_accum[0] += (long)*p;
     			long nonlinear_tnd = pack_sample(nonlinearize(unpack_sample(tnd_accum[0])) * tnd_volume);
-				*p++ = tnd_skip > 0 ? 0 : nonlinear_tnd - prev_nonlinear_tnd;
+				*p++ = tnd_skip ? 0 : nonlinear_tnd - prev_nonlinear_tnd;
 				prev_nonlinear_tnd = nonlinear_tnd;
 
-				if (tnd_skip > 0)
+				if (tnd_skip)
 					tnd_skip--;
 			}
 		}

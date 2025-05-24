@@ -1011,7 +1011,7 @@ namespace FamiStudio
                         // be making sound, without the tone. In this case, well arbitrarely put the note at C4.
                         if (!toneEnabled && envEnabled)
                         {
-                            var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
+                            var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels, project.Tuning);
                             period = noteTable[Note.MusicalNoteC4];
                         }
                     }
@@ -1219,7 +1219,7 @@ namespace FamiStudio
 
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
-                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels);
+                    var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels, project.Tuning);
                     var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
                     var finePitch = 0;
 
@@ -1393,7 +1393,7 @@ namespace FamiStudio
             return mask;
         }
 
-        public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence, bool reverseDpcm, bool preserveDpcmPad)
+        public Project Load(string filename, int songIndex, int duration, int patternLength, int startFrame, bool removeIntroSilence, bool reverseDpcm, bool preserveDpcmPad, int tuning = 440)
         {
             nsf = NotSoFatso.NsfOpen(filename);
 
@@ -1427,6 +1427,7 @@ namespace FamiStudio
             project.Author    = Utils.PtrToStringAnsi(NotSoFatso.NsfGetArtist(nsf));
             project.Copyright = Utils.PtrToStringAnsi(NotSoFatso.NsfGetCopyright(nsf));
             project.PalMode   = palSource;
+            project.Tuning    = tuning;
 
             // Our expansion mask is the same as NSF.
             var expansionMask = GetExpansionMaskFromNsfFlags(NotSoFatso.NsfGetExpansion(nsf));

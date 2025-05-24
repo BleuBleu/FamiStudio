@@ -2105,6 +2105,7 @@ namespace FamiStudio
             {
                 var selPatterns = GetSelectedPatterns(out var customSettings);
                 ClipboardUtils.SavePatterns(App.Project, selPatterns, customSettings);
+                CancelDragSelection(); // Safety in case a transaction is in progress.
                 DeleteSelection(true, customSettings != null);
             }
         }
@@ -3257,7 +3258,8 @@ namespace FamiStudio
         {
             continuouslyFollowing = false;
 
-            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncPianoRoll && !panning && captureOperation == CaptureOperation.None)
+            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncPianoRoll && !panning && 
+                captureOperation == CaptureOperation.None && !window.IsAsyncDialogInProgress)
             {
                 var frame = App.CurrentFrame;
                 var seekX = GetPixelForNote(App.CurrentFrame);

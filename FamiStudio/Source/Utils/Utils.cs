@@ -144,6 +144,47 @@ namespace FamiStudio
             return BitOperations.Log2((uint)x);
         }
 
+        public static float ParseFloatWithTrailingGarbage(string s)
+        {
+            if (string.IsNullOrEmpty(s))
+            {
+                return 0;
+            }
+
+            bool pastDecimal = false;
+            bool negative    = s.Length > 0 && s[0] == '-';
+
+            int start = negative ?  1 : 0;
+            int sign  = negative ? -1 : 1;
+            int idx   = start;
+
+            s = s.Trim();
+
+            if (s[start] == '.' || s[start] == ',')
+                s = s.Insert(start, "0");
+
+            for (; idx < Math.Min(s.Length, 7); idx++)
+            {
+                char c = s[idx];
+                if ((c == '.' || c == ',') && !pastDecimal)
+                {
+                    pastDecimal = true;
+                }
+                else if (!char.IsDigit(c))
+                {
+                    break;
+                }
+            }
+
+            return idx == 0 || (idx - start) == 0 ? 0 : float.Parse(s.Substring(start, idx - start).Replace(',', '.'), CultureInfo.InvariantCulture) * sign;
+        }
+
+        public static float ParseFloatWithLeadingAndTrailingGarbage(string s)
+        {
+            s = new String(s.SkipWhile((c) => !char.IsDigit(c)).ToArray());
+            return ParseFloatWithTrailingGarbage(s);
+        }
+
         public static int ParseIntWithTrailingGarbage(string s)
         {
             if (s == null)
@@ -151,17 +192,13 @@ namespace FamiStudio
                 return 0;
             }
 
-            int idx = 0;
-            int start = 0;
-            int sign = 1;
+            bool negative = s.Length > 0 && s[0] == '-';
+
+            int start = negative ?  1 : 0;
+            int sign  = negative ? -1 : 1;
+            int idx   = start;
 
             s = s.Trim();
-            if (s.Length > 0 && s[0] == '-')
-            {
-                sign = -1;
-                idx = 1;
-                start = 1;
-            }
 
             for (; idx < Math.Min(s.Length, 7); idx++)
             {
@@ -193,7 +230,17 @@ namespace FamiStudio
             return (x / factor) * factor;
         }
 
+        public static float RoundDownFloat(float x, float factor)
+        {
+            return (x / factor) * factor;
+        }
+
         public static int RoundUp(int x, int factor)
+        {
+            return ((x + factor - 1) / factor) * factor;
+        }
+
+        public static float RoundUpFloat(float x, float factor)
         {
             return ((x + factor - 1) / factor) * factor;
         }

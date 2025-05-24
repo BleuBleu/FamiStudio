@@ -10,6 +10,7 @@ namespace FamiStudio
         private int MinValue;
         private int MaxValue;
         public int DefaultValue;
+        public bool CanInputValue = true;
         public int SnapValue;
         public int CustomHeight;
         public bool IsList;
@@ -34,6 +35,8 @@ namespace FamiStudio
         public CustomDrawDelegate CustomDraw;
         public GetValueDelegate GetMinValue;
         public GetValueDelegate GetMaxValue;
+        public GetValueDelegate GetDefaultValue;
+        public EnabledDelegate GetCanInputValue;
 
         public bool HasTab => !string.IsNullOrEmpty(TabName);
 
@@ -47,18 +50,20 @@ namespace FamiStudio
             return Utils.Clamp(value, GetMinValue(), GetMaxValue());
         }
 
-        protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, int snap = 1)
+        protected ParamInfo(string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, int snap = 1, bool input = true)
         {
             Name = name;
             ToolTip = tooltip;
             MinValue = minVal;
             MaxValue = maxVal;
             DefaultValue = defaultVal;
+            CanInputValue = input;
             IsList = list;
             SnapValue = snap;
             GetValueString = () => GetValue().ToString();
             GetMinValue = () => MinValue;
             GetMaxValue = () => MaxValue;
+            GetDefaultValue = () => DefaultValue;
             IsEnabled = () => true;
         }
 
@@ -213,8 +218,10 @@ namespace FamiStudio
                 case ExpansionType.Fds:
                     paramInfos.Add(new InstrumentParamInfo(instrument, MasterVolumeLabel, 0, 3, 0, null, true)
                         { GetValue = () => { return instrument.FdsMasterVolume; }, GetValueString = () => { return FdsMasterVolumeType.Names[instrument.FdsMasterVolume]; }, SetValue = (v) => { instrument.FdsMasterVolume = (byte)v; } });
-                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.CountNoPWM - 1, WavePresetType.Sine, null, true)
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WavePresetLabel, 0, WavePresetType.Count - 1, WavePresetType.Sine, null, true)
                         { GetValue = () => { return instrument.FdsWavePreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsWavePreset]; }, SetValue = (v) => { instrument.FdsWavePreset = (byte)v; } });
+                    paramInfos.Add(new InstrumentParamInfo(instrument, WaveCountLabel, 1, instrument.Envelopes[EnvelopeType.FdsWaveform].Values.Length / 64, 1)
+                        { GetValue = () => { return instrument.FdsWaveCount; }, SetValue = (v) => { instrument.FdsWaveCount = (byte)v;}, GetMaxValue = () => { return instrument.FdsMaxWaveCount; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModPresetLabel, 0, WavePresetType.CountNoResample - 1, WavePresetType.Flat, null, true )
                         { GetValue = () => { return instrument.FdsModPreset; }, GetValueString = () => { return WavePresetType.LocalizedNames[instrument.FdsModPreset]; }, SetValue = (v) => { instrument.FdsModPreset = (byte)v; } });
                     paramInfos.Add(new InstrumentParamInfo(instrument, ModSpeedLabel, 0, 4095, 0)
@@ -554,8 +561,8 @@ namespace FamiStudio
 
     public class DPCMSampleParamInfo : ParamInfo
     {
-        public DPCMSampleParamInfo(DPCMSample sample, string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false) :
-            base(name, minVal, maxVal, defaultVal, tooltip, list)
+        public DPCMSampleParamInfo(DPCMSample sample, string name, int minVal, int maxVal, int defaultVal, string tooltip, bool list = false, bool canInput = true) :
+            base(name, minVal, maxVal, defaultVal, tooltip, list, 1, canInput)
         {
         }
     }
@@ -603,13 +610,13 @@ namespace FamiStudio
                     { GetValue = () => { return sample.PreviewRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.PreviewRate); }, SetValue = (v) => { sample.PreviewRate = (byte)v; } },
                 new DPCMSampleParamInfo(sample, SampleRateLabel, 0, 15, 15, SampleRateTooltip, true)
                     { GetValue = () => { return sample.SampleRate; }, GetValueString = () => { return DPCMSampleRate.GetString(true, FamiStudio.StaticInstance.PalPlayback, true, false, sample.SampleRate); }, SetValue = (v) => { sample.SampleRate = (byte)v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, PaddingModeLabel, 0, 4, DPCMPaddingType.PadTo16Bytes, PaddingModeTooltip, true)
+                new DPCMSampleParamInfo(sample, PaddingModeLabel, 0, 6, DPCMPaddingType.PadTo16Bytes, PaddingModeTooltip, true)
                     { GetValue = () => { return sample.PaddingMode; }, GetValueString = () => { return DPCMPaddingType.Names[sample.PaddingMode]; }, SetValue = (v) => { sample.PaddingMode = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, DmcInitialValueDiv2Label, 0, 63, NesApu.DACDefaultValueDiv2, DmcInitialValueDiv2Tooltip)
                     { GetValue = () => { return sample.DmcInitialValueDiv2; }, SetValue = (v) => { sample.DmcInitialValueDiv2 = v; sample.Process(); } },
                 new DPCMSampleParamInfo(sample, VolumeAdjustLabel, 0, 200, 100, VolumeAdjustTooltip)
                     { GetValue = () => { return sample.VolumeAdjust; }, SetValue = (v) => { sample.VolumeAdjust = v; sample.Process(); } },
-                new DPCMSampleParamInfo(sample, FineTuningLabel, 0, 200, 100, FineTuningTooltip)
+                new DPCMSampleParamInfo(sample, FineTuningLabel, 0, 200, 100, FineTuningTooltip, false, false)
                     { GetValue = () => { return (int)Math.Round((sample.FinePitch - 0.95f) * 2000); }, SetValue = (v) => { sample.FinePitch = (v / 2000.0f) + 0.95f; sample.Process(); }, GetValueString = () => { return (sample.FinePitch * 100.0f).ToString("N2") + "%"; } },
                 new DPCMSampleParamInfo(sample, ProcessPalLabel, 0, 1, 0, ProcessPalTooltip)
                     { GetValue = () => { return  sample.PalProcessing ? 1 : 0; }, SetValue = (v) => { sample.PalProcessing = v != 0; sample.Process(); } },

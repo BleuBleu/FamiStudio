@@ -1950,11 +1950,11 @@ namespace FamiStudio
             {
                 OpenProject();
             }
-            else if (Settings.FileSaveShortcut.Matches(e) && !UndoRedoManager.HasTransactionInProgress)
+            else if (Settings.FileSaveShortcut.Matches(e))
             {
                 SaveProjectAsync(false);
             }
-            else if (Settings.FileSaveAsShortcut.Matches(e) && !UndoRedoManager.HasTransactionInProgress)
+            else if (Settings.FileSaveAsShortcut.Matches(e))
             {
                 SaveProjectAsync(true);
             }

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection.Metadata;
 using System.Runtime.InteropServices.Marshalling;
+using System.Transactions;
 
 namespace FamiStudio
 {
@@ -34,6 +35,7 @@ namespace FamiStudio
             buttonSizeX = DpiScaling.ScaleCustom(bmpLeft.ElementSize.Width, bmpScale);
             buttonSizeY = DpiScaling.ScaleCustom(bmpLeft.ElementSize.Height, bmpScale);
             height = buttonSizeY;
+            supportsDoubleClick = true;
         }
 
         // -1 = left, 1 = right, 0 = outside
@@ -65,6 +67,11 @@ namespace FamiStudio
                     e.MarkHandled();
                 }
             }
+        }
+
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
+        {
+            OnPointerDown(e);
         }
 
         protected override void OnPointerUp(PointerEventArgs e)

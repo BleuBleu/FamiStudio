@@ -9,6 +9,8 @@ namespace FamiStudio
         private ushort modDepth;
         private ushort modSpeed;
         private int    prevPeriodHi;
+        private int    waveIndex = -1;
+        private int    masterVolume;
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx, int tuning, bool pal) : base(player, apuIdx, channelIdx, tuning, pal)
         {
@@ -22,18 +24,15 @@ namespace FamiStudio
 
                 if (instrument.IsFds)
                 {
-                    var wav = instrument.Envelopes[EnvelopeType.FdsWaveform];
                     var mod = instrument.Envelopes[EnvelopeType.FdsModulation].BuildFdsModulationTable();
 
-                    Debug.Assert(wav.Length == 0x40);
+                    //Debug.Assert(wav.Length == 0x40);
                     Debug.Assert(mod.Length == 0x20);
 
-                    WriteRegister(NesApu.FDS_VOL, 0x80 | instrument.FdsMasterVolume);
-
-                    for (int i = 0; i < 0x40; ++i)
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav.Values[i] & 0xff, 16); // 16 cycles to mimic ASM loop.
+                    waveIndex = -1; // Force reload on instrument change.
+                    masterVolume = instrument.FdsMasterVolume;
+                    ConditionalLoadWave();
                     
-                    WriteRegister(NesApu.FDS_VOL, instrument.FdsMasterVolume);
                     WriteRegister(NesApu.FDS_MOD_HI, 0x80);
                     WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
 
@@ -43,11 +42,44 @@ namespace FamiStudio
             }
         }
 
+        private void ConditionalLoadWave()
+        {
+            var newWaveIndex = envelopeIdx[EnvelopeType.WaveformRepeat];
+
+            if (newWaveIndex != waveIndex)
+            {
+                var wav = envelopes[EnvelopeType.FdsWaveform].GetChunk(newWaveIndex);
+
+                // We read the table from end to start to mimic the ASM code (saves cycles).
+                for (int i = 0x3F; i >= 0; i -= 2)
+                {
+                    // Toggle write every 2 iterations. ASM does this for smooth cycling between
+                    // waveforms. We write twice between write toggling and iterate half the times 
+                    // to save CPU cycles. 41 skipped cycles to mimic ASM loop (40 if BPL is skipped).
+                    SkipCycles(4); // 4 cycles to mimic TXA and ORA before enabling write
+                    WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 4);
+                    WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, 13);         // +7 for LDA and DEY
+                    WriteRegister(NesApu.FDS_WAV_START + i - 1, wav[i - 1] & 0xff, 11); // +5 for LDA
+                    WriteRegister(NesApu.FDS_VOL, masterVolume, i > 1 ? 9 : 8);         // +5 for DEY and BPL (4 on BPL exit)
+                }
+ 
+                waveIndex = newWaveIndex;
+            }
+        }
+
+        private void ResetModulation()
+        {
+            WriteRegister(NesApu.FDS_MOD_LO, 0x00);
+            WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
+            WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+            WriteRegister(NesApu.FDS_SWEEP_ENV, 0x80);
+        }
+
         public override int GetEnvelopeFrame(int envIdx)
         {
             if (envIdx == EnvelopeType.FdsWaveform)
             {
-                return + NesApu.GetFdsWavePos(apuIdx);
+                return waveIndex * 64 + NesApu.GetFdsWavePos(apuIdx);
             }
             else
             {
@@ -75,9 +107,12 @@ namespace FamiStudio
             if (note.IsStop)
             {
                 WriteRegister(NesApu.FDS_VOL_ENV, 0x80); // Zero volume
+                ResetModulation();
             }
             else if (note.IsMusical)
             {
+                ConditionalLoadWave();
+
                 var period = GetPeriod();
                 var volume = GetVolume();
                 var instrument = note.Instrument;
@@ -125,7 +160,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                    ResetModulation();
                     modDelayCounter--;
                 }
             }

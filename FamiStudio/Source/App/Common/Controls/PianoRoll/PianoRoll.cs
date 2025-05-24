@@ -7903,6 +7903,7 @@ namespace FamiStudio
             var val = note.GetEffectValue(selectedEffectIdx);
             var min = Note.GetEffectMinValue(Song, channel, selectedEffectIdx);
             var max = Note.GetEffectMaxValue(Song, channel, selectedEffectIdx);
+            var def = Note.GetEffectDefaultValue(Song, selectedEffectIdx);
             var dlg = new ValueInputDialog(ParentWindow, new Point(left + x, top + y), EffectType.LocalizedNames[selectedEffectIdx], val, min, max, false);
 
             dlg.ShowDialogAsync((r) =>
@@ -7910,7 +7911,7 @@ namespace FamiStudio
                 if (r == DialogResult.OK)
                 {
                     var noteSelected = IsNoteSelected(location);
-                    var newVal = dlg.Value;
+                    var newVal = (int)dlg.Value;
 
                     if (noteSelected && SelectionCoversMultiplePatterns())
                         App.UndoRedoManager.BeginTransaction(TransactionScope.Channel, Song.Id, editChannel);
@@ -9730,7 +9731,8 @@ namespace FamiStudio
         {
             continuouslyFollowing = false;
 
-            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncSequencer && !panning && captureOperation == CaptureOperation.None && editMode == EditionMode.Channel)
+            if ((App.IsPlaying || force) && App.FollowModeEnabled && Settings.FollowSync != Settings.FollowSyncSequencer && !panning && 
+                captureOperation == CaptureOperation.None && editMode == EditionMode.Channel && !window.IsAsyncDialogInProgress)
             {
                 var frame = App.CurrentFrame;
                 var seekX = GetPixelXForAbsoluteNoteIndex(frame);

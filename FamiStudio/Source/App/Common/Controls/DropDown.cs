@@ -30,6 +30,7 @@ namespace FamiStudio
         private int captureScrollBarPos;
         private int captureMouseY;
         private int maxListScroll = 0;
+        private int highlightedIndex = -1;
 
         private int margin         = DpiScaling.ScaleForWindow(4);
         private int scrollBarWidth = DpiScaling.ScaleForWindow(10);
@@ -44,7 +45,7 @@ namespace FamiStudio
             selectedIndex = index;
             height = rowHeight;
             transparent = trans;
-            supportsDoubleClick = false;
+            supportsDoubleClick = true;
             UpdateScrollParams();
         }
 
@@ -115,6 +116,11 @@ namespace FamiStudio
             }
         }
 
+        protected override void OnMouseDoubleClick(PointerEventArgs e)
+        {
+            OnPointerDown(e);
+        }
+
         protected override void OnPointerUp(PointerEventArgs e)
         {
             if (!e.IsTouchEvent)
@@ -165,6 +171,32 @@ namespace FamiStudio
                 SetListOpened(false);
                 ClearDialogFocus();
                 e.Handled = true;
+            }
+            else if (e.Key == Keys.Enter || e.Key == Keys.KeypadEnter)
+            {
+                selectedIndex = highlightedIndex;
+                SetListOpened(false);
+                e.Handled = true;
+            }
+            else
+            {
+                // Vertical navigation.
+                var newIndex = e.Key switch
+                {
+                    Keys.Up       => -1,
+                    Keys.Down     =>  1,
+                    Keys.PageUp   => -MaxItemsInList,
+                    Keys.PageDown =>  MaxItemsInList,
+                    Keys.Home     => -numItemsInList,
+                    Keys.End      =>  numItemsInList,
+                    _             =>  0,
+                };
+                if (newIndex != 0)
+                {
+                    highlightedIndex = Math.Clamp(highlightedIndex + newIndex, 0, numItemsInList - 1);
+                    e.Handled = true;
+                    MarkDirty();
+                }
             }
         }
 
@@ -331,6 +363,8 @@ namespace FamiStudio
                     var absItemIndex = i + listScroll;
                     if (absItemIndex == selectedIndex || absItemIndex == listHover)
                         o.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, absItemIndex == selectedIndex ? Theme.DarkGreyColor4 : Theme.DarkGreyColor3);
+                    if (absItemIndex == highlightedIndex)
+                        o.FillRectangle(0, i * rowHeight, width, (i + 1) * rowHeight, Color.FromArgb(70, 0, 128, 255));
                     o.DrawText(items[absItemIndex], Fonts.FontMedium, margin, i * rowHeight, Theme.LightGreyColor1, TextFlags.MiddleLeft | TextFlags.Clip, width - margin - actualScrollBarWidth, rowHeight);
                 }
 

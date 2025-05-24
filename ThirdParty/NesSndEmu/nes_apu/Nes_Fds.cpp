@@ -39,7 +39,6 @@ void Nes_Fds::reset()
 	memset(&osc.ages, 0, sizeof(osc.ages));
 	osc.mod_pos = 0;
 	osc.mod_phase = 0;
-	osc.mod_pos = 0;
 	osc.delay = 0;
 	osc.last_amp = 0;
 	osc.phase = 0;
@@ -102,6 +101,7 @@ void Nes_Fds::write_register(cpu_time_t time, cpu_addr_t addr, int data)
 				break;
 			case 5:
 				osc.mod_pos = data & 0x7f;
+				osc.mod_phase = data & 0x7f;
 				break;
 			case 7:
 				if (data & 0x80) 
@@ -150,7 +150,7 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 
 	// Code here is kind of a mix of Disch/NotSoFatso + NSFPlay.
 	bool mod_on = osc.mod_period() && !(osc.regs[7] & 0x80);
-	bool wav_on = osc.wav_period() && !(osc.regs[3] & 0x80) && !(osc.regs[9] & 0x80);
+	bool wav_on = osc.wav_period() && !(osc.regs[3] & 0x80);
 
 	cpu_time_t time = last_time;
 
@@ -231,24 +231,28 @@ void Nes_Fds::run_fds(cpu_time_t end_time)
 		{
 			osc.trigger = trigger_none;
 		}
-		
-		// From my tests, the DAC lookup needs to be applied before any volume
-		// calculation. If you play a saw-tooth at low volume, you clearly still
-		// see all the same little ripples across the rising edge, even at low 
-		// volume.
-		int volume = min(osc.volume_env, 0x20);
-		int wav = osc.wave[(osc.phase >> 16) & 0x3f];
-		int amp = dac_lookup[wav] * volume;
 
-		// Master volume.
-		amp = amp * 2 / ((osc.regs[9] & 0x03) + 2);
-		amp >>= dac_lookup_bits;
-
-		int delta = amp - last_amp;
-		if (delta)
+		// Only output / change volume if write is disabled
+		if (!(osc.regs[9] & 0x80))
 		{
-			synth.offset(time, delta, osc.output);
-			last_amp = amp;
+			// From my tests, the DAC lookup needs to be applied before any volume
+			// calculation. If you play a saw-tooth at low volume, you clearly still
+			// see all the same little ripples across the rising edge, even at low 
+			// volume.
+			int volume = min(osc.volume_env, 0x20);
+			int wav = osc.wave[(osc.phase >> 16) & 0x3f];
+			int amp = dac_lookup[wav] * volume;
+
+			// Master volume.
+			amp = amp * 2 / ((osc.regs[9] & 0x03) + 2);
+			amp >>= dac_lookup_bits;
+
+			int delta = amp - last_amp;
+			if (delta)
+			{
+				synth.offset(time, delta, osc.output);
+				last_amp = amp;
+			}
 		}
 
 		time += sub_step;

@@ -54,7 +54,7 @@ You should use FamiTracker tempo mode if:
 
 ## Expansion audio
 
-The project properties is also where you select your [Expansion Audio](expansion.md). Expansion will add extra channels on top of the default 5 that the NES supported. Note that removing a expansion audio in a project will delete all data (patterns, notes, instrument) related to the it.
+The project properties is also where you select your [Expansion Audio](expansion.md). Expansion will add extra channels on top of the default 5 that the NES supported. Note that removing an audio expansion in a project will delete all data (patterns, notes, instrument) related to it.
 
 ![](images/EditProjectExp.png#center)
 

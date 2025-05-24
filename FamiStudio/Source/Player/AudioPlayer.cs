@@ -88,8 +88,8 @@ namespace FamiStudio
                     Debug.Assert((newSamples.Length & 1) == 0);
                     for (; i < newSamples.Length && (int)j < metronome.Length; i += 2, j += pitch)
                     {
-                        newSamples[i + 0] = (short)Utils.Clamp((int)(emulation[i + 0] + metronome[(int)j] * volume), short.MinValue, short.MaxValue);
-                        newSamples[i + 1] = (short)Utils.Clamp((int)(emulation[i + 1] + metronome[(int)j] * volume), short.MinValue, short.MaxValue);
+                        newSamples[i + 0] = (short)Utils.Clamp((int)(emulation[i + 0] + metronome[(int)j] * (volume / 2)), short.MinValue, short.MaxValue);
+                        newSamples[i + 1] = (short)Utils.Clamp((int)(emulation[i + 1] + metronome[(int)j] * (volume / 2)), short.MinValue, short.MaxValue);
                     }
                 }
                 else
@@ -214,7 +214,7 @@ namespace FamiStudio
 
             if (metronomePlayPosition >= 0)
             {
-                metronomePlayPosition += (int)(data.samples.Length * data.metronomePitch);
+                metronomePlayPosition += (int)(data.samples.Length / (stereo ? 2 : 1) * data.metronomePitch);
                 if (metronome == null || metronomePlayPosition >= metronome.Length)
                     metronomePlayPosition = -1;
             }

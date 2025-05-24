@@ -1,7 +1,7 @@
 Project TempoMode="FamiStudio" Name="Untitled" Author="Unknown" Expansions="VRC6"
 	Instrument Name="Duty 0"
 	Instrument Name="VRC6 Duty 0" Expansion="VRC6" Vrc6SawMasterVolume="Full"
-	Song Name="Song 1" Length="45" LoopPoint="0" PatternLength="16" BeatLength="4" NoteLength="10" Groove="10" GroovePaddingMode="Middle"
+	Song Name="Song 1" Length="46" LoopPoint="0" PatternLength="16" BeatLength="4" NoteLength="10" Groove="10" GroovePaddingMode="Middle"
 		Channel Type="Square1"
 			Pattern Name="Pattern 1"
 				Note Time="0" Value="C3" Duration="15" Instrument="Duty 0"

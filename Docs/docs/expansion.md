@@ -18,7 +18,7 @@ List of expansions supported:
 
 * **Sunsoft 5B**: Add 3 extra square channels with shared noise & envelope capabilities. These channels are fixed at a duty cycle of 50%. It was based off the Yamaha YM2149F. While this expansion was extremely powerful, it was only ever used in one game (Gimmick!) and this game did not make use of any advanced features of the chip. For this reason most emulators only support a small subset of features.
 
-* **EPSM**: EPSM is not an audio expansion that ever used, or even existed in the lifetime of the NES, but rather the pet project of [Perkka](https://github.com/Perkka2/EPSM) who designed a small circuit board that can be plugged in the expansion port of the NES and controlled by it to produce sound. The expansion is based off the Yamaha YMF288 chip and adds 3 extra square channels with shared noise capabilities, 6 FM synthesis channels and 6 rhythm channels. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
+* **EPSM**: EPSM is not an audio expansion that was ever used, which never even existed in the lifetime of the NES, but rather the pet project of [Perkka](https://github.com/Perkka2/EPSM) who designed a small circuit board that can be plugged in the expansion port of the NES and controlled by it to produce sound. The expansion is based off the Yamaha YMF288 chip and adds 3 extra square channels with shared noise capabilities, 6 FM synthesis channels and 6 rhythm channels. The square are fixed at a duty cycle or 50%. Those are essentially the same as Sunsoft S5B. The FM channels are 4-OP channels that can be configured independently. The rhythm channels are 6 pre-defined drum samples.
 
 ## Enabling expansion audio
 
@@ -96,12 +96,13 @@ The parameters are:
 
 * **Master Volume** : At full volume the FDS can be significantly louder than the regular channels. The chip also supported 40%, 50% and 66% which makes the sound a lot more balanced.
 * **Wave Preset** : A few preset that you can use to set the waveform envelope.
+* **Wave Count** : The number of waveforms the instrument will contain. The maximum amount is 16.
 * **Mod Preset** : A few preset that you can use to set the modulation envelope.
 * **Mod Speed** : The speed of the modulation.
 * **Mod Depth** : The depth of the modulation.
 * **Mod Delay** : A delay, in frames (1/60th of a second) before enabling modulation.
-* **Resample Period**, **Offset** and **Normalize** : See the [resampling section](#resampling-wav-files-for-n163-and-fds)
 * **Auto-Mod** and **Numerator** / **Denominator** : Toggles Auto-Modulation and allow setting a numerator/denominator fraction. 
+* **Resample Period**, **Offset** and **Normalize** : See the [resampling section](#resampling-wav-files-for-n163-and-fds)
 
 When **Auto-Mod** is enabled, the instrument will automatically compute the modulation speed as a fraction of the note's pitch. For example setting Numerator = 1 and Denominator = 4 means the modulation speed will be 1/4 of the note's pitch. Since this process involves multiplications and divisions and the NES/Famicom is ill-equipped for this kind of task, it is highly recommend that you limit yourself to simple fractions such as 1/4 and avoid things like 13/27.
 
@@ -111,7 +112,7 @@ When changing the values of the sliders with huge values (such as the Mod Speed)
 
 N163 instrument can have custom user-drawn waveforms. The size of the waveform is configurable, but limited by the amount of N163 RAM available, which decreases as more N163 channels are added. Waveforms can also be resampled from a WAV file, see the [resampling section](#resampling-wav-files-for-n163-and-fds) for more details.
 
-Since the amount of RAM is limited, and there can be up to 8 channels playing at the same time, it is the user's responsability to make sure waves do not overlap. For example, if 2 N163 channels are playing 2 different instruments at the same time, a sine wave and a triangle wave, they will have to occupy different RAM locations. Both cannot be a RAM position 0, for example. If using a wave size of 32, we could place one at offset 0, and the second at offset 32. 
+Since the amount of RAM is limited, and there can be up to 8 channels playing at the same time, it is the user's responsibility to make sure waves do not overlap. For example, if 2 N163 channels are playing 2 different instruments at the same time, a sine wave and a triangle wave, they will have to occupy different RAM locations. Both cannot be a RAM position 0, for example. If using a wave size of 32, we could place one at offset 0, and the second at offset 32. 
 
 The register viewer can be used to dianose wave overlap issues. Look for error message in the RAM diagram if you think there are issues.
 
@@ -137,7 +138,7 @@ The parameters are:
 * **Wave Size** : The N163 chip had only 128 of RAM to store all the waveforms used at any given time. For example, if you use waveforms of size 32, you can only use 4 unique instrument at any given time. Using more will result in channels using wrong instruments.
 * **Wave Auto-Position** : Let FamiStudio automatically position the waves to try to avoid overlap. When this is active, every time you press Play, FamiStudio will scan all songs and all notes and try to assign a position to all the N163 instruments that have this option enabled. Note that this can fail if using too many large waves. When the auto-assignment algorithm fails, you will get no error message and will need to use the register viewer to diagnose issues, as mentioned above. 
 * **Wave Position** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms don't overlap.
-* **Wave Count** : The position, in the 128 bytes of memory, of the waveform. You must manually make sure that different waveforms don't overlap.
+* **Wave Count** : The number of waveforms the instrument will contain. The maximum amount depends on the wave size.
 * **Resample Period**, **Offset** and **Normalize** : See the [resampling section](#resampling-wav-files-for-n163-and-fds)
 
 ## Sunsoft 5B

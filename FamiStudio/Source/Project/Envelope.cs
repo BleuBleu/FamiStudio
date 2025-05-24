@@ -33,10 +33,10 @@ namespace FamiStudio
         {
             maxLength = GetEnvelopeMaxLength(type);
             values = new sbyte[maxLength];
-            canResize = type != EnvelopeType.FdsModulation && type != EnvelopeType.FdsWaveform;
-            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform;
-            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.S5BNoiseFreq || type == EnvelopeType.S5BMixer;
-            chunkLength = type == EnvelopeType.N163Waveform ? 16 : 1;
+            canResize = type != EnvelopeType.FdsModulation;
+            canRelease = type == EnvelopeType.Volume || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform;
+            canLoop = type <= EnvelopeType.DutyCycle || type == EnvelopeType.WaveformRepeat || type == EnvelopeType.N163Waveform || type == EnvelopeType.FdsWaveform || type == EnvelopeType.S5BNoiseFreq || type == EnvelopeType.S5BMixer;
+            chunkLength = type == EnvelopeType.FdsWaveform ? 64 : (type == EnvelopeType.N163Waveform ? 16 : 1);
 
             if (canResize)
             {
@@ -503,6 +503,10 @@ namespace FamiStudio
                         for (int i = 0; i < localChunkLength; i++)
                             values[chunkOffset + i] = (sbyte)(i >= (localChunkLength / 2) + (localChunkLength / 2 - (1 + ((j + 1) * (localChunkLength - 2) / localChunkCount) / 2)) ? max : min);
                         break;
+                    case WavePresetType.PWM4:
+                        for (int i = 0; i < localChunkLength; i++)
+                            values[chunkOffset + i] = (sbyte)(i >= localChunkLength - 1 - Math.Abs(localChunkLength / 2 - (1 + (j + 1) * (localChunkLength - 2) / localChunkCount)) ? max : min);           
+                        break;
                 }
             }
         }
@@ -560,7 +564,6 @@ namespace FamiStudio
             switch (type)
             {
                 case EnvelopeType.FdsWaveform:
-                    return 64;
                 case EnvelopeType.N163Waveform:
                     return 1024; // Actually includes multiple waveforms.
                 case EnvelopeType.FdsModulation:
@@ -835,7 +838,8 @@ namespace FamiStudio
         public const int PWM             = 8; 
         public const int PWM2            = 9; 
         public const int PWM3            = 10;
-        public const int Count           = 11;
+        public const int PWM4            = 11;
+        public const int Count           = 12;
 
         // Use these to display to user
         public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
@@ -853,7 +857,8 @@ namespace FamiStudio
             "Resample",
             "PWM",
             "PWM2",
-            "PWM3"
+            "PWM3",
+            "PWM4"
         };
 
         static WavePresetType()

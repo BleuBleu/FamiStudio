@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Diagnostics;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -9,14 +10,18 @@ namespace FamiStudio
         public delegate void ValueChangedDelegate(Control sender, int rowIndex, int colIndex, object value);
         public delegate void ButtonPressedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void CellClickedDelegate(Control sender, bool left, int rowIndex, int colIndex);
+        public delegate void EmptyCellClickedDelegate(Control sender, bool left);
         public delegate void CellDoubleClickedDelegate(Control sender, int rowIndex, int colIndex);
         public delegate void HeaderCellClickedDelegate(Control sender, int colIndex);
+        public delegate void SelectedRowUpdatedDelegate(Control sender, int rowIndex);
 
         public event ValueChangedDelegate ValueChanged;
         public event ButtonPressedDelegate ButtonPressed;
         public event CellClickedDelegate CellClicked;
+        public event EmptyCellClickedDelegate EmptyCellClicked;
         public event CellDoubleClickedDelegate CellDoubleClicked;
         public event HeaderCellClickedDelegate HeaderCellClicked;
+        public event SelectedRowUpdatedDelegate SelectedRowUpdated;
 
         private class CellSliderData
         {
@@ -29,6 +34,7 @@ namespace FamiStudio
         private int maxScroll;
         private int hoverRow = -1;
         private int hoverCol = -1;
+        private int selectedRow = -1;
         private bool hoverButton;
         private int dropDownRow = -1;
         private int dropDownCol = -1;
@@ -41,8 +47,10 @@ namespace FamiStudio
         private byte columnEnabledMask;
         private bool hasAnyDropDowns;
         private bool hasAnyCheckBoxes;
+        private bool hasAnySliders;
         private bool fullRowSelect;
         private bool isClosingList;
+        private bool isFileDialog;
         private Font font;
         private Font fontBold;
         private ColumnDesc[] columns;
@@ -50,6 +58,7 @@ namespace FamiStudio
         private Color foreColor = Theme.LightGreyColor1;
         private CellSliderData[,] cellSliderData;
         private bool[,] cellDisabled;
+        private Point lastMousePosition;
 
         private bool draggingScrollbars;
         private bool draggingSlider;
@@ -75,12 +84,14 @@ namespace FamiStudio
 
         public int ItemCount => data.GetLength(0);
         public bool FullRowSelect { get => fullRowSelect; set => fullRowSelect = value; }
+        public bool IsFileDialog { get => isFileDialog; set => isFileDialog = value; }
 
         #region Localization
 
         LocalizedString SelectAllLabel;
         LocalizedString SelectNoneLabel;
-    
+        LocalizedString EnterValueContext;
+
         #endregion
 
         public Grid(ColumnDesc[] columnDescs, int rows, bool hasHeader = true)
@@ -104,6 +115,10 @@ namespace FamiStudio
                 else if (col.Type == ColumnType.CheckBox)
                 {
                     hasAnyCheckBoxes = true;
+                }
+                else if (col.Type == ColumnType.Slider)
+                {
+                    hasAnySliders = true;
                 }
             }
 
@@ -321,6 +336,28 @@ namespace FamiStudio
             SetAndMarkDirty(ref scroll, 0);
         }
 
+        public void UpdateSelectedRow(int index)
+        {
+            if (index != selectedRow)
+            {
+                Debug.Assert(index < ItemCount);
+                
+                if (index >= scroll + numItemRows || index < scroll)
+                {
+                    var s  = index < scroll ? index : index - numItemRows + 1;
+                    scroll = Math.Clamp(s, 0, numItemRows + ItemCount);
+                }
+
+                SelectedRowUpdated?.Invoke(this, index);
+                SetAndMarkDirty(ref selectedRow, index);
+            }
+        }
+
+        public void ResetSelectedRow()
+        {
+            SetAndMarkDirty(ref selectedRow, -1);
+        }
+
         protected override void OnAddedToContainer()
         {
             var g = Graphics;
@@ -383,6 +420,12 @@ namespace FamiStudio
                 col = -1;
                 return false;
             }
+        }
+
+        private void KeyboardNavigateUpDown(int newIndex)
+        {
+            var row = Math.Clamp(selectedRow + newIndex, 0, ItemCount - 1);
+            UpdateSelectedRow(row);
         }
 
         protected override void OnPointerDown(PointerEventArgs e)
@@ -451,7 +494,7 @@ namespace FamiStudio
                                     sliderCol = col;
                                     sliderRow = row;
                                     GetCellSliderData(row, col, out var sliderMin, out var sliderMax, out _);
-                                    data[row, col] = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[col]) / (float)columnWidths[col])));
+                                    data[row, col] = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[col]) / (float) columnWidths[col])));
                                     ValueChanged?.Invoke(this, row, col, data[row, col]);
                                     break;
                                 }
@@ -485,12 +528,22 @@ namespace FamiStudio
             if (valid)
             {
                 if (e.Left || e.Right)
+                {
                     CellClicked?.Invoke(this, e.Left, row, col);
+                }
+
+                UpdateSelectedRow(row);
             }
             else if (e.Left && row < 0 && col >= 0)
             {
                 HeaderCellClicked?.Invoke(this, col);
             }
+            else
+            {
+                EmptyCellClicked?.Invoke(this, e.Left);
+            }
+
+            UpdateHover(e);
         }
 
         private bool IsPointInButton(int x, int row, int col)
@@ -502,13 +555,48 @@ namespace FamiStudio
             return buttonX >= 0 && buttonX < rowHeight;
         }
 
+        private bool FindColumnIndexByType(ColumnType type, out int col)
+        {
+            col = Array.FindIndex(columns, c => c.Type == type);
+            if (col != -1)
+                return true;
+
+            return false;
+        }
+
+        protected void EnterSliderValue()
+        {
+            if (FindColumnIndexByType(ColumnType.Slider, out var col))
+            {
+                GetCellSliderData(selectedRow, col, out var min, out var max, out var fmt);
+
+                // Scale value based on the format, then rescale and store as int.
+                var scale = Utils.ParseFloatWithLeadingAndTrailingGarbage(fmt(1));
+                var value = (int)data[selectedRow, col];
+                var dlg   = new ValueInputDialog(ParentWindow, new Point(WindowPosition.X, WindowPosition.Y), null, value * scale, min * scale, max * scale, true, scale);
+                
+                dlg.ShowDialogAsync((r) =>
+                {
+                    if (r == DialogResult.OK)
+                    {
+                        data[selectedRow, col] = (int)Math.Round(dlg.Value / scale);
+                        MarkDirty();
+                    }
+                });
+            }
+        }
+
         protected override void OnPointerMove(PointerEventArgs e)
         {
             if (draggingSlider)
             {
                 GetCellSliderData(sliderRow, sliderCol, out var sliderMin, out var sliderMax, out _);
-                var newSliderVal = (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[sliderCol]) / (float)columnWidths[sliderCol])));
-                if (newSliderVal != (int)data[sliderRow, sliderCol])
+                var oldSliderVal = (int)data[sliderRow, sliderCol];
+                var newSliderVal = ModifierKeys.IsControlDown
+                    ? Math.Clamp(Math.Sign(e.X - lastMousePosition.X) + oldSliderVal, sliderMin, sliderMax)
+                    : (int)Math.Round(Utils.Lerp(sliderMin, sliderMax, Utils.Saturate((e.X - columnOffsets[sliderCol]) / (float)columnWidths[sliderCol])));
+
+                if (newSliderVal != oldSliderVal)
                 {
                     data[sliderRow, sliderCol] = newSliderVal;
                     ValueChanged?.Invoke(this, sliderRow, sliderCol, newSliderVal);
@@ -527,6 +615,15 @@ namespace FamiStudio
             {
                 UpdateHover(e);
             }
+
+            lastMousePosition = e.Position;
+        }
+
+        protected override void OnLostDialogFocus()
+        {
+            SetAndMarkDirty(ref hoverRow, -1);
+            ResetSelectedRow();
+            base.OnLostDialogFocus();
         }
 
         protected override void OnPointerUp(PointerEventArgs e)
@@ -538,15 +635,118 @@ namespace FamiStudio
                 ReleasePointer();
                 MarkDirty();
             }
-            else if (e.Right && hasAnyCheckBoxes)
+            else if (e.Right)
             {
-                App.ShowContextMenuAsync(new[]
-{
-                    new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
-                    new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
-                });
-                e.MarkHandled();
+                if (PixelToCell(e.X, e.Y, out var row, out var col))
+                {
+                    if (columns[col].Type == ColumnType.Slider)
+                    {
+                        App.ShowContextMenuAsync(new[]
+                        {
+                            new ContextMenuOption("Type", EnterValueContext, () => EnterSliderValue()),
+                        });
+                        e.MarkHandled();
+                    }
+                    else if (hasAnyCheckBoxes)
+                    {
+                        App.ShowContextMenuAsync(new[]
+                        {
+                            new ContextMenuOption("SelectAll",  SelectAllLabel,  () => SelectAllCheckBoxes(true)),
+                            new ContextMenuOption("SelectNone", SelectNoneLabel, () => SelectAllCheckBoxes(false))
+                        });
+                        e.MarkHandled();
+                    }
+
+                    GrabDialogFocus();
+                    UpdateSelectedRow(row);
+                    CellClicked?.Invoke(this, e.Left, row, col);
+                }
+                else if (e.Y > rowHeight * numHeaderRows)
+                {
+                    EmptyCellClicked?.Invoke(this, e.Left);
+                }
+
+                UpdateHover(e);
             }
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (HasDialogFocus && !e.Handled)
+            {
+                if (e.Key == Keys.Left || e.Key == Keys.Right)
+                {
+                    // Slider adjustment.
+                    if (hasAnySliders)
+                    {
+                        var col = Array.FindIndex(columns, c => c.Type == ColumnType.Slider);
+                        if (col != -1)
+                        {
+                            var sign  = e.Key == Keys.Left ? -1 : 1;
+                            var value = sign * (ModifierKeys.IsShiftDown ? 10 : 1);
+
+                            IncrementSlider(selectedRow, col, value);
+                        }
+                    }
+
+                    e.Handled = true;
+                }
+                else if (e.Key == Keys.Space)
+                {
+                    // Checkbox toggling.
+                    if (hasAnyCheckBoxes)
+                    {
+                        var col = Array.FindIndex(columns, c => c.Type == ColumnType.CheckBox);
+                        if (col != -1)
+                        {
+                            ToggleCheckbox(selectedRow, col);
+                        }
+                    }
+
+                    e.Handled = true;
+                }
+                else
+                {
+                    // Vertical navigation.
+                    var newIndex = e.Key switch
+                    {
+                        Keys.Up       => -1,
+                        Keys.Down     =>  1,
+                        Keys.PageUp   => -numItemRows,
+                        Keys.PageDown =>  numItemRows,
+                        Keys.Home     => -ItemCount,
+                        Keys.End      =>  ItemCount,
+                        _             =>  0,
+                    };
+                    if (newIndex != 0)
+                    {
+                        KeyboardNavigateUpDown(newIndex);
+                        e.Handled = true;
+                    }
+                }
+            }
+        }
+
+        private void ToggleCheckbox(int row, int col)
+        {
+            var newValue = !(bool)data[row, col];
+            data[row, col] = newValue;
+
+            ValueChanged?.Invoke(this, row, col, newValue);
+            MarkDirty();
+        }
+
+        private void IncrementSlider(int row, int col, int offset)
+        {
+            GetCellSliderData(row, col, out var min, out var max, out _);
+
+            var newValue = (int)data[row, col] + offset;
+            data[row, col] = Math.Clamp(newValue, min, max);
+
+            ValueChanged?.Invoke(this, row, col, newValue);
+            MarkDirty();
         }
 
         private void SelectAllCheckBoxes(bool check)
@@ -575,12 +775,10 @@ namespace FamiStudio
         private void UpdateHover(PointerEventArgs e)
         {
             PixelToCell(e.X, e.Y, out var row, out var col);
-            if (!e.IsTouchEvent)
-            {
-                SetAndMarkDirty(ref hoverRow, row);
-                SetAndMarkDirty(ref hoverCol, col);
-                SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
-            }
+
+            SetAndMarkDirty(ref hoverRow, row);
+            SetAndMarkDirty(ref hoverCol, col);
+            SetAndMarkDirty(ref hoverButton, IsPointInButton(e.X, row, col));
         }
 
         protected override void OnMouseWheel(PointerEventArgs e)
@@ -602,6 +800,7 @@ namespace FamiStudio
                     e.MarkHandled();
                 }
 
+                GrabDialogFocus();
                 UpdateHover(e);
             }
         }
@@ -682,17 +881,6 @@ namespace FamiStudio
             // Data
             if (data != null)
             {
-                // Hovered cell
-                if (enabled && hoverCol >= 0 && (hoverRow - scroll) >= 0 && (hoverRow - scroll) < numItemRows && hoverRow < data.GetLength(0))
-                {
-                    var hoverColor = Color.FromArgb(50, Color.White);
-
-                    if (fullRowSelect)
-                        c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
-                    else
-                        c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
-                }
-
                 for (int i = 0, k = scroll; i < numItemRows && k < data.GetLength(0); i++, k++) // Rows
                 {
                     var y = (i + numHeaderRows) * rowHeight;
@@ -735,9 +923,10 @@ namespace FamiStudio
                             {
                                 if (cellEnabled)
                                 {
+                                    var f = float.Parse(val.ToString(), CultureInfo.InvariantCulture);
                                     GetCellSliderData(k, j, out var sliderMin, out var sliderMax, out var fmt);
-                                    c.FillRectangle(0, 0, (int)Math.Round(((int)val - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(fmt((int)val), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.FillRectangle(0, 0, (int)Math.Round((f - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
+                                    c.DrawText(fmt(f), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
@@ -793,6 +982,25 @@ namespace FamiStudio
 
                         c.PopTransform();
                     }
+                }
+
+                // Hovered cell
+                if (enabled && hoverCol >= 0 && (hoverRow - scroll) >= 0 && (hoverRow - scroll) < numItemRows && hoverRow < data.GetLength(0))
+                {
+                    var hoverColor = Color.FromArgb(50, Color.White);
+
+                    if (fullRowSelect)
+                        c.FillRectangle(0, (numHeaderRows + hoverRow - scroll) * rowHeight, width, (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
+                    else
+                        c.FillRectangle(columnOffsets[hoverCol], (numHeaderRows + hoverRow - scroll) * rowHeight, columnOffsets[hoverCol + 1], (numHeaderRows + hoverRow - scroll + 1) * rowHeight, hoverColor);
+                }
+
+                // Highlighted cell (for keyboard). Full Row Select
+                if (enabled && selectedRow >= 0 && (selectedRow - scroll) >= 0 && (selectedRow - scroll) < numItemRows && selectedRow < data.GetLength(0))
+                {
+                    var highlightColor = Color.FromArgb(70, 0, 128, 255); // Blue
+
+                    c.FillRectangle(0, (numHeaderRows + selectedRow - scroll) * rowHeight, width, (numHeaderRows + selectedRow - scroll + 1) * rowHeight, highlightColor);
                 }
             }
 

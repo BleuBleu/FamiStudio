@@ -60,7 +60,7 @@ namespace FamiStudio
                     if (r == DialogResult.OK)
                     {
                         InvokeValueChangeStart();
-                        param.SetValue(param.SnapAndClampValue(dlg.Value));
+                        param.SetValue(param.SnapAndClampValue((int)dlg.Value));
                         InvokeValueChangeEnd();
                         MarkDirty();
                     }

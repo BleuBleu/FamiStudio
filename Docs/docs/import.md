@@ -82,6 +82,7 @@ Most NSF files will not contain the names of songs, so they will usually have pl
 * **Duration** : Time (in sec) to extract from the NSF. 
 * **Pattern Length** : Number of frames in a pattern.
 * **Start frame** : Used to offset the entire song by a number of frames. This is useful when a song has an intro that is not the same length as the other patterns.
+* **Tuning** : Used to adjust the tuning for songs that use non-standard tuning. Useful for more accurate fine pitch effects if the song's tuning is known.
 * **Remove intro silence** : Some songs start with a bit of silence, this will wait until any sound is produced to start recording.
 * **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
 * **Preserve DPCM padding bytes** : Force FamiStudio to keep the last byte of every sample, this will make all samples 16 bytes larger simply to keep an extra byte. This could be useful to keep looping samples intact. Should remain off most of the time since most games seem to ignore this byte.
@@ -104,6 +105,7 @@ Import options:
 
 * **Pattern Length** : Number of frames in a pattern.
 * **Skip frames at start** : Used to remove frames in the start of the track, can be useful if the song dont start right away.
+* **Tuning** : Used to adjust the tuning for songs that use non-standard tuning. Useful for more accurate fine pitch effects if the song's tuning is known.
 * **Reverse DPCM bits** : This will set the "Reverse Bits" flag on all the imported samples. This come from a recent discovery that quite a few games had packed their bits in the wrong order, leading to samples sounding worse than they should.
 * **Preserve DPCM padding bytes** : Force FamiStudio to keep the last byte of every sample, this will make all samples 16 bytes larger simply to keep an extra byte. This could be useful to keep looping samples intact. Should remain off most of the time 
 * **Adjust notes to match chip clock in VGM** : Used to convert notes where the sound chip clock being imported does not match the frequency used on the chip on the NES/Expansion.

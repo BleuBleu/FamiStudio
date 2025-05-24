@@ -712,12 +712,22 @@ namespace FamiStudio
                 alert.SetButton(YesButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Yes); } });
                 alert.SetButton2(NoButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.No);  } });
                 if (buttons == MessageBoxButtons.YesNoCancel)
+                {
                     alert.SetButton3(CancelButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.Cancel); } });
+                    alert.CancelEvent += (s, e) => { lock (renderLock) { callback.Invoke(DialogResult.Cancel); } };
+                }
+                else
+                {
+                    alert.CancelEvent += (s, e) => { lock (renderLock) { callback.Invoke(DialogResult.No); } };
+                }
             }
             else
             {
                 alert.SetButton(OKButton, (c, ev) => { lock (renderLock) { callback?.Invoke(DialogResult.OK); } });
             }
+
+            alert.SetCanceledOnTouchOutside(false);
+            alert.SetCancelable(false);
 
             alert.Show();
         }

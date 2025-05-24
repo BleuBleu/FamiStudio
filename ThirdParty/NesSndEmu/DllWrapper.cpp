@@ -20,7 +20,7 @@ extern "C" int __stdcall NesApuInit(int apuIdx, int sampleRate, int bass_freq, i
 
 	apu[apuIdx].set_audio_expansions(expansions);
 	apu[apuIdx].dmc_reader(dmcReadFunc, (void*)apuIdx);
-	apu[apuIdx].bass_freq(bass_freq);
+	apu[apuIdx].bass_freq(0, bass_freq); // Any non FDS value will do for initialisation.
 
 	return 0;
 }
@@ -83,6 +83,11 @@ extern "C" int __stdcall NesApuIsSeeking(int apuIdx)
 extern "C" void __stdcall NesApuTrebleEq(int apuIdx, int expansion, double treble_amount, int treble_freq, int sample_rate)
 {
 	apu[apuIdx].treble_eq(expansion, treble_amount, treble_freq, sample_rate);
+}
+
+extern "C" void __stdcall NesApuBassFilter(int apuIdx, int expansion, int bass_freq)
+{
+	apu[apuIdx].bass_freq(expansion, bass_freq);
 }
 
 extern "C" int __stdcall NesApuGetAudioExpansions(int apuIdx)

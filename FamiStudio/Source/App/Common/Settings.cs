@@ -20,6 +20,7 @@ namespace FamiStudio
         // Version 7    : FamiStudio 4.0.0 (Animated GIF tutorials, control changes, recent files, dialogs)
         // Version 8    : FamiStudio 4.1.0 (Configurable keys)
         // Version 9-10 : FamiStudio 4.2.0 (Latency improvements, more filtering options)
+        // Version 11   : FamiStudio 4.4.0 (Separate bass filter for FDS)
         public const int SettingsVersion = 10;
         public const int NumRecentFiles  = 10;
 
@@ -71,7 +72,7 @@ namespace FamiStudio
         public static bool AllowSequencerVerticalScroll = false;
         public static bool ShowImplicitStopNotes = false;
         public static bool ShowRegisterViewer = Platform.IsDesktop;
-        public static bool UseOSDialogs = !Platform.IsLinux;
+        public static bool UseOSDialogs;
 
         // Input section
         public static bool TrackPadControls = false;
@@ -257,23 +258,23 @@ namespace FamiStudio
 
         private static void InitShortcuts()
         {
-            FileNewShortcut          = new Shortcut(FileNewName,          "FileNew",          Keys.N, ModifierKeys.Control);
-            FileOpenShortcut         = new Shortcut(FileOpenName,         "FileOpen",         Keys.O, ModifierKeys.Control);
-            FileSaveShortcut         = new Shortcut(FileSaveName,         "FileSave",         Keys.S, ModifierKeys.Control);
-            FileSaveAsShortcut       = new Shortcut(FileSaveAsName,       "FileSaveAs",       Keys.S, ModifierKeys.ControlShift);
-            FileExportShortcut       = new Shortcut(FileExportName,       "FileExport",       Keys.E, ModifierKeys.Control);
-            FileExportRepeatShortcut = new Shortcut(FileExportRepeatName, "FileExportRepeat", Keys.E, ModifierKeys.ControlShift);
+            FileNewShortcut          = new Shortcut(FileNewName,          "FileNew",          Keys.N, ModifierKeys.Control,      false);
+            FileOpenShortcut         = new Shortcut(FileOpenName,         "FileOpen",         Keys.O, ModifierKeys.Control,      false);
+            FileSaveShortcut         = new Shortcut(FileSaveName,         "FileSave",         Keys.S, ModifierKeys.Control,      false);
+            FileSaveAsShortcut       = new Shortcut(FileSaveAsName,       "FileSaveAs",       Keys.S, ModifierKeys.ControlShift, false);
+            FileExportShortcut       = new Shortcut(FileExportName,       "FileExport",       Keys.E, ModifierKeys.Control,      false);
+            FileExportRepeatShortcut = new Shortcut(FileExportRepeatName, "FileExportRepeat", Keys.E, ModifierKeys.ControlShift, false);
 
+            SelectAllShortcut     = new Shortcut(SelectAllName,     "SelectAll",     Keys.A, ModifierKeys.Control);
             CopyShortcut          = new Shortcut(CopyName,          "Copy",          Keys.C, ModifierKeys.Control);
             CutShortcut           = new Shortcut(CutName,           "Cut",           Keys.X, ModifierKeys.Control);
             PasteShortcut         = new Shortcut(PasteName,         "Paste",         Keys.V, ModifierKeys.Control);
-            PasteSpecialShortcut  = new Shortcut(PasteSpecialName,  "PasteSpecial",  Keys.V, ModifierKeys.ControlShift);
+            PasteSpecialShortcut  = new Shortcut(PasteSpecialName,  "PasteSpecial",  Keys.V, ModifierKeys.ControlShift, false);
             DeleteShortcut        = new Shortcut(DeleteName,        "Delete",        Keys.Delete);
-            DeleteSpecialShortcut = new Shortcut(DeleteSpecialName, "DeleteSpecial", Keys.Delete, ModifierKeys.ControlShift);
-            SelectAllShortcut     = new Shortcut(SelectAllName,     "SelectAll", Keys.A, ModifierKeys.Control);
+            DeleteSpecialShortcut = new Shortcut(DeleteSpecialName, "DeleteSpecial", Keys.Delete, ModifierKeys.ControlShift, false);
 
-            UndoShortcut = new Shortcut(UndoName, "Undo", Keys.Z, ModifierKeys.Control);
-            RedoShortcut = new Shortcut(RedoName, "Redo", Keys.Y, ModifierKeys.Control, Keys.Z, ModifierKeys.ControlShift);
+            UndoShortcut = new Shortcut(UndoName, "Undo", Keys.Z, ModifierKeys.Control, false);
+            RedoShortcut = new Shortcut(RedoName, "Redo", Keys.Y, ModifierKeys.Control, Keys.Z, ModifierKeys.ControlShift, false);
 
             QwertyShortcut     = new Shortcut(ToggleQwertyName,     "Qwerty",     Keys.Q, ModifierKeys.Shift);
             RecordingShortcut  = new Shortcut(ToggleRecordingName,  "Recording",  Keys.Enter);
@@ -349,58 +350,58 @@ namespace FamiStudio
 
             ActiveChannelShortcuts = new Shortcut[]
             {
-                new Shortcut(SetActiveChannelPrefix.Format("1"),  "Channel01", Keys.F1),
-                new Shortcut(SetActiveChannelPrefix.Format("2"),  "Channel02", Keys.F2),
-                new Shortcut(SetActiveChannelPrefix.Format("3"),  "Channel03", Keys.F3),
-                new Shortcut(SetActiveChannelPrefix.Format("4"),  "Channel04", Keys.F4),
-                new Shortcut(SetActiveChannelPrefix.Format("5"),  "Channel05", Keys.F5),
-                new Shortcut(SetActiveChannelPrefix.Format("6"),  "Channel06", Keys.F6),
-                new Shortcut(SetActiveChannelPrefix.Format("7"),  "Channel07", Keys.F7),
-                new Shortcut(SetActiveChannelPrefix.Format("8"),  "Channel08", Keys.F8),
-                new Shortcut(SetActiveChannelPrefix.Format("9"),  "Channel09", Keys.F9),
-                new Shortcut(SetActiveChannelPrefix.Format("10"), "Channel10", Keys.F10),
-                new Shortcut(SetActiveChannelPrefix.Format("11"), "Channel11", Keys.F11),
-                new Shortcut(SetActiveChannelPrefix.Format("12"), "Channel12", Keys.F12),
-                new Shortcut(SetActiveChannelPrefix.Format("13"), "Channel13", Keys.F13),
-                new Shortcut(SetActiveChannelPrefix.Format("14"), "Channel14", Keys.F14),
-                new Shortcut(SetActiveChannelPrefix.Format("15"), "Channel15", Keys.F15),
-                new Shortcut(SetActiveChannelPrefix.Format("16"), "Channel16", Keys.F16),
-                new Shortcut(SetActiveChannelPrefix.Format("17"), "Channel17", Keys.F17),
-                new Shortcut(SetActiveChannelPrefix.Format("18"), "Channel18", Keys.F18),
-                new Shortcut(SetActiveChannelPrefix.Format("19"), "Channel19", Keys.F19),
-                new Shortcut(SetActiveChannelPrefix.Format("20"), "Channel20", Keys.F20),
-                new Shortcut(SetActiveChannelPrefix.Format("21"), "Channel21", Keys.F21),
-                new Shortcut(SetActiveChannelPrefix.Format("22"), "Channel22", Keys.F22),
-                new Shortcut(SetActiveChannelPrefix.Format("23"), "Channel23", Keys.F23),
-                new Shortcut(SetActiveChannelPrefix.Format("24"), "Channel24", Keys.F24),
+                new Shortcut(SetActiveChannelPrefix.Format("1"),  "Channel01", Keys.F1,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("2"),  "Channel02", Keys.F2,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("3"),  "Channel03", Keys.F3,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("4"),  "Channel04", Keys.F4,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("5"),  "Channel05", Keys.F5,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("6"),  "Channel06", Keys.F6,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("7"),  "Channel07", Keys.F7,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("8"),  "Channel08", Keys.F8,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("9"),  "Channel09", Keys.F9,  true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("10"), "Channel10", Keys.F10, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("11"), "Channel11", Keys.F11, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("12"), "Channel12", Keys.F12, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("13"), "Channel13", Keys.F13, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("14"), "Channel14", Keys.F14, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("15"), "Channel15", Keys.F15, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("16"), "Channel16", Keys.F16, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("17"), "Channel17", Keys.F17, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("18"), "Channel18", Keys.F18, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("19"), "Channel19", Keys.F19, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("20"), "Channel20", Keys.F20, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("21"), "Channel21", Keys.F21, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("22"), "Channel22", Keys.F22, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("23"), "Channel23", Keys.F23, true, false),
+                new Shortcut(SetActiveChannelPrefix.Format("24"), "Channel24", Keys.F24, true, false),
             };
 
             DisplayChannelShortcuts = new Shortcut[]
             {
-                new Shortcut(ForceDisplayPrefix.Format("1"),  "DisplayChannel01", Keys.F1,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("2"),  "DisplayChannel02", Keys.F2,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("3"),  "DisplayChannel03", Keys.F3,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("4"),  "DisplayChannel04", Keys.F4,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("5"),  "DisplayChannel05", Keys.F5,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("6"),  "DisplayChannel06", Keys.F6,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("7"),  "DisplayChannel07", Keys.F7,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("8"),  "DisplayChannel08", Keys.F8,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("9"),  "DisplayChannel09", Keys.F9,  Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("10"), "DisplayChannel10", Keys.F10, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("11"), "DisplayChannel11", Keys.F11, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("12"), "DisplayChannel12", Keys.F12, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("13"), "DisplayChannel13", Keys.F13, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("14"), "DisplayChannel14", Keys.F14, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("15"), "DisplayChannel15", Keys.F15, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("16"), "DisplayChannel16", Keys.F16, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("17"), "DisplayChannel17", Keys.F17, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("18"), "DisplayChannel18", Keys.F18, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("19"), "DisplayChannel19", Keys.F19, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("20"), "DisplayChannel20", Keys.F20, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("21"), "DisplayChannel21", Keys.F21, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("22"), "DisplayChannel22", Keys.F22, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("23"), "DisplayChannel23", Keys.F23, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
-                new Shortcut(ForceDisplayPrefix.Format("24"), "DisplayChannel24", Keys.F24, Platform.IsMacOS ? ModifierKeys.Shift : ModifierKeys.Control),
+                new Shortcut(ForceDisplayPrefix.Format("1"),  "DisplayChannel01", Keys.F1,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("2"),  "DisplayChannel02", Keys.F2,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("3"),  "DisplayChannel03", Keys.F3,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("4"),  "DisplayChannel04", Keys.F4,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("5"),  "DisplayChannel05", Keys.F5,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("6"),  "DisplayChannel06", Keys.F6,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("7"),  "DisplayChannel07", Keys.F7,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("8"),  "DisplayChannel08", Keys.F8,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("9"),  "DisplayChannel09", Keys.F9,  ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("10"), "DisplayChannel10", Keys.F10, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("11"), "DisplayChannel11", Keys.F11, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("12"), "DisplayChannel12", Keys.F12, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("13"), "DisplayChannel13", Keys.F13, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("14"), "DisplayChannel14", Keys.F14, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("15"), "DisplayChannel15", Keys.F15, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("16"), "DisplayChannel16", Keys.F16, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("17"), "DisplayChannel17", Keys.F17, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("18"), "DisplayChannel18", Keys.F18, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("19"), "DisplayChannel19", Keys.F19, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("20"), "DisplayChannel20", Keys.F20, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("21"), "DisplayChannel21", Keys.F21, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("22"), "DisplayChannel22", Keys.F22, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("23"), "DisplayChannel23", Keys.F23, ModifierKeys.Shift),
+                new Shortcut(ForceDisplayPrefix.Format("24"), "DisplayChannel24", Keys.F24, ModifierKeys.Shift),
             };
 
             AllShortcuts.Sort((c1, c2) => c1.ConfigName.CompareTo(c2.ConfigName));
@@ -464,7 +465,7 @@ namespace FamiStudio
             AudioAPI = ini.GetString("Audio", "AudioAPI", audioAPIs[0]);
             AudioBufferSize = ini.GetInt("Audio", "AudioBufferSize", DefaultAudioBufferSize);
             NumBufferedFrames = ini.GetInt("Audio", "NumBufferedFrames", DefaultNumBufferedFrames);
-            InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 2);
+            InstrumentStopTime = ini.GetInt("Audio", "InstrumentStopTime", 1);
             SquareSmoothVibrato = ini.GetBool("Audio", "SquareSmoothVibrato", true);
             N163Mix = ini.GetBool("Audio", "N163Mix", true);
             ClampPeriods = ini.GetBool("Audio", "ClampPeriods", true);
@@ -513,8 +514,8 @@ namespace FamiStudio
             FFmpegExecutablePath = ini.GetString("FFmpeg", "ExecutablePath", "");
 
             // Mixer.
-            GlobalVolumeDb = ini.GetFloat("Mixer", "GlobalVolume", -3.0f);
-            BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", 16);
+            GlobalVolumeDb = ini.GetFloat("Mixer", "GlobalVolume", DefaultGlobalVolumeDb);
+            BassCutoffHz = ini.GetInt("Mixer", "BassCutoffHz", DefaultBassCutoffHz);
 
             Array.Copy(ExpansionMixer.DefaultExpansionMixerSettings, ExpansionMixerSettings, ExpansionMixerSettings.Length);
 
@@ -525,9 +526,15 @@ namespace FamiStudio
                 {
                     var section = "Mixer" + ExpansionType.InternalNames[i];
 
-                    ExpansionMixerSettings[i].VolumeDb        = ini.GetFloat(section, "VolumeDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
-                    ExpansionMixerSettings[i].TrebleDb        = ini.GetFloat(section, "TrebleDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
-                    ExpansionMixerSettings[i].TrebleRolloffHz = ini.GetInt(section, "TrebleRolloffHz", ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
+                    ExpansionMixerSettings[i].VolumeDb         = ini.GetFloat(section, "VolumeDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
+                    
+                    // FDS bass filter (4.4.0).
+                    if (i == ExpansionType.Fds)
+                        ExpansionMixerSettings[i].BassCutoffHz = ini.GetInt(section, "BassCutoffHz",    ExpansionMixer.DefaultExpansionMixerSettings[i].BassCutoffHz);
+                    else
+                        ExpansionMixerSettings[i].TrebleDb     = ini.GetFloat(section, "TrebleDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
+                    
+                    ExpansionMixerSettings[i].TrebleRolloffHz  = ini.GetInt(section, "TrebleRolloffHz", ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleRolloffHz);
                 }
             }
 
@@ -705,7 +712,13 @@ namespace FamiStudio
             {
                 var section = "Mixer" + ExpansionType.InternalNames[i];
                 ini.SetFloat(section, "VolumeDb", ExpansionMixerSettings[i].VolumeDb);
-                ini.SetFloat(section, "TrebleDb", ExpansionMixerSettings[i].TrebleDb);
+
+                // FDS bass filter.
+                if (i == ExpansionType.Fds)
+                    ini.SetInt(section, "BassCutoffHz", ExpansionMixerSettings[i].BassCutoffHz);
+                else
+                    ini.SetFloat(section, "TrebleDb", ExpansionMixerSettings[i].TrebleDb);
+
                 ini.SetFloat(section, "TrebleRolloffHz", ExpansionMixerSettings[i].TrebleRolloffHz);
             }
 

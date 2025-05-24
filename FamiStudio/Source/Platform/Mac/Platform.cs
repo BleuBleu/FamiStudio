@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Media;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using static GLFWDotNet.GLFW;
 
@@ -104,6 +105,11 @@ namespace FamiStudio
         public static DialogResult PlatformMessageBox(FamiStudioWindow win, string text, string title, MessageBoxButtons buttons)
         {
             return MacUtils.ShowAlert(text, title, buttons);
+        }
+
+        public static bool IsOutOfProcessDialogInProgress()
+        {
+            return false;
         }
 
         public static void OpenUrl(string url)

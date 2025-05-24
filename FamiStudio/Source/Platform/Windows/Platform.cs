@@ -7,6 +7,7 @@ using System.Media;
 using Microsoft.Win32;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Linq;
 
 namespace FamiStudio
 {
@@ -285,6 +286,11 @@ namespace FamiStudio
         {
             var icons = title.ToLowerInvariant().Contains("error") ? MB_ICONERROR : 0;
             return (DialogResult)MessageBox(IntPtr.Zero, text, title, (uint)buttons | (uint)icons | MB_TASKMODAL);
+        }
+
+        public static bool IsOutOfProcessDialogInProgress()
+        {
+            return false;
         }
 
         public static bool IsVS2019RuntimeInstalled()

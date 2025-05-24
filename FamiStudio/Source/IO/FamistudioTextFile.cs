@@ -45,6 +45,7 @@ namespace FamiStudio
             if (project.Author    != "")    projectLine += GenerateAttribute("Author", project.Author);
             if (project.Copyright != "")    projectLine += GenerateAttribute("Copyright", project.Copyright);
             if (project.PalMode)            projectLine += GenerateAttribute("PAL", true);
+            if (project.Tuning    != 440)   projectLine += GenerateAttribute("Tuning", project.Tuning);
 
             if (project.UsesAnyExpansionAudio)
             {
@@ -60,17 +61,20 @@ namespace FamiStudio
 
                 if (project.UsesN163Expansion)
                     projectLine += GenerateAttribute("NumN163Channels", project.ExpansionNumN163Channels);
+            }
 
-                for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+            if (project.OverrideBassCutoffHz)
+                projectLine += GenerateAttribute("GlobalBassCutoffHz", project.BassCutoffHz);
+
+            for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
+            {
+                var mixer = project.ExpansionMixerSettings[i];
+                if (mixer.Override)
                 {
-                    var mixer = project.ExpansionMixerSettings[i];
-                    if (mixer.Override)
-                    {
-                        var expName = ExpansionType.InternalNames[i];
-                        projectLine += GenerateAttribute(expName + "VolumeDb", mixer.VolumeDb);
-                        projectLine += GenerateAttribute(expName + "TrebleDb", mixer.TrebleDb);
-                        projectLine += GenerateAttribute(expName + "TrebleRolloffHz", mixer.TrebleRolloffHz);
-                    }
+                    var expName = ExpansionType.InternalNames[i];
+                    projectLine += GenerateAttribute(expName + "VolumeDb", mixer.VolumeDb);
+                    projectLine += i == ExpansionType.Fds ? GenerateAttribute(expName + "BassCutoffHz", mixer.BassCutoffHz) : GenerateAttribute(expName + "TrebleDb", mixer.TrebleDb);
+                    projectLine += GenerateAttribute(expName + "TrebleRolloffHz", mixer.TrebleRolloffHz);
                 }
             }
 
@@ -116,6 +120,7 @@ namespace FamiStudio
 
                     if (instrument.IsFds)
                     {
+                        instrumentLine += GenerateAttribute("FdsWaveCount", instrument.FdsWaveCount);
                         instrumentLine += GenerateAttribute("FdsWavePreset", WavePresetType.InternalNames[instrument.FdsWavePreset]);
                         instrumentLine += GenerateAttribute("FdsModPreset",  WavePresetType.InternalNames[instrument.FdsModPreset]);
                         if (instrument.FdsMasterVolume != 0) instrumentLine += GenerateAttribute("FdsMasterVolume", instrument.FdsMasterVolume);
@@ -184,7 +189,7 @@ namespace FamiStudio
 
                         if (mapping != null && mapping.Sample != null)
                         {
-                            var mappingStr = $"\t\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(kv.Key))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}";
+                            var mappingStr = $"\t\tDPCMMapping{GenerateAttribute("Note", Note.GetFriendlyName(kv.Key))}{GenerateAttribute("Sample", mapping.Sample.Name)}{GenerateAttribute("Pitch", mapping.Pitch)}{GenerateAttribute("Loop", mapping.Loop)}{GenerateAttribute("Bank", mapping.Sample.Bank)}";
 
                             if (mapping.OverrideDmcInitialValue)
                                 mappingStr += $"{GenerateAttribute("DmcInitialValue", mapping.DmcInitialValueDiv2)}";
@@ -430,6 +435,7 @@ namespace FamiStudio
                             if (parameters.TryGetValue("Copyright", out var copyright)) project.Copyright = copyright;
                             if (parameters.TryGetValue("TempoMode", out var tempoMode)) project.TempoMode = TempoType.GetValueForName(tempoMode);
                             if (parameters.TryGetValue("PAL", out var pal)) project.PalMode = bool.Parse(pal);
+                            if (parameters.TryGetValue("Tuning", out var tuning)) project.Tuning = int.Parse(tuning);
                             if (parameters.TryGetValue("Expansions", out var expansions))
                             {
                                 var expansionMask = 0;
@@ -447,17 +453,27 @@ namespace FamiStudio
 
                                 project.SetExpansionAudioMask(expansionMask, numN163Channels);
 
+                                if (parameters.TryGetValue("GlobalBassCutoffHz", out var globalBassCutoffHzStr))
+                                {
+                                    project.OverrideBassCutoffHz = true;
+                                    project.BassCutoffHz = int.Parse(globalBassCutoffHzStr);
+                                }
+
                                 for (var i = 0; i < project.ExpansionMixerSettings.Length; i++)
                                 {
                                     var expName = ExpansionType.InternalNames[i];
+                                    var bassCutoffHzStr = string.Empty;
 
                                     if (parameters.TryGetValue(expName + "VolumeDb", out var volumeDbStr) &&
-                                        parameters.TryGetValue(expName + "TrebleDb", out var trebleDbStr) &&
+                                        (parameters.TryGetValue(expName + "TrebleDb", out var trebleDbStr) || parameters.TryGetValue(expName + "BassCutoffHz", out bassCutoffHzStr)) &&
                                         parameters.TryGetValue(expName + "TrebleRolloffHz", out var trebleRolloffHzStr))
                                     {
                                         project.ExpansionMixerSettings[i].Override = true;
                                         project.ExpansionMixerSettings[i].VolumeDb = float.Parse(volumeDbStr);
-                                        project.ExpansionMixerSettings[i].TrebleDb = float.Parse(trebleDbStr);
+                                        if (i == ExpansionType.Fds)
+                                            project.ExpansionMixerSettings[i].BassCutoffHz = int.Parse(bassCutoffHzStr);
+                                        else
+                                            project.ExpansionMixerSettings[i].TrebleDb = float.Parse(trebleDbStr);
                                         project.ExpansionMixerSettings[i].TrebleRolloffHz = int.Parse(trebleRolloffHzStr);
                                     }
                                 }
@@ -508,6 +524,7 @@ namespace FamiStudio
                                     if (parameters.TryGetValue("FdsAutoModDenom", out var fdsAutoModDenomStr)) instrument.FdsAutoModDenom = byte.Parse(fdsAutoModDenomStr);
                                     if (parameters.TryGetValue("FdsAutoModNumer", out var fdsAutoModNumerStr)) instrument.FdsAutoModNumer = byte.Parse(fdsAutoModNumerStr);
                                 }
+                                if (parameters.TryGetValue("FdsWaveCount",    out var wavCountStr))     instrument.FdsWaveCount    = byte.Parse(wavCountStr);
                             }
                             else if (instrument.IsN163)
                             {
@@ -570,9 +587,11 @@ namespace FamiStudio
                             {
                                 var pitch = 15;
                                 var loop = false;
+                                var bank = 0;
                                 if (parameters.TryGetValue("Pitch", out var pitchStr)) pitch = int.Parse(pitchStr);
                                 if (parameters.TryGetValue("Loop", out var loopStr)) loop = bool.Parse(loopStr);
-                                var mapping = instrument.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop);
+                                if (parameters.TryGetValue("Bank", out var bankStr)) bank = int.Parse(bankStr);
+                                var mapping = instrument.MapDPCMSample(Note.FromFriendlyName(parameters["Note"]), project.GetSample(parameters["Sample"]), pitch, loop, bank);
                                 if (parameters.TryGetValue("DmcInitialValue", out var dmcInitialStr))
                                 {
                                     mapping.OverrideDmcInitialValue = true;

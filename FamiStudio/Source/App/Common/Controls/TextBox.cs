@@ -30,9 +30,9 @@ namespace FamiStudio
         protected int textAreaWidthNoMargin;
         protected int maxLength;
         protected int mouseSelectionChar;
-        protected int numberMin;
-        protected int numberMax;
-        protected int numberInc;
+        protected float numberMin;
+        protected float numberMax;
+        protected float numberInc;
         protected bool mouseSelecting;
         protected bool caretBlink = true;
         protected bool numeric;
@@ -60,25 +60,33 @@ namespace FamiStudio
 
         public string Prompt { get => prompt; set => prompt = value; }
 
+        #region Localization
+        
+        protected LocalizedString CopyName;
+        protected LocalizedString CutName;
+        protected LocalizedString PasteName;
+
+        #endregion
+
         public TextBox(string txt, int maxLen = 0)
         {
             Debug.Assert(txt != null);
+            Localization.Localize(this);
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
             text = txt;
             maxLength = maxLen;
-            SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
             supportsDoubleClick = true;
         }
 
-        public TextBox(int value, int minVal, int maxVal, int increment)
+        public TextBox(float value, float minVal, float maxVal, float increment)
         {
+            Localization.Localize(this);
             height = DpiScaling.ScaleForWindow(24);
             text = value.ToString(CultureInfo.InvariantCulture);
             numeric = true;
             numberMin = minVal;
             numberMax = maxVal;
             numberInc = increment;
-            SetTickEnabled(Platform.IsDesktop); // TODO : Only enable when we have focus. 
         }
 
         public string Text
@@ -100,16 +108,21 @@ namespace FamiStudio
 
         protected string FilterString(string s)
         {
-            return numeric ? new string(s.Where(c => char.IsDigit(c) || c == '-').ToArray()) : s;
+            return numeric ? new string(s.Where(c => char.IsDigit(c) || c == '-' || c == '.' || c == ',').ToArray()) : s;
         }
 
         protected void ClampNumber()
         {
             if (numeric)
             {
-                var val = Utils.ParseIntWithTrailingGarbage(text);
-                var clampedVal = Utils.Clamp(Utils.RoundDown(val, numberInc), numberMin, numberMax);
-                if (SetAndMarkDirty(ref text, clampedVal.ToString(CultureInfo.InvariantCulture)))
+                var val = text.Contains('.') || text.Contains(',')
+                        ? Utils.ParseFloatWithTrailingGarbage(text) 
+                        : Utils.ParseIntWithTrailingGarbage(text);
+
+                var snap   = Utils.RoundDownFloat(val, numberInc);;
+                var clamp  = Utils.Clamp(snap, numberMin, numberMax);
+
+                if (SetAndMarkDirty(ref text, clamp.ToString(CultureInfo.InvariantCulture)))
                 {
                     caretIndex = Utils.Clamp(caretIndex, 0, text.Length);
                     selectionStart = -1;
@@ -118,10 +131,36 @@ namespace FamiStudio
             }
         }
 
+        protected void SetAndFormatTextForScaleValue(double s)
+        {
+            text = s.ToString(CultureInfo.InvariantCulture);
+            caretIndex = Math.Min(caretIndex, text.Length);
+        }
+
         protected virtual void OnTextChanged()
         {
             TextChanged?.Invoke(this);
             mouseSelecting = false;
+        }
+
+        protected void Cut()
+        {
+            if (selectionLength > 0)
+            {
+                Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+                DeleteSelection();
+            }
+        }
+
+        protected void Copy()
+        {
+            if (selectionLength > 0)
+                Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+        }
+
+        protected void Paste()
+        {
+            InsertText(Platform.GetClipboardString());
         }
 
         protected void UpdateScrollParams()
@@ -150,27 +189,43 @@ namespace FamiStudio
 
         protected override void OnPointerDown(PointerEventArgs e)
         {
-            if (e.Left && enabled && !e.IsTouchEvent)
+            if (enabled && !e.IsTouchEvent)
             {
-                var c = PixelToChar(e.X - outerMarginLeft);
-                SetAndMarkDirty(ref caretIndex, c);
-                SetAndMarkDirty(ref selectionStart, c);
-                SetAndMarkDirty(ref selectionLength, 0);
-                ClearSelection();
-                ResetCaretBlink();
-                CapturePointer();
+                if (e.Left)
+                {
+                    var c = PixelToChar(e.X - outerMarginLeft);
+                    SetAndMarkDirty(ref caretIndex, c);
+                    SetAndMarkDirty(ref selectionStart, c);
+                    SetAndMarkDirty(ref selectionLength, 0);
+                    ClearSelection();
+                    ResetCaretBlink();
+                    CapturePointer();
 
-                mouseSelectionChar = c;
-                mouseSelecting = true;
+                    mouseSelectionChar = c;
+                    mouseSelecting = true;
+                }
             }
         }
 
         protected override void OnPointerUp(PointerEventArgs e)
         {
-            if (e.Left && enabled && !e.IsTouchEvent)
+            if (enabled && !e.IsTouchEvent)
             {
-                mouseSelecting = false;
-                ReleasePointer();
+                if (e.Left)
+                {
+                    mouseSelecting = false;
+                    ReleasePointer();
+                }
+                else if (e.Right)
+                {
+                    GrabDialogFocus();
+                    App.ShowContextMenuAsync(new[]
+                    {
+                        new ContextMenuOption("MenuCut",   CutName,   () => Cut()),
+                        new ContextMenuOption("MenuCopy",  CopyName,  () => Copy()),
+                        new ContextMenuOption("MenuPaste", PasteName, () => Paste()),
+                    });
+                }
             }
         }
 
@@ -195,12 +250,23 @@ namespace FamiStudio
 
         protected int FindWordStart(int c, int dir)
         {
+            if (string.IsNullOrEmpty(text))
+                return 0;
+
+            c = Math.Clamp(c, 0, text.Length - 1); 
+            
+            var isWhiteSpace = char.IsWhiteSpace(text[c]);
+
             if (dir > 0)
             {
-                while (c < text.Length && !char.IsWhiteSpace(text[c]))
-                    c++;
                 while (c < text.Length && char.IsWhiteSpace(text[c]))
                     c++;
+
+                if (!isWhiteSpace)
+                {
+                    while (c < text.Length && !char.IsWhiteSpace(text[c]))
+                        c++;
+                }
             }
             else
             {
@@ -209,8 +275,12 @@ namespace FamiStudio
                     while (c >= 1 && char.IsWhiteSpace(text[c - 1]))
                         c--;
                 }
-                while (c >= 1 && !char.IsWhiteSpace(text[c - 1]))
-                    c--;
+
+                if (!isWhiteSpace)
+                {
+                    while (c >= 1 && !char.IsWhiteSpace(text[c - 1]))
+                        c--;
+                }
             }
 
             Debug.Assert(c >= 0 && c <= text.Length);
@@ -311,20 +381,15 @@ namespace FamiStudio
             }
             else if (e.Key == Keys.V && e.Control)
             {
-                InsertText(Platform.GetClipboardString());
+                Paste();
             }
             else if (e.Key == Keys.C && e.Control)
             {
-                if (selectionLength > 0)
-                    Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
+                Copy();
             }
             else if (e.Key == Keys.X && e.Control)
             {
-                if (selectionLength > 0)
-                {
-                    Platform.SetClipboardString(text.Substring(selectionStart, selectionLength));
-                    DeleteSelection();
-                }
+                Cut();
             }
             else if (e.Key == Keys.Z && e.Control)
             {
@@ -397,8 +462,12 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(str))
             {
-                SaveUndoRedoState();
-                DeleteSelection();
+                // Deleting selection saves the state, we don't need to save it twice.
+                if (selectionLength > 0)
+                    DeleteSelection();
+                else
+                    SaveUndoRedoState();
+
                 if (maxLength > 0 && text.Length + str.Length > maxLength)
                     str = str.Substring(0, Math.Min(str.Length, Math.Max(0, maxLength - text.Length)));
                 text = text.Insert(caretIndex, str);
@@ -415,6 +484,9 @@ namespace FamiStudio
         {
             caretBlinkTime += delta;
             SetAndMarkDirty(ref caretBlink, Utils.Frac(caretBlinkTime) < 0.5f);
+
+            if (!HasDialogFocus)
+                SetTickEnabled(false);
         }
 
         protected void UpdateCaretBlink()
@@ -452,6 +524,7 @@ namespace FamiStudio
 
         public void SetSelection(int start, int len)
         {
+            caretIndex = Math.Clamp(caretIndex, start, start + len);
             SetAndMarkDirty(ref selectionStart, start);
             SetAndMarkDirty(ref selectionLength, Math.Max(0, len));
         }
@@ -484,6 +557,7 @@ namespace FamiStudio
             if (selectionLength > 0)
             {
                 SaveUndoRedoState();
+
                 text = RemoveStringRange(selectionStart, selectionLength);
 
                 if (caretIndex > selectionStart)
@@ -551,6 +625,11 @@ namespace FamiStudio
         protected override void OnAddedToContainer()
         {
             UpdateTextAreaSize();
+        }
+
+        protected override void OnAcquiredDialogFocus()
+        {
+            SetTickEnabled(true);
         }
 
         protected override void OnResize(EventArgs e)
