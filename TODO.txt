@@ -1,8 +1,6 @@
 4.4.0
 =====
 - Multi-expansio conflict.
-- Crash export omage?
-	https://discord.com/channels/747649221879922840/1369054205389574165
 - 
 
 Testing:
@@ -11,6 +9,7 @@ Testing:
 - Re-export SoundEngine demo song data + recompile + listen to make sure samples work.
 - Re-compile ROM/NSF
 - Test NSF/ROM with DPCM samples
+- Re-run unit tests.
 
 4.4.0 Changelog
 ===============
