@@ -491,6 +491,14 @@ namespace FamiStudio
             }
         }
 
+        public void ClearInvalidSlide()
+        {
+            if (IsSlideNote && slide == val)
+            {
+                IsSlideNote = false;
+            }
+        }
+
         public void ClearReleaseIfPastDuration()
         {
             if (HasRelease && release >= duration)
@@ -707,6 +715,8 @@ namespace FamiStudio
             // At version 7 (FamiStudio 2.2.0) we added support for arpeggios.
             if (buffer.Version >= 7)
                 buffer.Serialize(ref arpeggio);
+
+            ClearInvalidSlide();
         }
 
         public bool HasValidEffectValue(int fx)

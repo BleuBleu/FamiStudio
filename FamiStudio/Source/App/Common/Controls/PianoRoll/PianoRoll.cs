@@ -3476,7 +3476,7 @@ namespace FamiStudio
             var absoluteIndex = location.ToAbsoluteNoteIndex(Song);
             var nextAbsoluteIndex = absoluteIndex + distanceToNextNote;
             var duration = Math.Min(distanceToNextNote, note.Duration);
-            var slideDuration = note.IsSlideNote ? channel.GetSlideNoteDuration(location) : -1;
+            var slideDuration = note.IsSlideNote && note.Value != note.SlideNoteTarget ? channel.GetSlideNoteDuration(location) : -1;
             var color = GetNoteColor(channel, note.Value, note.Instrument, isActiveChannel ? 255 : 50);
             var selected = isActiveChannel && IsNoteSelected(location, duration);
             var transpose = videoChannelTranspose != null ? videoChannelTranspose[channelIndex] : 0;
@@ -6259,6 +6259,7 @@ namespace FamiStudio
             note.Duration = SnapEnabled ? Math.Max(1, SnapNote(abs, true) - abs) : Song.GetPatternBeatLength(location.PatternIndex);
             note.Instrument = App.SelectedInstrument;
             note.Arpeggio = channel.SupportsArpeggios ? App.SelectedArpeggio : null;
+            note.ClearInvalidSlide();
 
             SetMobileHighlightedNote(abs);
             MarkPatternDirty(pattern);

@@ -1,6 +1,9 @@
 4.4.0
 =====
 - Multi-expansio conflict.
+- Crash export omage?
+	https://discord.com/channels/747649221879922840/1369054205389574165
+- 
 
 Testing:
 - Test release snap on mobile
