@@ -35,7 +35,7 @@ namespace FamiStudio
                 dialog.Properties.AddDropDownList(SongLabel.Colon, songNames, songNames[0]); // 0
                 dialog.Properties.AddNumericUpDown(DurationLabel.Colon, 120, 1, 600, 1);    // 1
                 dialog.Properties.AddNumericUpDown(PatternLength.Colon, 256, 4, Pattern.MaxLength, 1);  // 2
-                dialog.Properties.AddNumericUpDown(StartFrameLabel.Colon, 0, 0, 256, 1);       // 3
+                dialog.Properties.AddNumericUpDown(StartFrameLabel.Colon, 0, 0, Pattern.MaxLength - 1, 1);       // 3
                 dialog.Properties.AddCheckBox(RemoveIntroSilenceLabel.Colon, true);        // 4
                 dialog.Properties.AddCheckBox(ReverseDPCMBitsLabel.Colon, false);          // 5
                 dialog.Properties.AddCheckBox(PreserveDPCMPaddingByte.Colon, false); // 6
