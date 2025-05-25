@@ -7,10 +7,8 @@
 music_data_journey_to_silius:
 	.db 1
 	.dw .music_data_journey_to_silius_instruments
-.if FAMISTUDIO_CFG_C_BINDINGS
 _music_data_journey_to_silius=music_data_journey_to_silius
 .globl _music_data_journey_to_silius
-.endif
 
 	.dw .music_data_journey_to_silius_samples-4
 ; 00 : Title Screen

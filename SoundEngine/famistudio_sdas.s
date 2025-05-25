@@ -143,20 +143,17 @@
 FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 
 ; Support for sound effects playback + number of SFX that can play at once.
-; FAMISTUDIO_CFG_SFX_SUPPORT   = 1 
+; FAMISTUDIO_CFG_SFX_SUPPORT   = 1
 ; FAMISTUDIO_CFG_SFX_STREAMS   = 2
 
 ; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels. 
-; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
+; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
 
 ; Enables DPCM playback support.
 FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 
 ; Must be enabled if you are calling sound effects from a different thread than the sound engine update.
-; FAMISTUDIO_CFG_THREAD         = 1     
-
-; Enable to use the CC65 compatible entrypoints via the provided header file
-; FAMISTUDIO_CFG_C_BINDINGS   = 1
+; FAMISTUDIO_CFG_THREAD         = 1
 
 ;======================================================================================================================
 ; 4) SUPPORTED FEATURES CONFIGURATION
@@ -7709,12 +7706,6 @@ famistudio_rhythm_lut:
 .endif
 ; ======================================================================================================================
 ; Alternative entry points for calling from c code
-;
-; Notes: the C function definitions use __fastcall__ meaning they will put the
-; last parameter in a register before the call according to the rules laid out
-; in the documentation here: https://cc65.github.io/doc/cc65-intern.html
-; and here: https://github.com/cc65/wiki/wiki/Parameter-passing-and-calling-conventions
-; and here: https://github.com/cc65/wiki/wiki/Parameter-and-return-stacks
 ; ======================================================================================================================
 .ifne FAMISTUDIO_CFG_C_BINDINGS
 
@@ -7747,6 +7738,8 @@ _famistudio_update=famistudio_update
 
 .ifne FAMISTUDIO_CFG_SFX_SUPPORT
 
+.area FAMISTUDIO_SDAS_CODE_SEGMENT
+
 .globl _famistudio_sfx_init
 .globl _famistudio_sfx_play
 .globl _famistudio_sfx_sample_play
@@ -7768,4 +7761,3 @@ _famistudio_sfx_sample_play=famistudio_sfx_sample_play
 
 .endif
 .endif
-

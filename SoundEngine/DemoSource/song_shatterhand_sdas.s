@@ -5,10 +5,8 @@
 music_data_shatterhand:
 	.db 1
 	.dw .music_data_shatterhand_instruments
-.if FAMISTUDIO_CFG_C_BINDINGS
 _music_data_shatterhand=music_data_shatterhand
 .globl _music_data_shatterhand
-.endif
 
 	.dw .music_data_shatterhand_samples-4
 ; 00 : Final Area
