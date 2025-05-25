@@ -143,20 +143,17 @@
 FAMISTUDIO_CFG_NTSC_SUPPORT  = 1
 
 ; Support for sound effects playback + number of SFX that can play at once.
-; FAMISTUDIO_CFG_SFX_SUPPORT   = 1 
+; FAMISTUDIO_CFG_SFX_SUPPORT   = 1
 ; FAMISTUDIO_CFG_SFX_STREAMS   = 2
 
 ; Blaarg's smooth vibrato technique. Eliminates phase resets ("pops") on square channels. 
-; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1 
+; FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
 
 ; Enables DPCM playback support.
 FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
 
 ; Must be enabled if you are calling sound effects from a different thread than the sound engine update.
-; FAMISTUDIO_CFG_THREAD         = 1     
-
-; Enable to use the CC65 compatible entrypoints via the provided header file
-; FAMISTUDIO_CFG_C_BINDINGS   = 1
+; FAMISTUDIO_CFG_THREAD         = 1
 
 ;======================================================================================================================
 ; 4) SUPPORTED FEATURES CONFIGURATION
@@ -351,10 +348,6 @@ FAMISTUDIO_USE_ARPEGGIO          = 1
 
 .ifndef FAMISTUDIO_CFG_SFX_STREAMS
     FAMISTUDIO_CFG_SFX_STREAMS = 1
-.endif
-
-.ifndef FAMISTUDIO_CFG_C_BINDINGS
-    FAMISTUDIO_CFG_C_BINDINGS = 0
 .endif
 
 .ifndef FAMISTUDIO_CFG_SMOOTH_VIBRATO
@@ -7531,64 +7524,17 @@ famistudio_rhythm_lut:
     .byte $ff
 .endif
 .endif
-; ======================================================================================================================
-; Alternative entry points for calling from c code
-;
-; Notes: the C function definitions use __fastcall__ meaning they will put the
-; last parameter in a register before the call according to the rules laid out
-; in the documentation here: https://cc65.github.io/doc/cc65-intern.html
-; and here: https://github.com/cc65/wiki/wiki/Parameter-passing-and-calling-conventions
-; and here: https://github.com/cc65/wiki/wiki/Parameter-and-return-stacks
-; ======================================================================================================================
-.if FAMISTUDIO_CFG_C_BINDINGS
 
-; Required to fetch the extra parameter from the C stack
-.import popa
-
-.export _famistudio_init
-_famistudio_init:
-    ; A = ptr[lo]; X = ptr[hi]; SP[0] = platform
-    @tmp = famistudio_r0
-    stx @tmp
-    tax
-    ; Note that the C stack 'popa' function uses Y as scratch
-    jsr popa
-    ldy @tmp
-    jmp famistudio_init
-
-
-; A = song_index; So we can safely re-export the symbol
-.export _famistudio_music_play=famistudio_music_play
-; A = mode; safe to re-export the symbol as well
-.export _famistudio_music_pause=famistudio_music_pause
-
-; No parameters so its safe to re-export
-.export _famistudio_music_stop=famistudio_music_stop
-.export _famistudio_update=famistudio_update
-
+; Re-export C friendly names of the functions for cc65 and llvm-mos (which can link against ca65 libraries)
+.export _famistudio_init            := famistudio_init
+.export _famistudio_music_play      := famistudio_music_play
+.export _famistudio_music_pause     := famistudio_music_pause
+.export _famistudio_music_stop      := famistudio_music_stop
+.export _famistudio_update          := famistudio_update
 .if FAMISTUDIO_CFG_SFX_SUPPORT
-
-.export _famistudio_sfx_init
-.export _famistudio_sfx_play
-.export _famistudio_sfx_sample_play
-
-_famistudio_sfx_init:
-    ; A = ptr[lo]; X = ptr[hi]
-    @tmp = famistudio_r0
-    stx @tmp
-    ldy @tmp
-    tax
-    jmp famistudio_sfx_init
-
-_famistudio_sfx_play:
-    ; A = offset; SP[0] = index
-    tax
-    jsr popa
-    jmp famistudio_sfx_play
-
-; A = sample_index; So we can safely re-export the symbol
-.export _famistudio_sfx_sample_play=famistudio_sfx_sample_play
-
+.export _famistudio_sfx_init        := famistudio_sfx_init
+.export _famistudio_sfx_play        := famistudio_sfx_play
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+.export _famistudio_sfx_sample_play := famistudio_sfx_sample_play
 .endif
 .endif
-

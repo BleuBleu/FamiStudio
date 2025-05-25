@@ -59,19 +59,19 @@ extern void __fastcall__ update_title();
  * This will be called on startup to play the first song.
  */
 void __fastcall__ play_song(unsigned char song_index) {
-    static void* song_address;
+    static unsigned char* song_address;
 
     switch (song_index) {
     case SILVER_SURFER:
-        song_address = &music_data_silver_surfer_c_stephen_ruddy;
+        song_address = music_data_silver_surfer_c_stephen_ruddy;
         p0 = &song_title_silver_surfer;
         break;
     case JOURNEY_TO_SILAS:
-        song_address = &music_data_journey_to_silius;
+        song_address = music_data_journey_to_silius;
         p0 = &song_title_jts;
         break;
     case SHATTERHAND:
-        song_address = &music_data_shatterhand;
+        song_address = music_data_shatterhand;
         p0 = &song_title_shatterhand;
         break;
     }
@@ -93,7 +93,7 @@ void __fastcall__ play_song(unsigned char song_index) {
  * switching tracks.
  */
 void __fastcall__ init() {
-    famistudio_sfx_init(&sounds);
+    famistudio_sfx_init(sounds);
 }
 
 /**

@@ -16,6 +16,7 @@ FAMISTUDIO_DEMO_USE_C = 0
 .export __STARTUP__:absolute=1
 ; this is for the C stack and are set in the mapper file
 .import __STACK_START__, __STACKSIZE__
+.importzp sp
 .include "zeropage.inc"
 
 ; Functions defined in C (using C decl instead of fastcall)
@@ -24,7 +25,6 @@ FAMISTUDIO_DEMO_USE_C = 0
 ; Variables and functions used in the C code must be prefixed with underscore
 ; so re-export the necessary ones here
 .exportzp _gamepad_pressed=gamepad_pressed, _p0=p0
-.exportzp sp
 .export _song_title_silver_surfer=song_title_silver_surfer
 .export _song_title_jts=song_title_jts
 .export _song_title_shatterhand=song_title_shatterhand
@@ -69,10 +69,6 @@ r4: .res 1
 
 ; General purpose pointers.
 p0: .res 2
-.if FAMISTUDIO_DEMO_USE_C
-; Pointer to the C stack head
-sp = $80
-.endif
 
 .segment "RAM"
 
@@ -96,10 +92,6 @@ FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
 FAMISTUDIO_USE_RELEASE_NOTES  = 1
 FAMISTUDIO_USE_DELTA_COUNTER  = 1
 FAMISTUDIO_DPCM_OFF           = $e000
-
-.if FAMISTUDIO_DEMO_USE_C
-FAMISTUDIO_CFG_C_BINDINGS = 1
-.endif
 
 ; CA65-specifc config.
 .define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
