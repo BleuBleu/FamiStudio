@@ -977,11 +977,14 @@ namespace FamiStudio
             ProcessPlatformEvents();
             ProcessEvents();
 
-            if (!quit && !IsOutOfProcessDialogInProgress)
-            { 
-                Tick();
-                RenderFrameAndSwapBuffer();
-                ConditionalEmitDelayedRightClick();
+            if (!quit)
+            {
+                if (!IsOutOfProcessDialogInProgress)
+                {
+                    Tick();
+                    RenderFrameAndSwapBuffer();
+                    ConditionalEmitDelayedRightClick();
+                }
 
                 if (allowSleep)
                 {
