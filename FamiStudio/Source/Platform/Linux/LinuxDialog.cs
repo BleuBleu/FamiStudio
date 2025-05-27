@@ -47,15 +47,14 @@ namespace FamiStudio
             isX11 = Environment.GetEnvironmentVariable(XdgSessionTypeEnvVar)?.ToLowerInvariant() == "x11";
             isWayland = !isX11;
 
-            try
-            {
-                // TODO: Properly debug intermittent crashing in Wayland. Debian 12 seems to work, even with
-                // GLFW 3.4 compiled. Arch Linux seems to have issues on KDE and GNOME with Wayland. 
-                //
-                // NOTE: When it crashes, it will be on the first dialog, as if GTK never initialised properly 
-                // despite this try block passing.
-                GtkInit(0, IntPtr.Zero);
-                isGtkInitialized = true;
+            // NOTE: There are intermittent crashes regarding GTK on Wayland when launching through VS Code. This 
+            // doesn't happen on Debian, but my Arch install exhibits it. If it's going to crash, it will happen
+            // on the first dialog it tries to show. This never happens when building the app and launching it 
+            // normally (outside VS Code).
+            try 
+            { 
+                GtkInit(0, IntPtr.Zero); 
+                isGtkInitialized = true; 
             }
             catch (Exception ex)
             {
@@ -302,11 +301,14 @@ namespace FamiStudio
                 done = true;
             };
 
-            var isGnome = desktopEnvironment.Contains("gnome", StringComparison.InvariantCultureIgnoreCase);
-            var callbackHandle = GCHandle.Alloc(callback);
+            var isGnome = desktopEnvironment.Contains("gnome", StringComparison.InvariantCultureIgnoreCase) ||
+                          desktopEnvironment.Contains("unity", StringComparison.InvariantCultureIgnoreCase);
+
             var hasPresented = true;
-            var isFirstRun   = true; // Workaround for GNOME, otherwise dialogs may open in the background.
+            var isFirstLoop  = true; // Workaround for GNOME, otherwise dialogs may open in the background.
             var canSetBehind = false;
+
+            var callbackHandle = GCHandle.Alloc(callback);
             GSignalConnectData(dialog, "response", callback, IntPtr.Zero, IntPtr.Zero, 0);
 
             while (!done)
@@ -326,32 +328,34 @@ namespace FamiStudio
                 var fsActive  = FamiStudioWindow.Instance.IsWindowInFocus;
                 var gtkActive = GtkWindowIsActive(dialog);
 
-                var shouldPresent = (fsActive && !hasPresented) || isFirstRun;
+                var shouldPresent = (fsActive && !hasPresented) || isFirstLoop;
                 var keepAbove     = (fsActive || gtkActive) && !isGnome;
 
                 // Behave like a modal dialog.
                 if (shouldPresent)
                 {
                     // Present the window if the FS window is clicked. Environments behave differently here.
-                    // Some will bring the window back in front, others will highlight the icon on the taskbar.
-                    Console.WriteLine("WINDOW PRESENT!");
+                    // Some bring the window back in front, others will highlight the icon on the taskbar.
+                    // Environments like GNOME sometimes show "x is ready" messages instead.
                     GtkWindowPresent(dialog);
                     GtkWindowSetKeepAbove(dialog, keepAbove);
                     canSetBehind = true;
                     hasPresented = true;
 
-                    if (!isFirstRun)
+                    if (!isFirstLoop)
                         Platform.Beep();
                 }
                 else if (!keepAbove && canSetBehind) 
                 {
-                    Console.WriteLine("KEEP ABOVE UNSET!");
+                    // Some environments / window managers might not properly obey this. In such an edge case,
+                    // clicking on the dialog and then another window should allow it to go behind. This only 
+                    // happened with one environment of several, so it's not very likely.
                     GtkWindowSetKeepAbove(dialog, false);
                     canSetBehind = false;
                 }
 
                 hasPresented = fsActive;
-                isFirstRun   = false;
+                isFirstLoop  = false;
             }
 
             callbackHandle.Free();
