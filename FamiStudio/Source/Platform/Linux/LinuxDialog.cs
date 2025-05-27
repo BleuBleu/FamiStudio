@@ -38,8 +38,9 @@ namespace FamiStudio
 
         static LinuxDialog()
         {
-            desktopEnvironment = Environment.GetEnvironmentVariable(XdgCurrentDesktopEnvVar);
+            isDisplayAvailable = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(DisplayEnvVar));
             isRunningInFlatpak = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(FlatpakIdEnvVar));
+            desktopEnvironment = Environment.GetEnvironmentVariable(XdgCurrentDesktopEnvVar);
             isKdialogAvailable = IsCommandAvailable("kdialog");
             isZenityAvailable  = IsCommandAvailable("zenity");
 
