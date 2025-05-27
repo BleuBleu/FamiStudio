@@ -60,6 +60,8 @@ namespace FamiStudio
 
         public LinuxDialog(DialogMode mode, string title, ref string defaultPath, string extensions = "", bool multiselect = false)
         {
+            Debug.Assert(dlgInstance == null);
+
             dlgInstance = this;
             Localization.Localize(this);
 
@@ -80,6 +82,8 @@ namespace FamiStudio
 
         public LinuxDialog(string text, string title, MessageBoxButtons buttons)
         {
+            Debug.Assert(dlgInstance == null);
+            
             dlgInstance = this;
             Localization.Localize(this);
 
