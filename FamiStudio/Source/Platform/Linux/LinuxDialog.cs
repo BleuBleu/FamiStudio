@@ -117,7 +117,7 @@ namespace FamiStudio
                         if (line.StartsWith("app-path="))
                         {
                             flatpakPath = line.Split('=', 2)[1].Trim(); // System flatpak path.
-                            dialogPath = dialogPath.Replace(FlatpakPrefix, flatpakPath);
+                            dialogPath = string.Concat(flatpakPath, dialogPath.AsSpan(FlatpakPrefix.Length));
                             break;
                         }
                     }
