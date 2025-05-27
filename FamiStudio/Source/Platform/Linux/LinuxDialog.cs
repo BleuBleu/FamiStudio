@@ -116,8 +116,11 @@ namespace FamiStudio
             dialogPath  = defaultPath;
 
             SelectedPaths = ShowFileDialog();
-
-            defaultPath = dialogPath;
+            defaultPath   = dialogPath;
+           
+            // If we're using flatpak, we may have converted the sandbox "/app" path
+            // to a system one. If so, convert the results so the sandbox can find them.
+            ConditionalRestoreFlatpakPaths(SelectedPaths);
         }
 
         public LinuxDialog(string text, string title, MessageBoxButtons buttons)
@@ -259,10 +262,10 @@ namespace FamiStudio
 
             var isGnome = desktopEnvironment.Contains("gnome", StringComparison.InvariantCultureIgnoreCase);
             var callbackHandle = GCHandle.Alloc(callback);
-            var shouldPresent = false;
             var hasPresented = true;
+            var isFirstRun   = true; // Workaround for GNOME, otherwise dialogs may open in the background.
+            var canSetBehind = false;
             GSignalConnectData(dialog, "response", callback, IntPtr.Zero, IntPtr.Zero, 0);
-            GtkWindowSetModal(dialog, true);
 
             while (!done)
             {
@@ -280,35 +283,33 @@ namespace FamiStudio
 
                 var fsActive  = FamiStudioWindow.Instance.IsWindowInFocus;
                 var gtkActive = GtkWindowIsActive(dialog);
-                var keepAbove = fsActive || (gtkActive && !isGnome);
+
+                var shouldPresent = (fsActive && !hasPresented) || isFirstRun;
+                var keepAbove     = (fsActive || gtkActive) && !isGnome;
 
                 // Behave like a modal dialog.
-                if (fsActive || gtkActive)
+                if (shouldPresent)
                 {
-                    // GNOME seems to get stuck on top if using the GTK check for some reason. Some environments
-                    // ignore this depending on their configurations, notably Wayland.
-                    GtkWindowSetKeepAbove(dialog, keepAbove);
-
                     // Present the window if the FS window is clicked. Environments behave differently here.
                     // Some will bring the window back in front, others will highlight the icon on the taskbar.
-                    if (shouldPresent && !hasPresented)
-                    {
-                        GtkWindowPresent(dialog);
-                        hasPresented = true;
+                    Console.WriteLine("WINDOW PRESENT!");
+                    GtkWindowPresent(dialog);
+                    GtkWindowSetKeepAbove(dialog, keepAbove);
+                    canSetBehind = true;
+                    hasPresented = true;
 
-                        if (fsActive)
-                            Platform.Beep();
-                    }
+                    if (!isFirstRun)
+                        Platform.Beep();
                 }
-                else if (!isGnome) // Some environments need this (inconsistently).
+                else if (!keepAbove && canSetBehind) 
                 {
+                    Console.WriteLine("KEEP ABOVE UNSET!");
                     GtkWindowSetKeepAbove(dialog, false);
+                    canSetBehind = false;
                 }
 
-                // GNOME is really weird and inconsistent, I have to find a cleaner way to do this.
-                //shouldPresent = ((fsActive && !isGnome) || (!fsActive && isGnome)) && !hasPresented;
-                shouldPresent = (fsActive && !isGnome) || (!fsActive && isGnome);
-                hasPresented  = !gtkActive;
+                hasPresented = fsActive;
+                isFirstRun   = false;
             }
 
             callbackHandle.Free();
@@ -360,6 +361,15 @@ namespace FamiStudio
                 }
             }
             catch { }
+        }
+
+        private void ConditionalRestoreFlatpakPaths(string[] paths)
+        {
+            if (isFlatpak && !string.IsNullOrEmpty(flatpakPath))
+            {
+                for (var i = 0; i < paths.Length; i++)
+                    paths[i] = paths[i].Replace(flatpakPath, FlatpakPrefix);
+            }
         }
 
         private string[] ShowFileDialog()
@@ -712,16 +722,8 @@ namespace FamiStudio
             }
 
             dlgInstance = null;
+
             var results = process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
-            // If we're using flatpak, we may have converted the sandbox "/app" path
-            // to a system one. If so, convert the results so the sandbox can find them.
-            if (isFlatpak && !string.IsNullOrEmpty(flatpakPath))
-            {
-                for (var i = 0; i < results.Length; i++)
-                    results[i] = results[i].Replace(flatpakPath, FlatpakPrefix);
-            }
-
             return (results, process.ExitCode);
         }
     }
