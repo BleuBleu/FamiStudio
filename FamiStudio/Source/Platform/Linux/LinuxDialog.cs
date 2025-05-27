@@ -25,20 +25,24 @@ namespace FamiStudio
         private const string GtkDllName = "libgtk-3.so.0";
 
         private static LinuxDialog dlgInstance;
-        private static string desktopEnvironment;
-        private static bool isDisplayAvailable;
-        private static bool isGtkInitialized;
-        private static bool isX11;
-        private static bool isWayland;
-        private static bool isFlatpak;
+        private static readonly string desktopEnvironment;
+        private static readonly bool isDisplayAvailable;
+        private static readonly bool isGtkInitialized;
+        private static readonly bool isX11;
+        private static readonly bool isWayland;
+        private static readonly bool isRunningInFlatpak;
+        private static readonly bool isKdialogAvailable;
+        private static readonly bool isZenityAvailable;
 
         public static bool IsDialogOpen => dlgInstance != null;
 
         static LinuxDialog()
         {
             desktopEnvironment = Environment.GetEnvironmentVariable(XdgCurrentDesktopEnvVar);
-            isDisplayAvailable = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(DisplayEnvVar));
-            isFlatpak = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(FlatpakIdEnvVar));
+            isRunningInFlatpak = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(FlatpakIdEnvVar));
+            isKdialogAvailable = IsCommandAvailable("kdialog");
+            isZenityAvailable  = IsCommandAvailable("zenity");
+
             isX11 = Environment.GetEnvironmentVariable(XdgSessionTypeEnvVar)?.ToLowerInvariant() == "x11";
             isWayland = !isX11;
 
@@ -108,7 +112,11 @@ namespace FamiStudio
 
         public LinuxDialog(DialogMode mode, string title, ref string defaultPath, string extensions = "", bool multiselect = false)
         {
+            Debug.Assert(dlgInstance == null);
+
+            dlgInstance = this;
             Localization.Localize(this);
+
             dialogMode  = mode;
             dialogTitle = title;
             dialogExts  = extensions;
@@ -117,22 +125,55 @@ namespace FamiStudio
 
             SelectedPaths = ShowFileDialog();
             defaultPath   = dialogPath;
-           
+
             // If we're using flatpak, we may have converted the sandbox "/app" path
             // to a system one. If so, convert the results so the sandbox can find them.
             ConditionalRestoreFlatpakPaths(SelectedPaths);
+            dlgInstance = null;
         }
 
         public LinuxDialog(string text, string title, MessageBoxButtons buttons)
         {
+            Debug.Assert(dlgInstance == null);
+
+            dlgInstance = this;
             Localization.Localize(this);
+
             dialogMode    = DialogMode.Message;
             dialogTitle   = title;
             dialogText    = text;
             dialogButtons = buttons;
+
             MessageBoxSelection = ShowMessageBoxDialog();
+            dlgInstance = null;
         }
 
+        private static bool IsCommandAvailable(string program)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "/bin/sh",
+                    Arguments = $"-c \"command -v {program}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+                process.WaitForExit();
+
+                return process.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // TODO: Cleanup any of these P/Invoke calls that are not being used.
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         public delegate void GtkResponseCallback(IntPtr dialog, int response_id, IntPtr user_data);
 
@@ -316,59 +357,38 @@ namespace FamiStudio
             return response;
         }
 
-        private bool IsCommandAvailable(string program)
+        private void ConditionalSetFlatpakPaths()
         {
-            try
-            {
-                var psi = new ProcessStartInfo
+            if (isRunningInFlatpak && dialogPath.StartsWith(FlatpakPrefix))
+            { 
+                try
                 {
-                    FileName = "/bin/sh",
-                    Arguments = $"-c \"command -v {program}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using var process = Process.Start(psi);
-                process.WaitForExit();
-
-                return process.ExitCode == 0;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private void SetFlatpakPaths()
-        {
-            try
-            {
-                if (File.Exists(FlatpakInfoPath))
-                {
-                    var lines = File.ReadAllLines(FlatpakInfoPath);
-
-                    foreach (var line in lines)
+                    if (File.Exists(FlatpakInfoPath))
                     {
-                        if (line.StartsWith("app-path="))
+                        var lines = File.ReadAllLines(FlatpakInfoPath);
+
+                        foreach (var line in lines)
                         {
-                            flatpakPath = line.Split('=', 2)[1].Trim(); // System flatpak path.
-                            dialogPath = string.Concat(flatpakPath, dialogPath.AsSpan(FlatpakPrefix.Length));
-                            break;
+                            if (line.StartsWith("app-path="))
+                            {
+                                flatpakPath = line.Split('=', 2)[1].Trim(); // System flatpak path.
+                                dialogPath  = string.Concat(flatpakPath, dialogPath.AsSpan(FlatpakPrefix.Length));
+                                break;
+                            }
                         }
                     }
                 }
+                catch { }
             }
-            catch { }
         }
 
         private void ConditionalRestoreFlatpakPaths(string[] paths)
         {
-            if (isFlatpak && !string.IsNullOrEmpty(flatpakPath))
+            if (isRunningInFlatpak && !string.IsNullOrEmpty(flatpakPath))
             {
                 for (var i = 0; i < paths.Length; i++)
-                    paths[i] = paths[i].Replace(flatpakPath, FlatpakPrefix);
+                    if (paths[i].StartsWith(flatpakPath))
+                        paths[i] = string.Concat(FlatpakPrefix, paths[i].AsSpan(flatpakPath.Length));
             }
         }
 
@@ -379,19 +399,18 @@ namespace FamiStudio
 
             // If we're using flatpak and are within the sandboxed "/app" path, the
             // external process can't see it. We use the real system path to it instead.
-            if (isFlatpak && dialogPath.StartsWith(FlatpakPrefix))
-                SetFlatpakPaths();
+            ConditionalSetFlatpakPaths();
 
             // GTK seems the most flexible overall, but the others still work.
             if (isGtkInitialized)
             {
                 return ShowGtkFileDialog();
             }
-            else if (IsCommandAvailable("kdialog"))
+            else if (isKdialogAvailable)
             {
                 return ShowKDialogFileDialog();
             }
-            else if (IsCommandAvailable("zenity"))
+            else if (isZenityAvailable)
             {
                 return ShowZenityFileDialog();
             }
@@ -433,9 +452,6 @@ namespace FamiStudio
 
                 GtkFileChooserAddFilter(dialog, filter);
             }
-
-            Debug.Assert(dlgInstance == null);
-            dlgInstance = this;
             
             GtkWidgetShow(dialog);
             var response = GtkGetDialogResponse(dialog);
@@ -466,7 +482,6 @@ namespace FamiStudio
             while (GtkEventsPending())
                 GtkMainIteration();
 
-            dlgInstance = null;
             return result;
         }
 
@@ -562,11 +577,11 @@ namespace FamiStudio
             {
                 return ShowGtkMessageBoxDialog();
             }
-            else if (IsCommandAvailable("kdialog"))
+            else if (isKdialogAvailable)
             {
                 return ShowKDialogMessageBoxDialog();
             }
-            else if (IsCommandAvailable("zenity"))
+            else if (isZenityAvailable)
             {
                 return ShowZenityMessageBoxDialog();
             }
@@ -601,9 +616,6 @@ namespace FamiStudio
                 GtkDialogAddButton(dialog, CancelLabel, GTK_RESPONSE_CANCEL);
             }
 
-            Debug.Assert(dlgInstance == null);
-            dlgInstance = this;
-
             GtkWidgetShow(dialog);
             var response = GtkGetDialogResponse(dialog);
 
@@ -623,7 +635,6 @@ namespace FamiStudio
             while (GtkEventsPending())
                 GtkMainIteration();
 
-            dlgInstance = null;
             return result;
         }
 
@@ -711,17 +722,12 @@ namespace FamiStudio
                 CreateNoWindow = true
             };
 
-            Debug.Assert(dlgInstance == null);
-            dlgInstance = this;
-
             process.Start();
 
             while (!process.HasExited)
             {
                 FamiStudioWindow.Instance.RunEventLoop(true);
             }
-
-            dlgInstance = null;
 
             var results = process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
             return (results, process.ExitCode);
