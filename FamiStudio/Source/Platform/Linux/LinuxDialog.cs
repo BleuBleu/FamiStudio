@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using static GLFWDotNet.GLFW;
 
 namespace FamiStudio
 {
@@ -23,6 +24,8 @@ namespace FamiStudio
         private const string XdgSessionTypeEnvVar = "XDG_SESSION_TYPE";
         private const string GobjectDllName = "libgobject-2.0.so.0";
         private const string GtkDllName = "libgtk-3.so.0";
+        private const string GdkDllName = "libgdk-3.so.0";
+
 
         private static LinuxDialog dlgInstance;
         private static readonly string desktopEnvironment;
@@ -33,6 +36,7 @@ namespace FamiStudio
         private static readonly bool isRunningInFlatpak;
         private static readonly bool isKdialogAvailable;
         private static readonly bool isZenityAvailable;
+        private static readonly IntPtr x11DisplayHandle;
 
         public static bool IsDialogOpen => dlgInstance != null;
 
@@ -47,14 +51,17 @@ namespace FamiStudio
             isX11 = Environment.GetEnvironmentVariable(XdgSessionTypeEnvVar)?.ToLowerInvariant() == "x11";
             isWayland = !isX11;
 
+            if (isX11)
+                x11DisplayHandle = glfwGetX11Display();
+
             // NOTE: There are intermittent crashes regarding GTK on Wayland when launching through VS Code. This 
             // doesn't happen on Debian, but my Arch install exhibits it. If it's going to crash, it will happen
             // on the first dialog it tries to show. This never happens when building the app and launching it 
             // normally (outside VS Code).
-            try 
-            { 
-                GtkInit(0, IntPtr.Zero); 
-                isGtkInitialized = true; 
+            try
+            {
+                GtkInit(0, IntPtr.Zero);
+                isGtkInitialized = true;
             }
             catch (Exception ex)
             {
@@ -93,6 +100,10 @@ namespace FamiStudio
         private string dialogPath;
         private string flatpakPath;
         private bool dialogMulti;
+
+        // Wayland GTK workarounds.
+        private bool hasPresented;
+        private bool shouldKeepAbove = true;
 
         private MessageBoxButtons dialogButtons;
 
@@ -175,22 +186,22 @@ namespace FamiStudio
 
         // TODO: Cleanup any of these P/Invoke calls that are not being used.
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        public delegate void GtkResponseCallback(IntPtr dialog, int response_id, IntPtr user_data);
+        private delegate void GtkResponseCallback(IntPtr dialog, int response_id, IntPtr user_data);
 
         [DllImport(GobjectDllName, EntryPoint = "g_signal_connect_data", CallingConvention = CallingConvention.Cdecl)]
-        public static extern ulong GSignalConnectData(IntPtr instance, string detailed_signal, GtkResponseCallback handler, IntPtr data, IntPtr destroy_data, int connect_flags);
+        private static extern ulong GSignalConnectData(IntPtr instance, string detailed_signal, GtkResponseCallback handler, IntPtr data, IntPtr destroy_data, int connect_flags);
 
         [DllImport(GobjectDllName, EntryPoint = "g_type_check_instance_is_a", CallingConvention = CallingConvention.Cdecl)]
-        static extern bool GTypeCheckInstanceIsA(IntPtr obj, IntPtr gType);
+        private static extern bool GTypeCheckInstanceIsA(IntPtr obj, IntPtr gType);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_init", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkInit(int argc, IntPtr argv);
+        private static extern void GtkInit(int argc, IntPtr argv);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_set_title", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWindowSetTitle(IntPtr dialog, string title);
+        private static extern void GtkWindowSetTitle(IntPtr dialog, string title);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_dialog_new", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GtkFileChooserDialogNew(
+        private static extern IntPtr GtkFileChooserDialogNew(
             string title,
             IntPtr parent,
             int action,
@@ -199,7 +210,7 @@ namespace FamiStudio
             IntPtr nullTerminator);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_message_dialog_new", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GtkMessageDialogNew(
+        private static extern IntPtr GtkMessageDialogNew(
             IntPtr parent,
             int flags,
             int type,
@@ -207,77 +218,92 @@ namespace FamiStudio
             string message_format);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_dialog_add_button", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GtkDialogAddButton(IntPtr dialog, string button_text, int response_id);
+        private static extern IntPtr GtkDialogAddButton(IntPtr dialog, string button_text, int response_id);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_dialog_run", CallingConvention = CallingConvention.Cdecl)]
-        public static extern int GtkDialogRun(IntPtr dialog);
+        private static extern int GtkDialogRun(IntPtr dialog);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_show", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWidgetShow(IntPtr widget);
+        private static extern void GtkWidgetShow(IntPtr widget);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_get_visible", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool GtkGetWidgetVisible(IntPtr widget);
+        private static extern bool GtkGetWidgetVisible(IntPtr widget);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_get_type", CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr GtkWindowGetType();
+        private static extern IntPtr GtkWindowGetType();
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_get_type", CallingConvention = CallingConvention.Cdecl)]
-        static extern IntPtr GtkWidgetGetType();
+        private static extern IntPtr GtkWidgetGetType();
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_destroy", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWidgetDestroy(IntPtr widget);
+        private static extern void GtkWidgetDestroy(IntPtr widget);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_widget_get_window", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GtkWidgetGetWindow(IntPtr widget);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_is_active", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool GtkWindowIsActive(IntPtr window);
+        private static extern bool GtkWindowIsActive(IntPtr window);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_set_keep_above", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWindowSetKeepAbove(IntPtr window, bool setting);
+        private static extern void GtkWindowSetKeepAbove(IntPtr window, bool setting);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_set_transient_for", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWindowSetTransientFor(IntPtr window, IntPtr parent);
+        private static extern void GtkWindowSetTransientFor(IntPtr window, IntPtr parent);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_present", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWindowPresent(IntPtr window);
+        private static extern void GtkWindowPresent(IntPtr window);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_set_modal", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWindowSetModal(IntPtr window, bool modal);
+        private static extern void GtkWindowSetModal(IntPtr window, bool modal);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_window_set_default_icon_from_file", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkWindowSetDefaultIconFromFile(string filename, out IntPtr error);
+        private static extern void GtkWindowSetDefaultIconFromFile(string filename, out IntPtr error);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_current_folder", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool GtkFileChooserSetCurrentFolder(IntPtr chooser, string folder);
+        private static extern bool GtkFileChooserSetCurrentFolder(IntPtr chooser, string folder);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_get_filename", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GtkFileChooserGetFilename(IntPtr dialog);
+        private static extern IntPtr GtkFileChooserGetFilename(IntPtr dialog);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_select_multiple", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkFileChooserSetSelectMultiple(IntPtr dialog, bool select_multiple);
+        private static extern void GtkFileChooserSetSelectMultiple(IntPtr dialog, bool select_multiple);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_filter_new", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GtkFileFilterNew();
+        private static extern IntPtr GtkFileFilterNew();
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_filter_set_name", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkFileFilterSetName(IntPtr filter, string name);
+        private static extern void GtkFileFilterSetName(IntPtr filter, string name);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_filter_add_pattern", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkFileFilterAddPattern(IntPtr filter, string pattern);
+        private static extern void GtkFileFilterAddPattern(IntPtr filter, string pattern);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_add_filter", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkFileChooserAddFilter(IntPtr chooser, IntPtr filter);
+        private static extern void GtkFileChooserAddFilter(IntPtr chooser, IntPtr filter);
 
         [DllImport(GtkDllName, EntryPoint = "g_filename_to_utf8", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GFilenameToUtf8(IntPtr filename, IntPtr len, IntPtr bytesRead, IntPtr bytesWritten, IntPtr error);
+        private static extern IntPtr GFilenameToUtf8(IntPtr filename, IntPtr len, IntPtr bytesRead, IntPtr bytesWritten, IntPtr error);
 
         [DllImport(GtkDllName, EntryPoint = "g_free", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GFree(IntPtr ptr);
+        private static extern void GFree(IntPtr ptr);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_events_pending", CallingConvention = CallingConvention.Cdecl)]
-        public static extern bool GtkEventsPending();
+        private static extern bool GtkEventsPending();
 
         [DllImport(GtkDllName, EntryPoint = "gtk_main_iteration", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GtkMainIteration();
-        
+        private static extern void GtkMainIteration();
+
+        [DllImport(GdkDllName, EntryPoint = "gdk_x11_window_get_xid", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GdkX11WindowGetXid(IntPtr gdkWindow);
+
+        [DllImport(GdkDllName, EntryPoint = "gdk_display_get_default", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GdkDisplayGetDefault();
+
+        [DllImport(GdkDllName, EntryPoint = "gdk_x11_display_get_xdisplay", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GdkX11DisplayGetXdisplay(IntPtr gdkDisplay);
+
+        [DllImport("libX11")]
+        private static extern void XSetTransientForHint(IntPtr display, IntPtr w, IntPtr parent);
+
         private static bool IsGtkWindow(IntPtr ptr)
         {
             return GTypeCheckInstanceIsA(ptr, GtkWindowGetType());
@@ -288,25 +314,24 @@ namespace FamiStudio
             return GTypeCheckInstanceIsA(ptr, GtkWidgetGetType());
         }
 
-        private static int GtkGetDialogResponse(IntPtr dialog)
+        private int GtkGetDialogResponse(IntPtr dialog)
         {
+            // X11 can be truly modal.
+            if (isX11)
+            {
+                IntPtr gtkX11Window = GdkX11WindowGetXid(GtkWidgetGetWindow(dialog));
+                XSetTransientForHint(x11DisplayHandle, gtkX11Window, FamiStudioWindow.Instance.Handle);
+            }
+
             var response = -1;
             var done = false;
 
-            // Use a callback and custom loop to keep the window responsive and simulate a "modal" effect.
-            // GNOME is a little inconsistent here and will have to be tested properly.
+            // Use a callback and custom loop to keep the window responsive.
             GtkResponseCallback callback = (dlg, responseId, userData) =>
             {
                 response = responseId;
                 done = true;
             };
-
-            var isGnome = desktopEnvironment.Contains("gnome", StringComparison.InvariantCultureIgnoreCase) ||
-                          desktopEnvironment.Contains("unity", StringComparison.InvariantCultureIgnoreCase);
-
-            var hasPresented = true;
-            var isFirstLoop  = true; // Workaround for GNOME, otherwise dialogs may open in the background.
-            var canSetBehind = false;
 
             var callbackHandle = GCHandle.Alloc(callback);
             GSignalConnectData(dialog, "response", callback, IntPtr.Zero, IntPtr.Zero, 0);
@@ -325,37 +350,11 @@ namespace FamiStudio
 
                 FamiStudioWindow.Instance.RunEventLoop(true);
 
-                var fsActive  = FamiStudioWindow.Instance.IsWindowInFocus;
-                var gtkActive = GtkWindowIsActive(dialog);
-
-                var shouldPresent = (fsActive && !hasPresented) || isFirstLoop;
-                var keepAbove     = (fsActive || gtkActive) && !isGnome;
-
-                // Behave like a modal dialog.
-                if (shouldPresent)
+                // Wayland can't be truly modal like X11, but we can "simulate" it in most environments.
+                if (isWayland)
                 {
-                    // Present the window if the FS window is clicked. Environments behave differently here.
-                    // Some bring the window back in front, others will highlight the icon on the taskbar.
-                    // Environments like GNOME sometimes show "x is ready" messages instead.
-                    GtkWindowPresent(dialog);
-                    GtkWindowSetKeepAbove(dialog, keepAbove);
-                    canSetBehind = true;
-                    hasPresented = true;
-
-                    if (!isFirstLoop)
-                        Platform.Beep();
+                    SimulateTransientBehaviourWayland(dialog);
                 }
-                else if (!keepAbove && canSetBehind) 
-                {
-                    // Some environments / window managers might not properly obey this. In such an edge case,
-                    // clicking on the dialog and then another window should allow it to go behind. This only 
-                    // happened with one environment of several, so it's not very likely.
-                    GtkWindowSetKeepAbove(dialog, false);
-                    canSetBehind = false;
-                }
-
-                hasPresented = fsActive;
-                isFirstLoop  = false;
             }
 
             callbackHandle.Free();
@@ -389,12 +388,40 @@ namespace FamiStudio
 
         private void ConditionalRestoreFlatpakPaths(string[] paths)
         {
-            if (isRunningInFlatpak && !string.IsNullOrEmpty(flatpakPath))
+            if (isRunningInFlatpak && !string.IsNullOrEmpty(flatpakPath) && paths != null)
             {
                 for (var i = 0; i < paths.Length; i++)
                     if (paths[i].StartsWith(flatpakPath))
                         paths[i] = string.Concat(FlatpakPrefix, paths[i].AsSpan(flatpakPath.Length));
             }
+        }
+
+        private void SimulateTransientBehaviourWayland(IntPtr dialog)
+        {
+            var isFsActive  = FamiStudioWindow.Instance.IsWindowInFocus;
+            var isGtkActive = GtkWindowIsActive(dialog);
+
+            var shouldPresent = isFsActive && !hasPresented;
+            var keepAbove     = isFsActive || isGtkActive;
+
+            if (shouldPresent)
+            {
+                // Present the window if the FS window is clicked. Environments behave differently here.
+                // Some bring the window back in front, others will highlight the icon on the taskbar.
+                // Environments like GNOME sometimes show "x is ready" messages instead.
+                GtkWindowPresent(dialog);
+                GtkWindowSetKeepAbove(dialog, true);
+                hasPresented = true;
+            }
+
+            // Only toggle if needed, GNOME doesn't like multiple toggles.
+            if (shouldKeepAbove != keepAbove)
+            {
+                GtkWindowSetKeepAbove(dialog, keepAbove);
+                shouldKeepAbove = keepAbove;
+            }
+
+            hasPresented = isFsActive;
         }
 
         private string[] ShowFileDialog()
