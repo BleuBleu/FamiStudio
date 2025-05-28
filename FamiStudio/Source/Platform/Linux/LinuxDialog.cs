@@ -20,9 +20,9 @@ namespace FamiStudio
         private static readonly bool isZenityAvailable;
 
         private const string FlatpakInfoPath = "/.flatpak-info";
-        private const string FlatpakPrefix = "/app";
+        private const string FlatpakPrefix   = "/app";
         private const string FlatpakIdEnvVar = "FLATPAK_ID";
-        private const string DisplayEnvVar = "DISPLAY";
+        private const string DisplayEnvVar   = "DISPLAY";
         
         public static bool IsDialogOpen => dlgInstance != null;
 
@@ -31,7 +31,7 @@ namespace FamiStudio
             isDisplayAvailable = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(DisplayEnvVar));
             isRunningInFlatpak = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(FlatpakIdEnvVar));
             isKdialogAvailable = IsCommandAvailable("kdialog");
-            isZenityAvailable = IsCommandAvailable("zenity");
+            isZenityAvailable  = IsCommandAvailable("zenity");
         }
 
         private DialogMode dialogMode;
@@ -355,8 +355,7 @@ namespace FamiStudio
 
         private (string[] value, int exitCode) ShowDialog(string command, string arguments)
         {
-            using var process = new Process();
-            process.StartInfo = new ProcessStartInfo
+            var psi = new ProcessStartInfo
             {
                 FileName = command,
                 Arguments = arguments,
@@ -365,8 +364,7 @@ namespace FamiStudio
                 CreateNoWindow = true
             };
 
-            process.Start();
-
+            using var process = Process.Start(psi);
             while (!process.HasExited)
             {
                 FamiStudioWindow.Instance.RunEventLoop(true);
