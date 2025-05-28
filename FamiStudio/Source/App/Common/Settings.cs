@@ -445,7 +445,7 @@ namespace FamiStudio
             AllowSequencerVerticalScroll = ini.GetBool("UI", "AllowSequencerVerticalScroll", false);
             ShowImplicitStopNotes = ini.GetBool("UI", "ShowImplicitStopNotes", false);
             ShowRegisterViewer = ini.GetBool("UI", "ShowRegisterViewer", Platform.IsDesktop);
-            UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", !Platform.IsLinux);
+            UseOSDialogs = ini.GetBool("UI", "UseOSDialogs", true);
 
             // Input
             // At version 7 (FamiStudio 4.0.0) we changed the trackpad settings.
