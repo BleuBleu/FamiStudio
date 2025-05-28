@@ -626,12 +626,12 @@ namespace FamiStudio
 
             DialogResult result = response switch
             {
-                GTK_RESPONSE_DELETE_EVENT => DialogResult.None,
-                GTK_RESPONSE_OK => DialogResult.OK,
-                GTK_RESPONSE_CANCEL => DialogResult.Cancel,
-                GTK_RESPONSE_YES => DialogResult.Yes,
-                GTK_RESPONSE_NO => DialogResult.No,
-                _ => DialogResult.None
+                GTK_RESPONSE_DELETE_EVENT => DialogResult.Cancel,
+                GTK_RESPONSE_OK           => DialogResult.OK,
+                GTK_RESPONSE_CANCEL       => DialogResult.Cancel,
+                GTK_RESPONSE_YES          => DialogResult.Yes,
+                GTK_RESPONSE_NO           => DialogResult.No,
+                _                         => DialogResult.None
             };
 
             if (IsGtkWidget(dialog))
@@ -717,8 +717,7 @@ namespace FamiStudio
 
         private (string[] value, int exitCode) ShowDialog(string command, string arguments)
         {
-            using var process = new Process();
-            process.StartInfo = new ProcessStartInfo
+            var psi = new ProcessStartInfo
             {
                 FileName = command,
                 Arguments = arguments,
@@ -727,8 +726,7 @@ namespace FamiStudio
                 CreateNoWindow = true
             };
 
-            process.Start();
-
+            using var process = Process.Start(psi);
             while (!process.HasExited)
             {
                 FamiStudioWindow.Instance.RunEventLoop(true);
