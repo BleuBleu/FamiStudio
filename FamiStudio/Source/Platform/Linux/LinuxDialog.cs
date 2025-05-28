@@ -147,7 +147,7 @@ namespace FamiStudio
 
         private void ConditionalRestoreFlatpakPaths(string[] paths)
         {
-            if (isRunningInFlatpak && !string.IsNullOrEmpty(flatpakPath))
+            if (isRunningInFlatpak && !string.IsNullOrEmpty(flatpakPath) && paths != null)
             {
                 for (var i = 0; i < paths.Length; i++)
                     if (paths[i].StartsWith(flatpakPath))
