@@ -31,6 +31,7 @@ namespace FamiStudio
         private const string DisplayEnvVar = "DISPLAY";
         private const string XdgCurrentDesktopEnvVar = "XDG_CURRENT_DESKTOP";
         private const string XdgSessionTypeEnvVar = "XDG_SESSION_TYPE";
+        private const string GdkBackendEnvVar = "GDK_BACKEND";
         private const string GobjectDllName = "libgobject-2.0.so.0";
         private const string GtkDllName = "libgtk-3.so.0";
         private const string GdkDllName = "libgdk-3.so.0";
@@ -38,6 +39,7 @@ namespace FamiStudio
         private static LinuxDialog dlgInstance;
         private static readonly DialogBackend dialogBackend = DialogBackend.None;
         private static readonly string desktopEnvironment;
+        private static readonly string xdgSessionType;
         private static readonly bool isDisplayAvailable;
         private static readonly bool isX11;
         private static readonly bool isWayland;
@@ -51,19 +53,25 @@ namespace FamiStudio
             isDisplayAvailable = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(DisplayEnvVar));
             isRunningInFlatpak = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(FlatpakIdEnvVar));
             desktopEnvironment = Environment.GetEnvironmentVariable(XdgCurrentDesktopEnvVar);
+            xdgSessionType     = Environment.GetEnvironmentVariable(XdgSessionTypeEnvVar);
 
-            isX11 = Environment.GetEnvironmentVariable(XdgSessionTypeEnvVar)?.ToLowerInvariant() == "x11";
+            isX11     = xdgSessionType?.ToLowerInvariant() == "x11";
             isWayland = !isX11;
 
             if (isX11)
                 x11DisplayHandle = glfwGetX11Display();
 
             // Try GTK first, falling back to kdialog, and finally zenity. If all options are exhausted,
-            // either the FS dialogs will be used, or the user will need to install one of those.
+            // the user is prompted to install one of the above, or disable OS dialogs in settings.
 
-            // NOTE: There are intermittent issues with Wayland when launching specifically through VS Code.
-            // It only seems to affect certain distros / setups. Leaving this here in case.
-            if (TryInitializeGtk())
+            // NOTE: GDK_BACKEND must NOT be set to x11 when using Wayland, and vice versa. This will cause 
+            // instability, such as intermittent crashing while initializing GTK or the first dialog.
+            // We can workaround by skipping GTK if the backend doesn't match the session type.
+            var gdkBackend = Environment.GetEnvironmentVariable(GdkBackendEnvVar);
+            var isGdkValid = string.IsNullOrWhiteSpace(gdkBackend) ||
+                             string.Equals(gdkBackend, xdgSessionType, StringComparison.OrdinalIgnoreCase);
+
+            if (isGdkValid && TryInitializeGtk())
                 dialogBackend = DialogBackend.GTK;
 
             else if (IsCommandAvailable("kdialog"))
