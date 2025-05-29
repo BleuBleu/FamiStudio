@@ -194,6 +194,9 @@ namespace FamiStudio
         [DllImport(GobjectDllName, EntryPoint = "g_type_check_instance_is_a", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool GTypeCheckInstanceIsA(IntPtr obj, IntPtr gType);
 
+        [DllImport(GobjectDllName, EntryPoint = "g_object_unref", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void GObjectUnref(IntPtr obj);
+
         [DllImport(GtkDllName, EntryPoint = "gtk_init", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkInit(int argc, IntPtr argv);
 
@@ -256,8 +259,8 @@ namespace FamiStudio
         [DllImport(GtkDllName, EntryPoint = "gtk_window_set_modal", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkWindowSetModal(IntPtr window, bool modal);
 
-        [DllImport(GtkDllName, EntryPoint = "gtk_window_set_default_icon_from_file", CallingConvention = CallingConvention.Cdecl)]
-        private static extern void GtkWindowSetDefaultIconFromFile(string filename, out IntPtr error);
+        [DllImport(GtkDllName, EntryPoint = "gtk_window_set_icon", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void GtkWindowSetIcon(IntPtr window, IntPtr icon);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_current_folder", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool GtkFileChooserSetCurrentFolder(IntPtr chooser, string folder);
@@ -301,6 +304,21 @@ namespace FamiStudio
         [DllImport(GdkDllName, EntryPoint = "gdk_x11_display_get_xdisplay", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr GdkX11DisplayGetXdisplay(IntPtr gdkDisplay);
 
+        [DllImport("libgdk-3.so.0")]
+        public static extern IntPtr gdk_pixbuf_new_from_data(
+            IntPtr data,
+            int colorspace,          // 0 = GDK_COLORSPACE_RGB
+            bool hasAlpha,
+            int bitsPerSample,
+            int width,
+            int height,
+            int rowstride,
+            DestroyNotifyFunc destroy_fn,
+            IntPtr destroy_fn_data);
+
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+        public delegate void DestroyNotifyFunc(IntPtr pixels, IntPtr data);
+
         [DllImport("libX11")]
         private static extern void XSetTransientForHint(IntPtr display, IntPtr w, IntPtr parent);
 
@@ -314,7 +332,49 @@ namespace FamiStudio
             return GTypeCheckInstanceIsA(ptr, GtkWidgetGetType());
         }
 
-        private int GtkGetDialogResponse(IntPtr dialog)
+        private IntPtr CreateGtkWindowIcon()
+        {
+            var tga = TgaFile.LoadFromResource("FamiStudio.Resources.Icons.FamiStudio_32.tga");
+
+            int width = tga.Width;
+            int height = tga.Height;
+            int[] data = tga.Data;
+
+            for (int i = 0; i < data.Length; i++)
+            {
+                int pixel = data[i];
+
+                byte g = (byte)(pixel >> 0);
+                byte b = (byte)(pixel >> 8);
+                byte r = (byte)(pixel >> 16);
+                byte a = (byte)(pixel >> 24);
+
+                data[i] = (r << 0) | (g << 16) | (b << 8) | (a << 24);
+            }
+
+            IntPtr pixbuf;
+
+            unsafe
+            {
+                fixed (int* p = &data[0])
+                {
+                    pixbuf = gdk_pixbuf_new_from_data(
+                        (IntPtr)p,
+                        0,
+                        true,
+                        8,
+                        width,
+                        height,
+                        width * 4,
+                        null,
+                        IntPtr.Zero);
+                }
+            }
+
+            return pixbuf;
+        }
+
+        private int ShowGtkDialogAndAwaitResponse(IntPtr dialog)
         {
             // X11 can be truly modal.
             if (isX11)
@@ -322,6 +382,9 @@ namespace FamiStudio
                 IntPtr gtkX11Window = GdkX11WindowGetXid(GtkWidgetGetWindow(dialog));
                 XSetTransientForHint(x11DisplayHandle, gtkX11Window, FamiStudioWindow.Instance.Handle);
             }
+
+            var pixbuf = CreateGtkWindowIcon();
+            GtkWindowSetIcon(dialog, pixbuf);
 
             var response = -1;
             var done = false;
@@ -331,6 +394,7 @@ namespace FamiStudio
             {
                 response = responseId;
                 done = true;
+                GObjectUnref(pixbuf);
             };
 
             var callbackHandle = GCHandle.Alloc(callback);
@@ -486,7 +550,7 @@ namespace FamiStudio
             }
             
             GtkWidgetShow(dialog);
-            var response = GtkGetDialogResponse(dialog);
+            var response = ShowGtkDialogAndAwaitResponse(dialog);
 
             string[] result = null;
             if (response == GTK_RESPONSE_ACCEPT)
@@ -649,7 +713,7 @@ namespace FamiStudio
             }
 
             GtkWidgetShow(dialog);
-            var response = GtkGetDialogResponse(dialog);
+            var response = ShowGtkDialogAndAwaitResponse(dialog);
 
             DialogResult result = response switch
             {
