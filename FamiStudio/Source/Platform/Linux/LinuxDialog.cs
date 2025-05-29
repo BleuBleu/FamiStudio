@@ -194,7 +194,7 @@ namespace FamiStudio
         private static extern bool GTypeCheckInstanceIsA(IntPtr obj, IntPtr gType);
 
         [DllImport(GobjectDllName, EntryPoint = "g_object_unref", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void GObjectUnref(IntPtr obj);
+        private static extern void GObjectUnref(IntPtr obj);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_init", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkInit(int argc, IntPtr argv);
@@ -295,7 +295,7 @@ namespace FamiStudio
         private static extern IntPtr GdkX11WindowGetXid(IntPtr gdkWindow);
 
         [DllImport(GdkDllName, EntryPoint = "gdk_pixbuf_new_from_data", CallingConvention = CallingConvention.Cdecl)]
-        public static extern IntPtr GdkPixbufNewFromData(
+        private static extern IntPtr GdkPixbufNewFromData(
             IntPtr data,
             int colorspace,
             bool hasAlpha,
