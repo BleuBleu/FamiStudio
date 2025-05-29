@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -16,6 +17,14 @@ namespace FamiStudio
             Message = 3
         }
 
+        public enum DialogBackend
+        {
+            None = -1,
+            GTK = 0,
+            Kdialog = 1,
+            Zenity = 2,
+        }
+
         private const string FlatpakInfoPath = "/.flatpak-info";
         private const string FlatpakPrefix = "/app";
         private const string FlatpakIdEnvVar = "FLATPAK_ID";
@@ -27,25 +36,21 @@ namespace FamiStudio
         private const string GdkDllName = "libgdk-3.so.0";
 
         private static LinuxDialog dlgInstance;
+        private static readonly DialogBackend dialogBackend = DialogBackend.None;
         private static readonly string desktopEnvironment;
         private static readonly bool isDisplayAvailable;
-        private static readonly bool isGtkInitialized;
         private static readonly bool isX11;
         private static readonly bool isWayland;
         private static readonly bool isRunningInFlatpak;
-        private static readonly bool isKdialogAvailable;
-        private static readonly bool isZenityAvailable;
         private static readonly IntPtr x11DisplayHandle;
 
-        public static bool IsDialogOpen => dlgInstance != null;
+        public static bool IsDialogOpen => dlgInstance != null && dialogBackend != DialogBackend.None;
 
         static LinuxDialog()
         {
             isDisplayAvailable = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(DisplayEnvVar));
             isRunningInFlatpak = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(FlatpakIdEnvVar));
             desktopEnvironment = Environment.GetEnvironmentVariable(XdgCurrentDesktopEnvVar);
-            isKdialogAvailable = IsCommandAvailable("kdialog");
-            isZenityAvailable  = IsCommandAvailable("zenity");
 
             isX11 = Environment.GetEnvironmentVariable(XdgSessionTypeEnvVar)?.ToLowerInvariant() == "x11";
             isWayland = !isX11;
@@ -53,20 +58,19 @@ namespace FamiStudio
             if (isX11)
                 x11DisplayHandle = glfwGetX11Display();
 
-            // NOTE: There are intermittent crashes regarding GTK on Wayland when launching through VS Code. This 
-            // doesn't happen on Debian, but my Arch install exhibits it. If it's going to crash, it will happen
-            // on the first dialog it tries to show. This never happens when building the app and launching it 
-            // normally (outside VS Code).
-            try
-            {
-                GtkInit(0, IntPtr.Zero);
-                isGtkInitialized = true;
-            }
-            catch (Exception ex)
-            {
-                isGtkInitialized = false;
-                Console.Error.WriteLine($"[LinuxDialog] Failed to initialize GTK: {ex}");
-            }
+            // Try GTK first, falling back to kdialog, and finally zenity. If all options are exhausted,
+            // either the FS dialogs will be used, or the user will need to install one of those.
+
+            // NOTE: There are intermittent issues with Wayland when launching specifically through VS Code.
+            // It only seems to affect certain distros / setups. Leaving this here in case.
+            if (TryInitializeGtk())
+                dialogBackend = DialogBackend.GTK;
+
+            else if (IsCommandAvailable("kdialog"))
+                dialogBackend = DialogBackend.Kdialog;
+
+            else if (IsCommandAvailable("zenity"))
+                dialogBackend = DialogBackend.Zenity;
         }
 
         // GTK Message Types
@@ -119,6 +123,7 @@ namespace FamiStudio
         LocalizedString DialogErrorMessage;
 
         #endregion
+        private delegate void GDestroyNotify(IntPtr data);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void GtkResponseCallback(IntPtr dialog, int response_id, IntPtr user_data);
@@ -200,8 +205,8 @@ namespace FamiStudio
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_current_folder", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool GtkFileChooserSetCurrentFolder(IntPtr chooser, string folder);
 
-        [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_get_filename", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr GtkFileChooserGetFilename(IntPtr dialog);
+        [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_get_filenames", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GtkFileChooserGetFilenames(IntPtr dialog);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_select_multiple", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkFileChooserSetSelectMultiple(IntPtr dialog, bool select_multiple);
@@ -220,6 +225,9 @@ namespace FamiStudio
 
         [DllImport(GtkDllName, EntryPoint = "g_free", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GFree(IntPtr ptr);
+
+        [DllImport(GtkDllName, EntryPoint = "g_slist_free_full", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void GSlistFreeFull(IntPtr list, GDestroyNotify freeFunc);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_events_pending", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool GtkEventsPending();
@@ -293,6 +301,20 @@ namespace FamiStudio
             return GTypeCheckInstanceIsA(ptr, GtkWidgetGetType());
         }
 
+        private static bool TryInitializeGtk()
+        {
+            try
+            {
+                GtkInit(0, IntPtr.Zero);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to initialize GTK: {ex.Message}");
+                return false;
+            }
+        }
+
         private static bool IsCommandAvailable(string program)
         {
             try
@@ -348,57 +370,6 @@ namespace FamiStudio
             return pixbuf;
         }
 
-        private int ShowGtkDialogAndAwaitResponse(IntPtr dialog)
-        {
-            // X11 can be truly modal / transient.
-            if (isX11)
-            {
-                IntPtr gtkX11Window = GdkX11WindowGetXid(GtkWidgetGetWindow(dialog));
-                XSetTransientForHint(x11DisplayHandle, gtkX11Window, FamiStudioWindow.Instance.Handle);
-            }
-
-            var icon = CreateGtkWindowIcon();
-            GtkWindowSetIcon(dialog, icon);
-
-            var response = -1;
-            var done = false;
-
-            // Use a callback and custom loop to keep the window responsive.
-            GtkResponseCallback callback = (dlg, responseId, userData) =>
-            {
-                response = responseId;
-                done = true;
-                GObjectUnref(icon);
-            };
-
-            var callbackHandle = GCHandle.Alloc(callback);
-            GSignalConnectData(dialog, "response", callback, IntPtr.Zero, IntPtr.Zero, 0);
-
-            while (!done)
-            {
-                while (GtkEventsPending())
-                    GtkMainIteration();
-
-                // In case a user exits via the window manager or X button.
-                if (!IsGtkWindow(dialog))
-                {
-                    done = true;
-                    break;
-                }
-
-                FamiStudioWindow.Instance.RunEventLoop(true);
-
-                // Wayland can't be truly modal like X11, but we can "simulate" it in most environments.
-                if (isWayland)
-                {
-                    SimulateTransientBehaviourWayland(dialog);
-                }
-            }
-
-            callbackHandle.Free();
-            return response;
-        }
-
         private void ConditionalSetFlatpakPaths()
         {
             if (isRunningInFlatpak && dialogPath.StartsWith(FlatpakPrefix))
@@ -439,8 +410,8 @@ namespace FamiStudio
             var isFsActive  = FamiStudioWindow.Instance.IsWindowInFocus;
             var isGtkActive = GtkWindowIsActive(dialog);
 
-            var shouldPresent = isFsActive && !hasPresented;
-            var keepAbove     = isFsActive || isGtkActive;
+            var shouldPresent  = isFsActive && !hasPresented;
+            var isActive       = isFsActive || isGtkActive;
 
             if (shouldPresent)
             {
@@ -452,11 +423,11 @@ namespace FamiStudio
                 hasPresented = true;
             }
 
-            // Only toggle if needed, GNOME doesn't like multiple toggles.
-            if (shouldKeepAbove != keepAbove)
+            // Only toggle when needed, some environments dislike multiple toggles.
+            if (shouldKeepAbove != isActive)
             {
-                GtkWindowSetKeepAbove(dialog, keepAbove);
-                shouldKeepAbove = keepAbove;
+                GtkWindowSetKeepAbove(dialog, isActive);
+                shouldKeepAbove = isActive;
             }
 
             hasPresented = isFsActive;
@@ -471,18 +442,11 @@ namespace FamiStudio
             // external process can't see it. We use the real system path to it instead.
             ConditionalSetFlatpakPaths();
 
-            // GTK seems the most flexible overall, but the others still work.
-            if (isGtkInitialized)
+            switch (dialogBackend)
             {
-                return ShowGtkFileDialog();
-            }
-            else if (isKdialogAvailable)
-            {
-                return ShowKDialogFileDialog();
-            }
-            else if (isZenityAvailable)
-            {
-                return ShowZenityFileDialog();
+                case DialogBackend.GTK:     return ShowGtkFileDialog();
+                case DialogBackend.Kdialog: return ShowKDialogFileDialog();
+                case DialogBackend.Zenity:  return ShowZenityFileDialog();
             }
 
             var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
@@ -523,36 +487,8 @@ namespace FamiStudio
                 GtkFileChooserAddFilter(dialog, filter);
             }
             
-            GtkWidgetShow(dialog);
-            var response = ShowGtkDialogAndAwaitResponse(dialog);
-
-            string[] result = null;
-            if (response == GTK_RESPONSE_ACCEPT)
-            {
-                if (GtkGetWidgetVisible(dialog))
-                {
-                    IntPtr filenamePtr = GtkFileChooserGetFilename(dialog);
-
-                    if (filenamePtr != IntPtr.Zero)
-                    {
-                        var file = Marshal.PtrToStringUTF8(filenamePtr)!;
-                        result = new[] { file };
-
-                        if (result.Length > 0)
-                            dialogPath = Path.GetDirectoryName(result[0]);
-
-                        GFree(filenamePtr);
-                    }
-                }
-            }
-
-            if (IsGtkWidget(dialog))
-                GtkWidgetDestroy(dialog);
-
-            while (GtkEventsPending())
-                GtkMainIteration();
-
-            return result;
+            var response = ShowGtkDialog(dialog);
+            return response.paths;
         }
 
         private string[] ShowKDialogFileDialog()
@@ -591,11 +527,11 @@ namespace FamiStudio
 
             var result = ShowDialog("kdialog", args);
 
-            if (result.value.Length == 0)
+            if (result.paths.Length == 0)
                 return null;
 
-            dialogPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
-            return result.value;
+            dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
+            return result.paths;
         }
 
         private string[] ShowZenityFileDialog()
@@ -630,11 +566,11 @@ namespace FamiStudio
 
             var result = ShowDialog("zenity", args);
 
-            if (result.value.Length == 0)
+            if (result.paths.Length == 0)
                 return null;
 
-            dialogPath = dialogMode == DialogMode.Folder ? result.value[0] : Path.GetDirectoryName(result.value[0]);
-            return result.value;
+            dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
+            return result.paths;
         }
 
         private DialogResult ShowMessageBoxDialog()
@@ -642,18 +578,11 @@ namespace FamiStudio
             if (!isDisplayAvailable)
                 return DialogResult.None;
 
-            // GTK seems the most flexible overall, but the others still work.
-            if (isGtkInitialized)
+            switch (dialogBackend)
             {
-                return ShowGtkMessageBoxDialog();
-            }
-            else if (isKdialogAvailable)
-            {
-                return ShowKDialogMessageBoxDialog();
-            }
-            else if (isZenityAvailable)
-            {
-                return ShowZenityMessageBoxDialog();
+                case DialogBackend.GTK:     return ShowGtkMessageBoxDialog();
+                case DialogBackend.Kdialog: return ShowKDialogMessageBoxDialog();
+                case DialogBackend.Zenity:  return ShowZenityMessageBoxDialog();
             }
 
             var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
@@ -686,10 +615,9 @@ namespace FamiStudio
                 GtkDialogAddButton(dialog, CancelLabel, GTK_RESPONSE_CANCEL);
             }
 
-            GtkWidgetShow(dialog);
-            var response = ShowGtkDialogAndAwaitResponse(dialog);
+            var response = ShowGtkDialog(dialog);
 
-            DialogResult result = response switch
+            DialogResult result = response.exitCode switch
             {
                 GTK_RESPONSE_DELETE_EVENT => DialogResult.Cancel,
                 GTK_RESPONSE_OK           => DialogResult.OK,
@@ -698,12 +626,6 @@ namespace FamiStudio
                 GTK_RESPONSE_NO           => DialogResult.No,
                 _                         => DialogResult.None
             };
-
-            if (IsGtkWidget(dialog))
-                GtkWidgetDestroy(dialog);
-            
-            while (GtkEventsPending())
-                GtkMainIteration();
 
             return result;
         }
@@ -767,11 +689,11 @@ namespace FamiStudio
             else if (exitCode == 1)
             {
                 // No and Cancel are both exit code 1 on zenity, since it doesn't natively support 3 buttons. "No" returns an empty array.
-                if (result.value.Length == 0)
+                if (result.paths.Length == 0)
                 {
                     return DialogResult.No;
                 }
-                else if (result.value[0] == CancelLabel)
+                else if (result.paths[0] == CancelLabel)
                 {
                     return DialogResult.Cancel;
                 }
@@ -780,7 +702,103 @@ namespace FamiStudio
             return DialogResult.None;
         }
 
-        private (string[] value, int exitCode) ShowDialog(string command, string arguments)
+        private (string[] paths, int exitCode) ShowGtkDialog(IntPtr dialog)
+        {
+            var icon = CreateGtkWindowIcon();
+            GtkWindowSetIcon(dialog, icon);
+            GtkWidgetShow(dialog);
+
+            // X11 can be truly modal / transient.
+            if (isX11)
+            {
+                IntPtr gtkX11Window = GdkX11WindowGetXid(GtkWidgetGetWindow(dialog));
+                XSetTransientForHint(x11DisplayHandle, gtkX11Window, FamiStudioWindow.Instance.Handle);
+            }
+
+            var response = -1;
+            var done = false;
+            string[] paths = null;
+
+            // Use a callback and custom loop to keep the window responsive.
+            GtkResponseCallback callback = (dlg, responseId, userData) =>
+            {
+                response = responseId;
+                done = true;
+                GObjectUnref(icon);
+            };
+
+            var callbackHandle = GCHandle.Alloc(callback);
+            GSignalConnectData(dialog, "response", callback, IntPtr.Zero, IntPtr.Zero, 0);
+
+            while (!done)
+            {
+                while (GtkEventsPending())
+                    GtkMainIteration();
+
+                // In case a user exits via the window manager or X button.
+                if (!IsGtkWindow(dialog))
+                {
+                    done = true;
+                    break;
+                }
+
+                FamiStudioWindow.Instance.RunEventLoop(true);
+
+                // Wayland can't be truly modal like X11, but we can "simulate" it in most environments.
+                if (isWayland)
+                {
+                    SimulateTransientBehaviourWayland(dialog);
+                }
+            }
+
+            callbackHandle.Free();
+
+            // File dialogs.
+            if (dialogMode != DialogMode.Message)
+            {
+                if (response == GTK_RESPONSE_ACCEPT)
+                {
+                    if (GtkGetWidgetVisible(dialog))
+                    {
+                        IntPtr list = GtkFileChooserGetFilenames(dialog);
+                        if (list != IntPtr.Zero)
+                        {
+                            var pathsList = new List<string>();
+                            IntPtr current = list;
+
+                            while (current != IntPtr.Zero)
+                            {
+                                IntPtr filenamePtr = Marshal.ReadIntPtr(current);
+                                string path = Marshal.PtrToStringUTF8(filenamePtr);
+                                pathsList.Add(path);
+
+                                current = Marshal.ReadIntPtr(current, IntPtr.Size);
+                            }
+
+                            paths = pathsList.ToArray();
+
+                            if (paths.Length > 0)
+                                dialogPath = Path.GetDirectoryName(paths[0]);
+
+                            GSlistFreeFull(list, GFree);
+                        }
+                    }
+                }
+            }
+
+            // Ensure we discard the dialog.
+            if (IsGtkWidget(dialog))
+            {
+                GtkWidgetDestroy(dialog);
+
+                while (GtkEventsPending())
+                    GtkMainIteration();
+            }
+
+            return (paths, response);
+        }
+
+        private (string[] paths, int exitCode) ShowDialog(string command, string arguments)
         {
             var psi = new ProcessStartInfo
             {
