@@ -123,6 +123,9 @@ namespace FamiStudio
         LocalizedString DialogErrorMessage;
 
         #endregion
+
+        
+        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void GDestroyNotify(IntPtr data);
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -754,34 +757,31 @@ namespace FamiStudio
             callbackHandle.Free();
 
             // File dialogs.
-            if (dialogMode != DialogMode.Message)
+            if (dialogMode != DialogMode.Message && response == GTK_RESPONSE_ACCEPT)
             {
-                if (response == GTK_RESPONSE_ACCEPT)
+                if (GtkGetWidgetVisible(dialog))
                 {
-                    if (GtkGetWidgetVisible(dialog))
+                    IntPtr list = GtkFileChooserGetFilenames(dialog);
+                    if (list != IntPtr.Zero)
                     {
-                        IntPtr list = GtkFileChooserGetFilenames(dialog);
-                        if (list != IntPtr.Zero)
+                        var pathsList = new List<string>();
+                        IntPtr current = list;
+
+                        while (current != IntPtr.Zero)
                         {
-                            var pathsList = new List<string>();
-                            IntPtr current = list;
+                            IntPtr filenamePtr = Marshal.ReadIntPtr(current);
+                            string path = Marshal.PtrToStringUTF8(filenamePtr);
+                            pathsList.Add(path);
 
-                            while (current != IntPtr.Zero)
-                            {
-                                IntPtr filenamePtr = Marshal.ReadIntPtr(current);
-                                string path = Marshal.PtrToStringUTF8(filenamePtr);
-                                pathsList.Add(path);
-
-                                current = Marshal.ReadIntPtr(current, IntPtr.Size);
-                            }
-
-                            paths = pathsList.ToArray();
-
-                            if (paths.Length > 0)
-                                dialogPath = Path.GetDirectoryName(paths[0]);
-
-                            GSlistFreeFull(list, GFree);
+                            current = Marshal.ReadIntPtr(current, IntPtr.Size);
                         }
+
+                        paths = pathsList.ToArray();
+
+                        if (paths.Length > 0)
+                            dialogPath = Path.GetDirectoryName(paths[0]);
+
+                        GSlistFreeFull(list, GFree);
                     }
                 }
             }
