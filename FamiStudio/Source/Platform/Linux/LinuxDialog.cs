@@ -26,7 +26,6 @@ namespace FamiStudio
         private const string GtkDllName = "libgtk-3.so.0";
         private const string GdkDllName = "libgdk-3.so.0";
 
-
         private static LinuxDialog dlgInstance;
         private static readonly string desktopEnvironment;
         private static readonly bool isDisplayAvailable;
@@ -120,69 +119,6 @@ namespace FamiStudio
         LocalizedString DialogErrorMessage;
 
         #endregion
-
-        public LinuxDialog(DialogMode mode, string title, ref string defaultPath, string extensions = "", bool multiselect = false)
-        {
-            Debug.Assert(dlgInstance == null);
-
-            dlgInstance = this;
-            Localization.Localize(this);
-
-            dialogMode  = mode;
-            dialogTitle = title;
-            dialogExts  = extensions;
-            dialogMulti = multiselect;
-            dialogPath  = defaultPath;
-
-            SelectedPaths = ShowFileDialog();
-            defaultPath   = dialogPath;
-
-            // If we're using flatpak, we may have converted the sandbox "/app" path
-            // to a system one. If so, convert the results so the sandbox can find them.
-            ConditionalRestoreFlatpakPaths(SelectedPaths);
-            dlgInstance = null;
-        }
-
-        public LinuxDialog(string text, string title, MessageBoxButtons buttons)
-        {
-            Debug.Assert(dlgInstance == null);
-
-            dlgInstance = this;
-            Localization.Localize(this);
-
-            dialogMode    = DialogMode.Message;
-            dialogTitle   = title;
-            dialogText    = text;
-            dialogButtons = buttons;
-
-            MessageBoxSelection = ShowMessageBoxDialog();
-            dlgInstance = null;
-        }
-
-        private static bool IsCommandAvailable(string program)
-        {
-            try
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "/bin/sh",
-                    Arguments = $"-c \"command -v {program}\"",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
-
-                using var process = Process.Start(psi);
-                process.WaitForExit();
-
-                return process.ExitCode == 0;
-            }
-            catch
-            {
-                return false;
-            }
-        }
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate void GtkResponseCallback(IntPtr dialog, int response_id, IntPtr user_data);
@@ -309,6 +245,44 @@ namespace FamiStudio
         [DllImport("libX11")]
         private static extern void XSetTransientForHint(IntPtr display, IntPtr w, IntPtr parent);
 
+        public LinuxDialog(DialogMode mode, string title, ref string defaultPath, string extensions = "", bool multiselect = false)
+        {
+            Debug.Assert(dlgInstance == null);
+
+            dlgInstance = this;
+            Localization.Localize(this);
+
+            dialogMode  = mode;
+            dialogTitle = title;
+            dialogExts  = extensions;
+            dialogMulti = multiselect;
+            dialogPath  = defaultPath;
+
+            SelectedPaths = ShowFileDialog();
+            defaultPath   = dialogPath;
+
+            // If we're using flatpak, we may have converted the sandbox "/app" path
+            // to a system one. If so, convert the results so the sandbox can find them.
+            ConditionalRestoreFlatpakPaths(SelectedPaths);
+            dlgInstance = null;
+        }
+
+        public LinuxDialog(string text, string title, MessageBoxButtons buttons)
+        {
+            Debug.Assert(dlgInstance == null);
+
+            dlgInstance = this;
+            Localization.Localize(this);
+
+            dialogMode    = DialogMode.Message;
+            dialogTitle   = title;
+            dialogText    = text;
+            dialogButtons = buttons;
+
+            MessageBoxSelection = ShowMessageBoxDialog();
+            dlgInstance = null;
+        }
+
         private static bool IsGtkWindow(IntPtr ptr)
         {
             return GTypeCheckInstanceIsA(ptr, GtkWindowGetType());
@@ -319,22 +293,47 @@ namespace FamiStudio
             return GTypeCheckInstanceIsA(ptr, GtkWidgetGetType());
         }
 
+        private static bool IsCommandAvailable(string program)
+        {
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "/bin/sh",
+                    Arguments = $"-c \"command -v {program}\"",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                using var process = Process.Start(psi);
+                process.WaitForExit();
+
+                return process.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         private unsafe IntPtr CreateGtkWindowIcon()
         {
             var tga = TgaFile.LoadFromResource("FamiStudio.Resources.Icons.FamiStudio_32.tga");
 
-            int width = tga.Width;
-            int height = tga.Height;
+            var width  = tga.Width;
+            var height = tga.Height;
             int[] data = tga.Data;
 
-            for (int i = 0; i < data.Length; i++)
+            for (var i = 0; i < data.Length; i++)
             {
-                int pixel = data[i];
+                var pixel = data[i];
 
-                byte g = (byte)(pixel >> 0);
-                byte b = (byte)(pixel >> 8);
-                byte r = (byte)(pixel >> 16);
-                byte a = (byte)(pixel >> 24);
+                var g = (byte)(pixel >> 0);
+                var b = (byte)(pixel >> 8);
+                var r = (byte)(pixel >> 16);
+                var a = (byte)(pixel >> 24);
 
                 data[i] = (r << 0) | (g << 16) | (b << 8) | (a << 24);
             }
