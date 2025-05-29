@@ -68,8 +68,7 @@ namespace FamiStudio
             // instability, such as intermittent crashing while initializing GTK or the first dialog.
             // We can workaround by skipping GTK if the backend doesn't match the session type.
             var gdkBackend = Environment.GetEnvironmentVariable(GdkBackendEnvVar);
-            var isGdkValid = string.IsNullOrWhiteSpace(gdkBackend) ||
-                             string.Equals(gdkBackend, xdgSessionType, StringComparison.OrdinalIgnoreCase);
+            var isGdkValid = gdkBackend == null || string.Equals(gdkBackend, xdgSessionType);
 
             if (isGdkValid && TryInitializeGtk())
                 dialogBackend = DialogBackend.GTK;
