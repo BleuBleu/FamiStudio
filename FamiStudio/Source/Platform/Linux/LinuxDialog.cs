@@ -455,7 +455,7 @@ namespace FamiStudio
             switch (dialogBackend)
             {
                 case DialogBackend.GTK:     return ShowGtkFileDialog();
-                case DialogBackend.Kdialog: return ShowKDialogFileDialog();
+                case DialogBackend.Kdialog: return ShowKdialogFileDialog();
                 case DialogBackend.Zenity:  return ShowZenityFileDialog();
             }
 
@@ -501,7 +501,7 @@ namespace FamiStudio
             return response.paths;
         }
 
-        private string[] ShowKDialogFileDialog()
+        private string[] ShowKdialogFileDialog()
         {
             var args = $"--title \"{dialogTitle}\" ";
             var extPairs = dialogExts.Split("|");
@@ -591,7 +591,7 @@ namespace FamiStudio
             switch (dialogBackend)
             {
                 case DialogBackend.GTK:     return ShowGtkMessageBoxDialog();
-                case DialogBackend.Kdialog: return ShowKDialogMessageBoxDialog();
+                case DialogBackend.Kdialog: return ShowKdialogMessageBoxDialog();
                 case DialogBackend.Zenity:  return ShowZenityMessageBoxDialog();
             }
 
@@ -640,7 +640,7 @@ namespace FamiStudio
             return result;
         }
 
-        private DialogResult ShowKDialogMessageBoxDialog()
+        private DialogResult ShowKdialogMessageBoxDialog()
         {
             string args = string.Empty;
 
