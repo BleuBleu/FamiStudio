@@ -2820,7 +2820,10 @@ namespace FamiStudio
             buffer.Serialize(ref VolumeDb);
             buffer.Serialize(ref TrebleDb);
             buffer.Serialize(ref TrebleRolloffHz);
-            buffer.Serialize(ref BassCutoffHz); // Special case for FDS
+
+            // Added special FDS bass filter in 4.4.0.
+            if (buffer.Version >= 18)
+                buffer.Serialize(ref BassCutoffHz);
         }
 
         public static readonly ExpansionMixer[] DefaultExpansionMixerSettings = new ExpansionMixer[ExpansionType.Count]
