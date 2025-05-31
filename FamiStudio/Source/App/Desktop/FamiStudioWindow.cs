@@ -36,6 +36,7 @@ namespace FamiStudio
         public int Height => GetWindowSizeInternal().Height;
         public string Text { set => glfwSetWindowTitle(window, value); }
         public bool IsLandscape => true;
+        public bool IsWindowInFocus => glfwGetWindowAttrib(window, GLFW_FOCUSED) == GLFW_TRUE;
         public bool IsAsyncDialogInProgress => container.IsDialogActive;
         public bool IsContextMenuActive => container.IsContextMenuActive;
         public bool IsOutOfProcessDialogInProgress => Platform.IsOutOfProcessDialogInProgress();
@@ -454,6 +455,10 @@ namespace FamiStudio
         {
             Debug.WriteLine($"WINDOW REFRESH!");
             MarkDirty();
+
+            // Force a refresh (prevents the window from becoming invisible).
+            if (IsOutOfProcessDialogInProgress)
+                Refresh();
         }
 
         private void MouseButtonCallback(IntPtr window, int button, int action, int mods)
@@ -977,11 +982,14 @@ namespace FamiStudio
             ProcessPlatformEvents();
             ProcessEvents();
 
-            if (!quit && !IsOutOfProcessDialogInProgress)
-            { 
-                Tick();
-                RenderFrameAndSwapBuffer();
-                ConditionalEmitDelayedRightClick();
+            if (!quit)
+            {
+                if (!IsOutOfProcessDialogInProgress)
+                {
+                    Tick();
+                    RenderFrameAndSwapBuffer();
+                    ConditionalEmitDelayedRightClick();
+                }
 
                 if (allowSleep)
                 {
