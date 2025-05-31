@@ -701,6 +701,10 @@ void FASTCALL CNSFCore::WriteMemory_N106(WORD a,BYTE v)
 		}
 #undef N106REGWRITE
 	}
+
+	// Handle conflicts if both N163 and S5B are active.
+	if ((nExternalSound & EXTSOUND_FME07) && a >= 0xE000)
+		WriteMemory_FME07(a,v);
 }
 
 void CNSFCore::WriteMemory_VRC7(WORD a,BYTE v)
@@ -1692,6 +1696,11 @@ int CNSFCore::LoadNSF(const CNSFFile* fl)
 	{
 		WriteMemory[0x0C] = &CNSFCore::WriteMemory_FME07;
 		WriteMemory[0x0E] = &CNSFCore::WriteMemory_FME07;
+
+		// We use F000 in multi-expansion NSF export, if N163 is not active, hook the address, 
+		// otherwise will be handled in "WriteMemory_N106"
+		if (!(nExternalSound & EXTSOUND_N106))
+			WriteMemory[0x0F] = &CNSFCore::WriteMemory_FME07; 
 	}
 	//if (nExternalSound & EXTSOUND_EPSM)
 	//{
