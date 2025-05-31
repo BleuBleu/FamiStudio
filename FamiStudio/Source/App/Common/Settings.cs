@@ -21,7 +21,7 @@ namespace FamiStudio
         // Version 8    : FamiStudio 4.1.0 (Configurable keys)
         // Version 9-10 : FamiStudio 4.2.0 (Latency improvements, more filtering options)
         // Version 11   : FamiStudio 4.4.0 (Separate bass filter for FDS)
-        public const int SettingsVersion = 10;
+        public const int SettingsVersion = 11;
         public const int NumRecentFiles  = 10;
 
         // Constants for follow.
@@ -528,8 +528,8 @@ namespace FamiStudio
 
                     ExpansionMixerSettings[i].VolumeDb         = ini.GetFloat(section, "VolumeDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].VolumeDb);
                     
-                    // FDS bass filter (4.4.0).
-                    if (i == ExpansionType.Fds)
+                    // At version 11 (FamiStudio 4.4.0) we added a separate bass filter for FDS.
+                    if (Version >= 11 && i == ExpansionType.Fds)
                         ExpansionMixerSettings[i].BassCutoffHz = ini.GetInt(section, "BassCutoffHz",    ExpansionMixer.DefaultExpansionMixerSettings[i].BassCutoffHz);
                     else
                         ExpansionMixerSettings[i].TrebleDb     = ini.GetFloat(section, "TrebleDb",      ExpansionMixer.DefaultExpansionMixerSettings[i].TrebleDb);
