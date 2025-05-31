@@ -1,28 +1,20 @@
-4.4.0
+Packaging:
+- Win
+- Android
+- Linux
+- MacOS
+- IOS
+
+Doc:
+x Write changelog
+/ Update website
+/ Prepare flatpak update.
+	=> NEED TO UPDATE ZIP HASH!!!
+
+4.5.0
 =====
-- Multi-expansio conflict.
-
-Testing:
-- Test release snap on mobile
-- Bump ROM version
-- Re-export SoundEngine demo song data + recompile + listen to make sure samples work.
-- Re-compile ROM/NSF
-- Test NSF/ROM with DPCM samples
-- Re-run unit tests.
-- Re-test S5B NSF import.
-
-4.4.0 Changelog
-===============
-* FDS multiwave support
-* DPCM options for "Trim to 16" and "Trim to 16+1"
-* Separate bass filter for FDS
-* PWM for FDS, including a fourth PWM preset
-* VGM FDS import support
-* NSF/VGM import tuning option
-* Linux support for kdialog and zenity for dialogs
-* MAYBE : Added keyboard inputs to some grid controls and to dropdown menus
-* MAYBE : Added fine-tuning for grid sliders (ctrl + drag)
-* MAYBE : Added option to input values for mixer sliders
+- Multi-expansion conflict.
+	=> No good solution, NSFPlay + MesenX both only consider E000 for S5B.
 
 Linux notes 
 =========== 
