@@ -167,10 +167,13 @@ namespace FamiStudio
 #if FAMISTUDIO_MOBILE
         protected override void OnTouchLongPress(PointerEventArgs e)
         {
-            App.ShowContextMenuAsync(new[]
+            if (captureButton == -1)
             {
-                new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(); }),
-            });
+                App.ShowContextMenuAsync(new[]
+                {
+                    new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(); }),
+                });
+            }
         }
 
         protected void EnterValue()

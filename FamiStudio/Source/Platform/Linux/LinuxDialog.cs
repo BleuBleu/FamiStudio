@@ -279,9 +279,6 @@ namespace FamiStudio
             SelectedPaths = ShowFileDialog();
             defaultPath   = dialogPath;
 
-            // If we're using flatpak, we may have converted the sandbox "/app" path
-            // to a system one. If so, convert the results so the sandbox can find them.
-            ConditionalRestoreFlatpakPaths(SelectedPaths);
             dlgInstance = null;
         }
 
@@ -450,13 +447,19 @@ namespace FamiStudio
 
             // If we're using flatpak and are within the sandboxed "/app" path, the
             // external process can't see it. We use the real system path to it instead.
-            ConditionalSetFlatpakPaths();
-
+            // NOTE: GTK can see the real "/app" path and doesn't need this.
             switch (dialogBackend)
             {
-                case DialogBackend.GTK:     return ShowGtkFileDialog();
-                case DialogBackend.Kdialog: return ShowKdialogFileDialog();
-                case DialogBackend.Zenity:  return ShowZenityFileDialog();
+                case DialogBackend.GTK:
+                    return ShowGtkFileDialog();
+
+                case DialogBackend.Kdialog:
+                    ConditionalSetFlatpakPaths();
+                    return ShowKdialogFileDialog();
+
+                case DialogBackend.Zenity:
+                    ConditionalSetFlatpakPaths();
+                    return ShowZenityFileDialog();
             }
 
             var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
@@ -738,19 +741,21 @@ namespace FamiStudio
             };
 
             var callbackHandle = GCHandle.Alloc(callback);
+
             GSignalConnectData(dialog, "response", callback, IntPtr.Zero, IntPtr.Zero, 0);
+            GSignalConnectData(dialog, "delete-event", (dlg, eventPtr, userData) =>
+            {
+                callback(dlg, GTK_RESPONSE_DELETE_EVENT, userData);
+            }, IntPtr.Zero, IntPtr.Zero, 0);
 
             while (!done)
             {
                 while (GtkEventsPending())
                     GtkMainIteration();
 
-                // In case a user exits via the window manager or X button.
+                // In case a user hits the "X" button.
                 if (!IsGtkWindow(dialog))
-                {
-                    done = true;
                     break;
-                }
 
                 FamiStudioWindow.Instance.RunEventLoop(true);
 
@@ -822,7 +827,11 @@ namespace FamiStudio
                 FamiStudioWindow.Instance.RunEventLoop(true);
             }
 
+            // If we're using flatpak, we may have converted the sandbox "/app" path
+            // to a system one. If so, convert the results so the sandbox can find them.
             var results = process.StandardOutput.ReadToEnd().Trim().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            ConditionalRestoreFlatpakPaths(results);
+            
             return (results, process.ExitCode);
         }
     }
