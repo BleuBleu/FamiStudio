@@ -4,6 +4,25 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.4.0
+
+Changes/Fixes:
+
+* FDS multiwave support (thanks Steo!)
+* DPCM options for "Trim to 16" and "Trim to 16+1" (thanks Steo!)
+* Separate bass filter for FDS (thanks Steo!)
+* PWM for FDS, including a fourth PWM preset (thanks Steo!)
+* VGM FDS import support (thanks Steo!)
+* NSF/VGM import tuning option (thanks Steo!)
+* Linux support for kdialog and zenity for dialogs (thanks Steo!)
+* Reworked C-binding and ability to combine identical channels in sound engine (thanks jroweboy!)
+
+Breaking/Behavior changes:
+
+* Default filtering options for FDS were changed slightly to better match the hardware
+
+**Note:** This is the first major release that has been driven almost entirely by community contributions. While I am focusing on another project, Steo has stepped up in a big way, conducting extensive hardware comparisons and adding numerous quality-of-life improvements. Thanks to him and everyone who contributed to this release!
+
 ## Version 4.3.4 (iOS Hotfix)
 
 Changes/Fixes:

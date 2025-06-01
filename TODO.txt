@@ -1,16 +1,3 @@
-Packaging:
-- Win
-- Android
-- Linux
-- MacOS
-- IOS
-
-Doc:
-x Write changelog
-/ Update website
-/ Prepare flatpak update.
-	=> NEED TO UPDATE ZIP HASH!!!
-
 4.5.0
 =====
 - Multi-expansion conflict.

@@ -22,6 +22,7 @@ nav:
   - "All Version History": changelog.md
   - "FamiStudio 4.2.0 Highlights": releases/420.md
   - "FamiStudio 4.3.0 Highlights": releases/430.md
+  - "FamiStudio 4.4.0 Highlights": releases/440.md
 extra_css:
     - css/extra.css    
 theme: 
