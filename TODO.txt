@@ -1,15 +1,10 @@
-Packaging:
-- Win
-- Android
-- Linux
-- MacOS
+Publish:
+- Push github
+- Update website
+- Push flatpak.
+- Google Play Store
 - IOS
-
-Doc:
-x Write changelog
-/ Update website
-/ Prepare flatpak update.
-	=> NEED TO UPDATE ZIP HASH!!!
+- Itch.io
 
 4.5.0
 =====
