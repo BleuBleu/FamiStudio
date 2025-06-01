@@ -36,7 +36,7 @@ namespace FamiStudio
             //Debug.Assert(min % increment == 0);
             //Debug.Assert(max % increment == 0);
             height = DpiScaling.ScaleForWindow(Platform.IsMobile ? 16 : 24);
-            allowMobileEdit = false;
+            allowMobileEdit = true;
             supportsDoubleClick = true;
             supportsLongPress = true;
             SetTextBoxValue();
@@ -157,6 +157,9 @@ namespace FamiStudio
                 captureDuration = 0;
                 Value += captureButton == 0 ? -inc : inc;
                 CapturePointer();
+
+                if (Platform.IsMobile)
+                    SetTickEnabled(true);
             }
             else
             {
@@ -165,26 +168,18 @@ namespace FamiStudio
         }
 
 #if FAMISTUDIO_MOBILE
-        protected override void OnTouchLongPress(PointerEventArgs e)
+        protected override void OnTouchClick(PointerEventArgs e)
         {
-            if (captureButton == -1)
+            if (allowMobileEdit && enabled && IsPointInButton(e.X, e.Y) < 0)
             {
-                App.ShowContextMenuAsync(new[]
+                Platform.EditTextAsync(prompt, Math.Round(Value).ToString(), (s) =>
                 {
-                    new ContextMenuOption("Type",      EnterValueContext,         () => { EnterValue(); }),
+                    Value = Utils.ParseFloatWithTrailingGarbage(s);
+
+                    if (container is Grid grid)
+                        grid.UpdateControlValue(this, Value);
                 });
             }
-        }
-
-        protected void EnterValue()
-        {
-            Platform.EditTextAsync(label, Math.Round(Value).ToString(), (s) =>
-            {
-                Value = Utils.ParseFloatWithTrailingGarbage(s);
-
-                if (container is Grid grid)
-                    grid.UpdateControlValue(this, Value);
-            });
         }
 #endif
 
