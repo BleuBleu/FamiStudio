@@ -1,11 +1,3 @@
-Publish:
-- Push github
-- Update website
-- Push flatpak.
-- Google Play Store
-- IOS
-- Itch.io
-
 4.5.0
 =====
 - Multi-expansion conflict.
