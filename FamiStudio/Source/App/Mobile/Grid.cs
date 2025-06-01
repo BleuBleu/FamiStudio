@@ -354,7 +354,7 @@ namespace FamiStudio
                 }
                 case ColumnType.NumericUpDown:
                 {
-                    (ctrl as NumericUpDown).Value = (int)d;
+                    (ctrl as NumericUpDown).Value = (int)(float)d;
                     break;
                 }
                 case ColumnType.DropDown:
