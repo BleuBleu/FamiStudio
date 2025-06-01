@@ -139,7 +139,7 @@ namespace FamiStudio
                     Value += (captureButton == 0 ? -inc : inc) * (lastDuration >= 1.5f && (Value % (10 * inc)) == 0 ? 10 : 1);
                 }
             }
-            else if (!HasDialogFocus)
+            else if (!HasDialogFocus || Platform.IsMobile)
             {
                 SetTickEnabled(false);
             }
@@ -158,6 +158,7 @@ namespace FamiStudio
                 Value += captureButton == 0 ? -inc : inc;
                 CapturePointer();
 
+                // Ticking will be enabled on Desktop for caret blink. Mobile needs it enabled manually.
                 if (Platform.IsMobile)
                     SetTickEnabled(true);
             }
