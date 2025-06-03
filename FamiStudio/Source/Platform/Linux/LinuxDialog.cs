@@ -88,11 +88,12 @@ namespace FamiStudio
         private const int GTK_MESSAGE_OTHER = 4;
 
         // GTK Buttons
-        private const int GTK_BUTTONS_OK = 0;
-        private const int GTK_BUTTONS_CLOSE = 1;
-        private const int GTK_BUTTONS_CANCEL = 2;
-        private const int GTK_BUTTONS_YES_NO = 3;
-        private const int GTK_BUTTONS_OK_CANCEL = 4;
+        const int GTK_BUTTONS_NONE      = 0;
+        const int GTK_BUTTONS_OK        = 1;
+        const int GTK_BUTTONS_CLOSE     = 2;
+        const int GTK_BUTTONS_CANCEL    = 3;
+        const int GTK_BUTTONS_YES_NO    = 4;
+        const int GTK_BUTTONS_OK_CANCEL = 5;
 
         // GTK Responses
         private const int GTK_RESPONSE_ACCEPT = -3;
@@ -609,9 +610,8 @@ namespace FamiStudio
             var messageType = dialogButtons == MessageBoxButtons.OK ? GTK_MESSAGE_INFO : GTK_MESSAGE_QUESTION;
             var buttonsType = dialogButtons switch
             {
-                MessageBoxButtons.OK          => GTK_BUTTONS_OK,
                 MessageBoxButtons.YesNo       => GTK_BUTTONS_YES_NO,
-                MessageBoxButtons.YesNoCancel => GTK_BUTTONS_OK_CANCEL,
+                MessageBoxButtons.YesNoCancel => GTK_BUTTONS_YES_NO,
                 _                             => GTK_BUTTONS_OK,
             };
             IntPtr dialog = GtkMessageDialogNew(
