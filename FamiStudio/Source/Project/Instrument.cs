@@ -413,8 +413,8 @@ namespace FamiStudio
 
         public void UpdateFdsWaveEnvelope()
         {
-            var wavEnv = envelopes[EnvelopeType.FdsWaveform];
-            var repEnv = envelopes[EnvelopeType.WaveformRepeat];
+            var wavEnv = FdsWaveformEnvelope;
+            var repEnv = WaveformRepeatEnvelope;
 
             wavEnv.MaxLength = 1024;
             wavEnv.ChunkLength = 64;
@@ -1341,7 +1341,8 @@ namespace FamiStudio
 
         private static void ConvertFdsToN163(Instrument src, Instrument dst)
         {
-            dst.N163WaveSize = (byte)Envelope.GetEnvelopeMaxLength(EnvelopeType.FdsWaveform);
+            dst.N163WaveCount = src.FdsWaveCount;
+            dst.N163WaveSize = 64; // FDS Wave Size.
             dst.N163WavePreset = WavePresetType.Custom;
 
             ConvertGeneric(src, dst);
@@ -1358,7 +1359,9 @@ namespace FamiStudio
 
         private static void ConvertN163ToFds(Instrument src, Instrument dst)
         {
+            dst.FdsWaveCount = (byte)Math.Min((int)src.N163WaveCount, 16);
             dst.FdsWavePreset = WavePresetType.Custom;
+
             ConvertGeneric(src, dst);
             ConvertEnvelopeValues(
                 src,
@@ -1367,8 +1370,10 @@ namespace FamiStudio
                 EnvelopeType.FdsWaveform,
                 src.N163WaveformEnvelope,
                 dst.FdsWaveformEnvelope,
-                src.N163WaveformEnvelope.ChunkLength, // Only first wave.
+                src.N163WaveformEnvelope.ChunkLength * dst.FdsWaveCount,
                 dst.FdsWaveformEnvelope.Length);
+
+            dst.WaveformRepeatEnvelope.Length = dst.FdsWaveCount;
         }
 
         private static void ConvertS5BToEPSM(Instrument src, Instrument dst)
