@@ -505,17 +505,19 @@ namespace FamiStudio
             
             var response = ShowGtkDialog(dialog);
 
-            // Conditionally append the file extension if saving.
+            // Conditionally append the file extension if saving (save file doesn't use multi).
             if (dialogMode == DialogMode.Save && response.paths?.Length > 0)
             {
                 var fileName = Path.GetFileName(response.paths[0]);
-                if (!fileName.Contains('.') && extPairs.Length >= 2)
+                var dotIdx = fileName.LastIndexOf('.');
+                var hasExt = dotIdx > 0 && dotIdx < fileName.Length - 1;
+
+                if (!hasExt && extPairs.Length >= 2)
                 {
                     var pattern = extPairs[1].Trim();
                     if (pattern.StartsWith("*.") && pattern.Length > 2)
                     {
-                        var ext = pattern.Substring(1);
-                        response.paths[0] += ext;
+                        response.paths[0] = string.Concat(response.paths[0].TrimEnd('.'), ".", pattern.AsSpan(2));
                     }
                 }
             }
