@@ -4210,13 +4210,12 @@ namespace FamiStudio
 
             delta = newValue - originalValue;
 
-            if (IsSelectionValid())
+            if (IsSelectionValid() && IsEnvelopeRepeatValueSelected(idx))
             {
-                if (GetRepeatEnvelopeSelectionMinMax(out var min, out var max))
-                {
-                    for (int i = min; i <= max; i++)
-                        rep.Values[i] = (sbyte)Utils.Clamp(rep.Values[i] + delta, minRepeat, maxRepeat);
-                }
+                GetRepeatEnvelopeSelectionMinMax(out var min, out var max);
+
+                for (int i = min; i <= max; i++)
+                    rep.Values[i] = (sbyte)Utils.Clamp(rep.Values[i] + delta, minRepeat, maxRepeat);
             }
             else
             {
