@@ -527,10 +527,10 @@ namespace FamiStudio
                     N163WaveformEnvelope.SetChunkMaxLengthUnsafe(n163WavSize, N163MaxWaveCount * n163WavSize);
                     UpdateN163WaveEnvelope(); // Safety
                     break;
-                case ExpansionType.Fds:
-                     envelopes[EnvelopeType.FdsWaveform].SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
-                     UpdateFdsWaveEnvelope(); // Safety
-                     break;
+                /*case ExpansionType.Fds:
+                    FdsWaveformEnvelope.SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
+                    UpdateFdsWaveEnvelope(); // Safety
+                    break;*/
             }
         }
 
