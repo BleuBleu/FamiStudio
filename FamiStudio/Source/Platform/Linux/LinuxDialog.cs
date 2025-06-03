@@ -718,7 +718,10 @@ namespace FamiStudio
         private (string[] paths, int exitCode) ShowGtkDialog(IntPtr dialog)
         {
             var icon = CreateGtkWindowIcon();
-            GtkWindowSetIcon(dialog, icon);
+
+            if (icon != IntPtr.Zero)
+                GtkWindowSetIcon(dialog, icon);
+
             GtkWidgetShow(dialog);
 
             // X11 can be truly modal / transient.
@@ -737,7 +740,6 @@ namespace FamiStudio
             {
                 response = responseId;
                 done = true;
-                GObjectUnref(icon);
             };
 
             var callbackHandle = GCHandle.Alloc(callback);
@@ -753,7 +755,7 @@ namespace FamiStudio
                 while (GtkEventsPending())
                     GtkMainIteration();
 
-                // In case a user hits the "X" button.
+                // In case a user hits the "X" button or ESC on the keyboard.
                 if (!IsGtkWindow(dialog))
                     break;
 
@@ -805,6 +807,12 @@ namespace FamiStudio
 
                 while (GtkEventsPending())
                     GtkMainIteration();
+            }
+
+            if (icon != IntPtr.Zero)
+            {
+                GObjectUnref(icon);
+                icon = IntPtr.Zero;
             }
 
             return (paths, response);
