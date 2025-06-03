@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using static GLFWDotNet.GLFW;
 
@@ -502,6 +504,22 @@ namespace FamiStudio
             }
             
             var response = ShowGtkDialog(dialog);
+
+            // Conditionally append the file extension if saving.
+            if (dialogMode == DialogMode.Save && response.paths?.Length > 0)
+            {
+                var fileName = Path.GetFileName(response.paths[0]);
+                if (!fileName.Contains('.') && extPairs.Length >= 2)
+                {
+                    var pattern = extPairs[1].Trim();
+                    if (pattern.StartsWith("*.") && pattern.Length > 2)
+                    {
+                        var ext = pattern.Substring(1);
+                        response.paths[0] += ext;
+                    }
+                }
+            }
+
             return response.paths;
         }
 
