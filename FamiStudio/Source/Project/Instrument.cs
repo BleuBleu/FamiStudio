@@ -527,10 +527,10 @@ namespace FamiStudio
                     N163WaveformEnvelope.SetChunkMaxLengthUnsafe(n163WavSize, N163MaxWaveCount * n163WavSize);
                     UpdateN163WaveEnvelope(); // Safety
                     break;
-                /*case ExpansionType.Fds:
+                case ExpansionType.Fds:
                     FdsWaveformEnvelope.SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
                     UpdateFdsWaveEnvelope(); // Safety
-                    break;*/
+                    break;
             }
         }
 
@@ -940,7 +940,7 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsWavPreset);
                             buffer.Serialize(ref fdsModPreset);
                             buffer.Serialize(ref fdsModSpeed);
-                            buffer.Serialize(ref fdsModDepth); 
+                            buffer.Serialize(ref fdsModDepth);
                             buffer.Serialize(ref fdsModDelay);
                             // At version 18 (FamiStudio 4.4.0), we added FDS multi-wave.
                             if (buffer.Version >= 18)
@@ -1147,19 +1147,19 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                PerformPostLoadActions();
-            }
+                if (!buffer.IsForUndoRedo)
+                {
+                    // Revert back presets to "customs" if they no longer match what the code generates.
+                    // This is in case we change the code that generates the preset.
+                    if (IsN163 && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
+                        n163WavPreset = WavePresetType.Custom;
+                    if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
+                        fdsWavPreset = WavePresetType.Custom;
+                    if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsModulation, fdsModPreset))
+                        fdsModPreset = WavePresetType.Custom;
+                }
 
-            // Revert back presets to "customs" if they no longer match what the code generates.
-            // This is in case we change the code that generates the preset.
-            if (buffer.IsReading && !buffer.IsForUndoRedo)
-            { 
-                if (IsN163 && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
-                    n163WavPreset = WavePresetType.Custom;
-                if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
-                    fdsWavPreset = WavePresetType.Custom;
-                if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsModulation, fdsModPreset))
-                    fdsModPreset = WavePresetType.Custom;
+                PerformPostLoadActions();
             }
         }
     }
