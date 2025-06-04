@@ -97,6 +97,9 @@ namespace FamiStudio
         const int GTK_BUTTONS_YES_NO    = 4;
         const int GTK_BUTTONS_OK_CANCEL = 5;
 
+        // GTK Button Icons
+        public const int GTK_ICON_SIZE_BUTTON = 1;
+
         // GTK Responses
         private const int GTK_RESPONSE_ACCEPT = -3;
         private const int GTK_RESPONSE_DELETE_EVENT = -4;
@@ -176,11 +179,17 @@ namespace FamiStudio
         [DllImport(GtkDllName, EntryPoint = "gtk_dialog_add_button", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr GtkDialogAddButton(IntPtr dialog, string button_text, int response_id);
 
+        [DllImport(GtkDllName, EntryPoint = "gtk_dialog_add_action_widget", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void GtkDialogAddActionWidget(IntPtr dialog, IntPtr widget, int responseId);
+
         [DllImport(GtkDllName, EntryPoint = "gtk_dialog_run", CallingConvention = CallingConvention.Cdecl)]
         private static extern int GtkDialogRun(IntPtr dialog);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_show", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkWidgetShow(IntPtr widget);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_widget_show_all", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void GtkWidgetShowAll(IntPtr widget);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_get_visible", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool GtkGetWidgetVisible(IntPtr widget);
@@ -193,6 +202,9 @@ namespace FamiStudio
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_destroy", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkWidgetDestroy(IntPtr widget);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_dialog_get_widget_for_response", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr GtkDialogGetWidgetForResponse(IntPtr dialog, int responseId);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_widget_get_window", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr GtkWidgetGetWindow(IntPtr widget);
@@ -215,6 +227,9 @@ namespace FamiStudio
         [DllImport(GtkDllName, EntryPoint = "gtk_window_set_icon", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkWindowSetIcon(IntPtr window, IntPtr icon);
 
+        [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_create_folders", CallingConvention = CallingConvention.Cdecl)]
+        private static extern void GtkFileChooserSetCreateFolders(IntPtr chooser, bool create);
+
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_current_folder", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool GtkFileChooserSetCurrentFolder(IntPtr chooser, string folder);
 
@@ -235,6 +250,18 @@ namespace FamiStudio
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_add_filter", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkFileChooserAddFilter(IntPtr chooser, IntPtr filter);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_button_new_with_label", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr GtkButtonNewWithLabel(string label);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_button_set_image", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void GtkButtonSetImage(IntPtr button, IntPtr image);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_button_set_always_show_image", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void GtkButtonSetAlwaysShowImage(IntPtr button, bool alwaysShow);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_image_new_from_icon_name", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr GtkImageNewFromIconName(string iconName, int size);
 
         [DllImport(GtkDllName, EntryPoint = "g_free", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GFree(IntPtr ptr);
@@ -349,12 +376,21 @@ namespace FamiStudio
                 return false;
             }
         }
+        
+        private static void AddGtkButtonWithIcon(IntPtr dialog, string text, string iconName, int response)
+        {
+            GtkDialogAddButton(dialog, text, response);
+            IntPtr button = GtkDialogGetWidgetForResponse(dialog, response);
+            IntPtr icon = GtkImageNewFromIconName(iconName, GTK_ICON_SIZE_BUTTON);
+            GtkButtonSetImage(button, icon);
+            GtkButtonSetAlwaysShowImage(button, true);
+        }
 
         private unsafe IntPtr CreateGtkWindowIcon()
         {
             var tga = TgaFile.LoadFromResource("FamiStudio.Resources.Icons.FamiStudio_32.tga");
 
-            var width  = tga.Width;
+            var width = tga.Width;
             var height = tga.Height;
             int[] data = tga.Data;
 
@@ -383,7 +419,7 @@ namespace FamiStudio
         private void ConditionalSetFlatpakPaths()
         {
             if (isRunningInFlatpak && dialogPath.StartsWith(FlatpakPrefix))
-            { 
+            {
                 try
                 {
                     if (File.Exists(FlatpakInfoPath))
@@ -395,7 +431,7 @@ namespace FamiStudio
                             if (line.StartsWith("app-path="))
                             {
                                 flatpakPath = line.Split('=', 2)[1].Trim(); // System flatpak path.
-                                dialogPath  = string.Concat(flatpakPath, dialogPath.AsSpan(FlatpakPrefix.Length));
+                                dialogPath = string.Concat(flatpakPath, dialogPath.AsSpan(FlatpakPrefix.Length));
                                 break;
                             }
                         }
@@ -484,23 +520,29 @@ namespace FamiStudio
             if (dialogMulti)
                 GtkFileChooserSetSelectMultiple(dialog, true);
 
+            if (dialogMode != DialogMode.Open)
+                GtkFileChooserSetCreateFolders(dialog, true);
+
             GtkFileChooserSetCurrentFolder(dialog, dialogPath);
 
             // Extension filters
             var extPairs = dialogExts.Split("|");
-            for (var i = 0; i < extPairs.Length; i += 2)
+            if (dialogMode != DialogMode.Folder)
             {
-                IntPtr filter = GtkFileFilterNew();
-
-                var pair = extPairs[i].Split('(');
-                GtkFileFilterSetName(filter, pair[0].Trim());
-
-                foreach (var ext in pair[1].Split(';'))
+                for (var i = 0; i < extPairs.Length; i += 2)
                 {
-                    GtkFileFilterAddPattern(filter, ext.TrimEnd(')'));
-                }
+                    IntPtr filter = GtkFileFilterNew();
 
-                GtkFileChooserAddFilter(dialog, filter);
+                    var pair = extPairs[i].Split('(');
+                    GtkFileFilterSetName(filter, pair[0].Trim());
+
+                    foreach (var ext in pair[1].Split(';'))
+                    {
+                        GtkFileFilterAddPattern(filter, ext.TrimEnd(')'));
+                    }
+
+                    GtkFileChooserAddFilter(dialog, filter);
+                }
             }
             
             var response = ShowGtkDialog(dialog);
@@ -520,36 +562,40 @@ namespace FamiStudio
         private string[] ShowKdialogFileDialog()
         {
             var args = $"--title \"{dialogTitle}\" ";
+
             var extPairs = dialogExts.Split("|");
+            var filters  = "";
 
-            Debug.Assert(extPairs.Length % 2 == 0);
-
-            var filters = "";
-            for (int i = 0; i < extPairs.Length - 1; i += 2)
+            if (dialogMode != DialogMode.Folder)
             {
-                var name = extPairs[i].Split(" (")[0]; ;
-                var pattern = extPairs[i + 1].Replace(";", " ");
-                filters += $"{name} {pattern}|";
-            }
+                Debug.Assert(extPairs.Length % 2 == 0);
 
-            filters = filters.TrimEnd('|');
+                for (int i = 0; i < extPairs.Length - 1; i += 2)
+                {
+                    var name = extPairs[i].Split(" (")[0]; ;
+                    var pattern = extPairs[i + 1].Replace(";", " ");
+                    filters += $"{name} {pattern}|";
+                }
+
+                filters = filters.TrimEnd('|');
+            }
 
             switch (dialogMode)
-            {
-                case DialogMode.Open:
-                    args += dialogMulti
-                        ? $"--getopenfilename \"{dialogPath}\" \"{filters}\" --multiple --separate-output"
-                        : $"--getopenfilename \"{dialogPath}\" \"{filters}\"";
-                    break;
+                {
+                    case DialogMode.Open:
+                        args += dialogMulti
+                            ? $"--getopenfilename \"{dialogPath}\" \"{filters}\" --multiple --separate-output"
+                            : $"--getopenfilename \"{dialogPath}\" \"{filters}\"";
+                        break;
 
-                case DialogMode.Save:
-                    args += $"--getsavefilename \"{dialogPath}\" \"{filters}\"";
-                    break;
+                    case DialogMode.Save:
+                        args += $"--getsavefilename \"{dialogPath}\" \"{filters}\"";
+                        break;
 
-                case DialogMode.Folder:
-                    args += $"--getexistingdirectory \"{dialogPath}\"";
-                    break;
-            }
+                    case DialogMode.Folder:
+                        args += $"--getexistingdirectory \"{dialogPath}\"";
+                        break;
+                }
 
             var result = ShowDialog("kdialog", args);
 
@@ -565,7 +611,7 @@ namespace FamiStudio
             var filters  = "";
             var extPairs = dialogExts.Split("|");
 
-            if (extPairs.Length > 0)
+            if (dialogMode != DialogMode.Folder)
             {
                 Debug.Assert(extPairs.Length % 2 == 0);
 
@@ -620,24 +666,25 @@ namespace FamiStudio
         private DialogResult ShowGtkMessageBoxDialog()
         {
             var messageType = dialogButtons == MessageBoxButtons.OK ? GTK_MESSAGE_INFO : GTK_MESSAGE_QUESTION;
-            var buttonsType = dialogButtons switch
-            {
-                MessageBoxButtons.YesNo       => GTK_BUTTONS_YES_NO,
-                MessageBoxButtons.YesNoCancel => GTK_BUTTONS_YES_NO,
-                _                             => GTK_BUTTONS_OK,
-            };
-            IntPtr dialog = GtkMessageDialogNew(
-                IntPtr.Zero,
-                0,
-                messageType,
-                buttonsType,
-                dialogText);
 
+            IntPtr dialog = GtkMessageDialogNew(IntPtr.Zero, 0, messageType, GTK_BUTTONS_NONE, dialogText);
             GtkWindowSetTitle(dialog, dialogTitle);
+
+            // We manually create the buttons so we can use icons.
+            if (dialogButtons == MessageBoxButtons.YesNo || dialogButtons == MessageBoxButtons.YesNoCancel)
+            {
+                AddGtkButtonWithIcon(dialog, "_Yes", "emblem-ok", GTK_RESPONSE_YES);
+                AddGtkButtonWithIcon(dialog, "_No", "window-close", GTK_RESPONSE_NO);
+            }
 
             if (dialogButtons == MessageBoxButtons.YesNoCancel)
             {
-                GtkDialogAddButton(dialog, CancelLabel, GTK_RESPONSE_CANCEL);
+                AddGtkButtonWithIcon(dialog, "_Cancel", "process-stop", GTK_RESPONSE_CANCEL);
+            }
+
+            if (dialogButtons == MessageBoxButtons.OK)
+            {
+                AddGtkButtonWithIcon(dialog, "_OK", "emblem-ok", GTK_RESPONSE_OK);
             }
 
             var response = ShowGtkDialog(dialog);
@@ -734,7 +781,7 @@ namespace FamiStudio
             if (icon != IntPtr.Zero)
                 GtkWindowSetIcon(dialog, icon);
 
-            GtkWidgetShow(dialog);
+            GtkWidgetShowAll(dialog);
 
             // X11 can be truly modal / transient.
             if (isX11)
