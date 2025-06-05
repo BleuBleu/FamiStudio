@@ -37,6 +37,7 @@ namespace FamiStudio
         private const string GobjectDllName = "libgobject-2.0.so.0";
         private const string GtkDllName = "libgtk-3.so.0";
         private const string GdkDllName = "libgdk-3.so.0";
+        private const int LC_ALL = 6;
 
         private static LinuxDialog dlgInstance;
         private static readonly DialogBackend dialogBackend = DialogBackend.None;
@@ -65,6 +66,9 @@ namespace FamiStudio
             if (isX11)
                 x11DisplayHandle = glfwGetX11Display();
 
+            // Needed for GTK to localise buttons based on the system language.
+            SetLocale(LC_ALL, "");
+
             // Try GTK first, falling back to kdialog, and finally zenity. If all options are exhausted,
             // the user is prompted to install one of the above, or disable OS dialogs in settings.
 
@@ -92,12 +96,12 @@ namespace FamiStudio
         private const int GTK_MESSAGE_OTHER = 4;
 
         // GTK Buttons
-        const int GTK_BUTTONS_NONE      = 0;
-        const int GTK_BUTTONS_OK        = 1;
-        const int GTK_BUTTONS_CLOSE     = 2;
-        const int GTK_BUTTONS_CANCEL    = 3;
-        const int GTK_BUTTONS_YES_NO    = 4;
-        const int GTK_BUTTONS_OK_CANCEL = 5;
+        private const int GTK_BUTTONS_NONE = 0;
+        private const int GTK_BUTTONS_OK = 1;
+        private const int GTK_BUTTONS_CLOSE = 2;
+        private const int GTK_BUTTONS_CANCEL = 3;
+        private const int GTK_BUTTONS_YES_NO = 4;
+        private const int GTK_BUTTONS_OK_CANCEL = 5;
 
         // GTK Button Icons
         public const int GTK_ICON_SIZE_BUTTON = 1;
@@ -291,6 +295,9 @@ namespace FamiStudio
             int rowstride,
             IntPtr destroy_fn,
             IntPtr destroy_fn_data);
+
+        [DllImport("libc", EntryPoint = "setlocale", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr SetLocale(int category, string locale);
 
         [DllImport("libX11")]
         private static extern void XSetTransientForHint(IntPtr display, IntPtr w, IntPtr parent);
@@ -515,8 +522,8 @@ namespace FamiStudio
                 dialogTitle,
                 IntPtr.Zero,
                 (int)dialogMode,
-                "_Cancel", GTK_RESPONSE_CANCEL,
-                dialogMode == DialogMode.Save ? "_Save" : "_Open", GTK_RESPONSE_ACCEPT,
+                "gtk-cancel", GTK_RESPONSE_CANCEL,
+                dialogMode == DialogMode.Save ? "gtk-save" : "gtk-open", GTK_RESPONSE_ACCEPT,
                 IntPtr.Zero);
 
             // Button icons.
@@ -530,7 +537,7 @@ namespace FamiStudio
             var openBtn = GtkDialogGetWidgetForResponse(dialog, GTK_RESPONSE_ACCEPT);
             if (openBtn != IntPtr.Zero)
             {
-                var iconName = dialogMode == DialogMode.Save ? "document-save" : "document-open";
+                var iconName = dialogMode == DialogMode.Save ? "document-save-symbolic" : "document-open-symbolic";
                 var openIcon = GtkImageNewFromIconName(iconName, GTK_ICON_SIZE_BUTTON);
                 GtkButtonSetImage(openBtn, openIcon);
                 GtkButtonSetAlwaysShowImage(openBtn, true);
@@ -692,18 +699,18 @@ namespace FamiStudio
             // We manually create the buttons so we can use icons.
             if (dialogButtons == MessageBoxButtons.YesNo || dialogButtons == MessageBoxButtons.YesNoCancel)
             {
-                AddGtkButtonWithIcon(dialog, "_Yes", "emblem-ok", GTK_RESPONSE_YES);
-                AddGtkButtonWithIcon(dialog, "_No", "window-close", GTK_RESPONSE_NO);
+                AddGtkButtonWithIcon(dialog, "gtk-yes", "emblem-ok", GTK_RESPONSE_YES);
+                AddGtkButtonWithIcon(dialog, "gtk-no", "window-close-symbolic", GTK_RESPONSE_NO);
             }
 
             if (dialogButtons == MessageBoxButtons.YesNoCancel)
             {
-                AddGtkButtonWithIcon(dialog, "_Cancel", "process-stop", GTK_RESPONSE_CANCEL);
+                AddGtkButtonWithIcon(dialog, "gtk-cancel", "process-stop", GTK_RESPONSE_CANCEL);
             }
 
             if (dialogButtons == MessageBoxButtons.OK)
             {
-                AddGtkButtonWithIcon(dialog, "_OK", "emblem-ok", GTK_RESPONSE_OK);
+                AddGtkButtonWithIcon(dialog, "gtk-ok", "emblem-ok", GTK_RESPONSE_OK);
             }
 
             var response = ShowGtkDialog(dialog);
