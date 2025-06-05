@@ -784,10 +784,15 @@ namespace FamiStudio
             GtkWidgetShowAll(dialog);
 
             // X11 can be truly modal / transient.
+            var gdkWayland = false;
             if (isX11)
             {
                 IntPtr gtkX11Window = GdkX11WindowGetXid(GtkWidgetGetWindow(dialog));
-                XSetTransientForHint(x11DisplayHandle, gtkX11Window, FamiStudioWindow.Instance.Handle);
+
+                if (gtkX11Window != IntPtr.Zero)
+                    XSetTransientForHint(x11DisplayHandle, gtkX11Window, FamiStudioWindow.Instance.Handle);
+                else
+                    gdkWayland = true;
             }
 
             var response = -1;
@@ -821,7 +826,7 @@ namespace FamiStudio
                 FamiStudioWindow.Instance.RunEventLoop(true);
 
                 // Wayland can't be truly modal like X11, but we can "simulate" it in most environments.
-                if (isWayland)
+                if (isWayland || gdkWayland)
                 {
                     SimulateTransientBehaviourWayland(dialog);
                 }
