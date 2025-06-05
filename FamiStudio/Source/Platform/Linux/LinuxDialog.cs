@@ -519,6 +519,23 @@ namespace FamiStudio
                 dialogMode == DialogMode.Save ? "_Save" : "_Open", GTK_RESPONSE_ACCEPT,
                 IntPtr.Zero);
 
+            // Button icons.
+            var cancelBtn = GtkDialogGetWidgetForResponse(dialog, GTK_RESPONSE_CANCEL);
+            if (cancelBtn != IntPtr.Zero)
+            {
+                IntPtr cancelIcon = GtkImageNewFromIconName("process-stop", GTK_ICON_SIZE_BUTTON);
+                GtkButtonSetImage(cancelBtn, cancelIcon);
+                GtkButtonSetAlwaysShowImage(cancelBtn, true);
+            }
+            var openBtn = GtkDialogGetWidgetForResponse(dialog, GTK_RESPONSE_ACCEPT);
+            if (openBtn != IntPtr.Zero)
+            {
+                var iconName = dialogMode == DialogMode.Save ? "document-save" : "document-open";
+                var openIcon = GtkImageNewFromIconName(iconName, GTK_ICON_SIZE_BUTTON);
+                GtkButtonSetImage(openBtn, openIcon);
+                GtkButtonSetAlwaysShowImage(openBtn, true);
+            }
+
             if (dialogMulti)
                 GtkFileChooserSetSelectMultiple(dialog, true);
 
