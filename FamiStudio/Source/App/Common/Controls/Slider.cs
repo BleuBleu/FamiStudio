@@ -87,14 +87,17 @@ namespace FamiStudio
 
         protected override void OnTouchClick(PointerEventArgs e)
         {
-            Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
-            e.MarkHandled();
+            if (enabled)
+            {
+                Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+                e.MarkHandled();
+            }
         }
 
 #if FAMISTUDIO_MOBILE
         protected override void OnTouchLongPress(PointerEventArgs e)
         {
-            if (container is Grid grid)
+            if (enabled && container is Grid grid)
                 grid.ShowContextMenu(this);
         }
 #endif
