@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using static GLFWDotNet.GLFW;
 
@@ -713,6 +711,12 @@ namespace FamiStudio
                 AddGtkButtonWithIcon(dialog, "gtk-ok", "emblem-ok", GTK_RESPONSE_OK);
             }
 
+            // If the window failed to initialize, we are only displaying an error.
+            if (FamiStudioWindow.Instance == null)
+            {
+                return (DialogResult)GtkDialogRun(dialog);
+            }
+
             var response = ShowGtkDialog(dialog);
 
             DialogResult result = response.exitCode switch
@@ -917,9 +921,12 @@ namespace FamiStudio
             };
 
             using var process = Process.Start(psi);
-            while (!process.HasExited)
+
+            // Skip running the loop if the window failed to initialize.
+            if (FamiStudioWindow.Instance != null)
             {
-                FamiStudioWindow.Instance.RunEventLoop(true);
+                while (!process.HasExited)
+                    FamiStudioWindow.Instance.RunEventLoop(true);
             }
 
             // If we're using flatpak, we may have converted the sandbox "/app" path
