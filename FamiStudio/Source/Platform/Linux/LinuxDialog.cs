@@ -46,6 +46,7 @@ namespace FamiStudio
         private static readonly bool isDisplayAvailable;
         private static readonly bool isX11;
         private static readonly bool isWayland;
+        private static readonly bool isGdkValid;
         private static readonly bool isRunningInFlatpak;
         private static readonly IntPtr x11DisplayHandle;
 
@@ -71,7 +72,7 @@ namespace FamiStudio
             // instability, such as intermittent crashing while initializing GTK or the first dialog.
             // We can workaround by skipping GTK if the backend doesn't match the session type.
             gdkBackend = Environment.GetEnvironmentVariable(GdkBackendEnvVar);
-            var isGdkValid = gdkBackend == null || string.Equals(gdkBackend, xdgSessionType);
+            isGdkValid = gdkBackend == null || string.Equals(gdkBackend, xdgSessionType);
 
             if (isGdkValid && TryInitializeGtk())
                 dialogBackend = DialogBackend.GTK;
@@ -785,7 +786,7 @@ namespace FamiStudio
             GtkWidgetShowAll(dialog);
 
             // X11 can be truly modal / transient.
-            if (isX11 && gdkBackend == desktopEnvironment)
+            if (isX11 && isGdkValid)
             {
                 IntPtr gtkX11Window = GdkX11WindowGetXid(GtkWidgetGetWindow(dialog));
 
