@@ -42,6 +42,7 @@ namespace FamiStudio
         private static readonly DialogBackend dialogBackend = DialogBackend.None;
         private static readonly string desktopEnvironment;
         private static readonly string xdgSessionType;
+        private static readonly string gdkBackend;
         private static readonly bool isDisplayAvailable;
         private static readonly bool isX11;
         private static readonly bool isWayland;
@@ -69,7 +70,7 @@ namespace FamiStudio
             // NOTE: GDK_BACKEND must NOT be set to x11 when using Wayland, and vice versa. This will cause 
             // instability, such as intermittent crashing while initializing GTK or the first dialog.
             // We can workaround by skipping GTK if the backend doesn't match the session type.
-            var gdkBackend = Environment.GetEnvironmentVariable(GdkBackendEnvVar);
+            gdkBackend = Environment.GetEnvironmentVariable(GdkBackendEnvVar);
             var isGdkValid = gdkBackend == null || string.Equals(gdkBackend, xdgSessionType);
 
             if (isGdkValid && TryInitializeGtk())
@@ -784,15 +785,12 @@ namespace FamiStudio
             GtkWidgetShowAll(dialog);
 
             // X11 can be truly modal / transient.
-            var gdkWayland = false;
-            if (isX11)
+            if (isX11 && gdkBackend == desktopEnvironment)
             {
                 IntPtr gtkX11Window = GdkX11WindowGetXid(GtkWidgetGetWindow(dialog));
 
                 if (gtkX11Window != IntPtr.Zero)
                     XSetTransientForHint(x11DisplayHandle, gtkX11Window, FamiStudioWindow.Instance.Handle);
-                else
-                    gdkWayland = true;
             }
 
             var response = -1;
@@ -826,7 +824,7 @@ namespace FamiStudio
                 FamiStudioWindow.Instance.RunEventLoop(true);
 
                 // Wayland can't be truly modal like X11, but we can "simulate" it in most environments.
-                if (isWayland || gdkWayland)
+                if (isWayland || gdkBackend != desktopEnvironment)
                 {
                     SimulateTransientBehaviourWayland(dialog);
                 }
