@@ -712,14 +712,11 @@ namespace FamiStudio
             }
 
             // If the window failed to initialize, we are only displaying an error.
-            if (FamiStudioWindow.Instance == null)
-            {
-                return (DialogResult)GtkDialogRun(dialog);
-            }
+            var response = FamiStudioWindow.Instance != null
+                ? ShowGtkDialog(dialog).exitCode
+                : GtkDialogRun(dialog);
 
-            var response = ShowGtkDialog(dialog);
-
-            DialogResult result = response.exitCode switch
+            DialogResult result = response switch
             {
                 GTK_RESPONSE_DELETE_EVENT => DialogResult.Cancel,
                 GTK_RESPONSE_OK           => DialogResult.OK,
