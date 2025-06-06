@@ -850,7 +850,7 @@ namespace FamiStudio
                 FamiStudioWindow.Instance.RunEventLoop(true);
 
                 // Wayland can't be truly modal like X11, but we can "simulate" it in most environments.
-                if (isWayland || gdkBackend != desktopEnvironment)
+                if (isWayland || gdkBackend != xdgSessionType)
                 {
                     SimulateTransientBehaviourWayland(dialog);
                 }
