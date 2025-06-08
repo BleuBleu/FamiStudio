@@ -915,6 +915,7 @@ famistudio_epsm_chn_env_octave:    .res FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
 .endif
 .if FAMISTUDIO_EXP_FDS
 famistudio_chn_fds_instrument:    .res 1
+famistudio_fds_mod_envelope:      .res 2
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_instrument:   .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -2356,13 +2357,13 @@ famistudio_update_fds_channel_sound:
 @check_mod_delay:
     lda famistudio_fds_mod_delay_counter
     beq @zero_delay
-    dec famistudio_fds_mod_delay_counter
     lda #0
     sta FAMISTUDIO_FDS_MOD_LO
     sta FAMISTUDIO_FDS_SWEEP_BIAS
     lda #$80
     sta FAMISTUDIO_FDS_MOD_HI
     sta FAMISTUDIO_FDS_SWEEP_ENV
+    dec famistudio_fds_mod_delay_counter
     bne @compute_volume
 
 @zero_delay:
@@ -5440,13 +5441,6 @@ famistudio_set_fds_instrument:
     sta famistudio_env_addr_hi,x
 
     @write_fds_mod:
-        ; Setup for modulation
-        lda #$80
-        sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
-        sta FAMISTUDIO_FDS_SWEEP_ENV
-        lda #0
-        sta FAMISTUDIO_FDS_SWEEP_BIAS
-
         ; FDS Modulation
         iny
         lda (@ptr),y ; Read depth / master volume, shift twice for depth and store for later
@@ -5458,28 +5452,50 @@ famistudio_set_fds_instrument:
         iny ; Skip to envelope
         iny
         iny
-        lda (@ptr),y
-        sta @wave_ptr+0
-        iny
-        lda (@ptr),y
-        sta @wave_ptr+1
-        iny
-        tya ; Store y and restore after loop
-        tax
 
-        ldy #0
-        @mod_loop:
-            lda (@wave_ptr),y
-            sta FAMISTUDIO_FDS_MOD_TABLE
+        ; Compare mod envelope pointer, only write the mod table if it has changed
+        lda (@ptr),y
+        cmp famistudio_fds_mod_envelope+0
+        bne @write_mod_table
+        iny
+        lda (@ptr),y
+        cmp famistudio_fds_mod_envelope+1
+        beq @load_mod_param ; Skip writing the mod table
+        dey
+        lda (@ptr),y
+
+        @write_mod_table:
+            ; Store new pointer
+            sta @wave_ptr+0
+            sta famistudio_fds_mod_envelope+0
             iny
-            cpy #32
-            bne @mod_loop
+            lda (@ptr),y
+            sta @wave_ptr+1
+            sta famistudio_fds_mod_envelope+1
 
-        txa
-        tay
+            ; Setup for modulation
+            lda #$80
+            sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
+            sta FAMISTUDIO_FDS_SWEEP_ENV
+            lda #0
+            sta FAMISTUDIO_FDS_SWEEP_BIAS
+
+            tya ; Store y and restore after loop
+            tax
+
+            ldy #0
+            @mod_loop:
+                lda (@wave_ptr),y
+                sta FAMISTUDIO_FDS_MOD_TABLE
+                iny
+                cpy #32
+                bne @mod_loop
+
+            txa
+            tay
 
     @load_mod_param:
-
+        iny
         .if FAMISTUDIO_USE_FDS_AUTOMOD
             lda (@ptr),y
             bpl @check_mod_speed ; Skip auto mod if bit 7 is clear

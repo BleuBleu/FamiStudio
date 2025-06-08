@@ -5,12 +5,13 @@ namespace FamiStudio
 {
     class ChannelStateFds : ChannelState
     {
-        private byte   modDelayCounter;
-        private ushort modDepth;
-        private ushort modSpeed;
-        private int    prevPeriodHi;
-        private int    waveIndex = -1;
-        private int    masterVolume;
+        private byte    modDelayCounter;
+        private ushort  modDepth;
+        private ushort  modSpeed;
+        private int     prevPeriodHi;
+        private int     waveIndex = -1;
+        private int     masterVolume;
+        private sbyte[] prevModTable = new sbyte[32];
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx, int tuning, bool pal) : base(player, apuIdx, channelIdx, tuning, pal)
         {
@@ -32,12 +33,24 @@ namespace FamiStudio
                     waveIndex = -1; // Force reload on instrument change.
                     masterVolume = instrument.FdsMasterVolume;
                     ConditionalLoadWave();
-                    
-                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
-                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
 
-                    for (int i = 0; i < 0x20; ++i)
-                        WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff, 16); // 16 cycles to mimic ASM loop.
+                    // Only write the modulation table if the mod envelope has actually changed. 
+                    // ASM does this using a pointer, since identical envelopes are merged.
+                    for (var i = 0; i < mod.Length; i++)
+                    {
+                        if (mod[i] != prevModTable[i])
+                        {
+                            WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                            WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
+
+                            for (int j = 0; j < 0x20; ++j)
+                                WriteRegister(NesApu.FDS_MOD_TABLE, mod[j] & 0xff, 16); // 16 cycles to mimic ASM loop.
+
+                            break;
+                        }
+                    }
+
+                    prevModTable = mod;
                 }
             }
         }
