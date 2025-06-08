@@ -913,7 +913,6 @@ famistudio_epsm_chn_env_octave:    .res FAMISTUDIO_EXP_EPSM_SSG_CHN_CNT
 .endif
 .if FAMISTUDIO_EXP_FDS
 famistudio_chn_fds_instrument:    .res 1
-famistudio_fds_mod_envelope:      .res 2
 .endif
 .if FAMISTUDIO_EXP_N163
 famistudio_chn_n163_instrument:   .res FAMISTUDIO_EXP_N163_CHN_CNT
@@ -966,6 +965,7 @@ famistudio_mmc5_pulse2_prev:      .res 1
 .endif
 
 .if FAMISTUDIO_EXP_FDS
+famistudio_fds_mod_envelope:      .res 2
 famistudio_fds_mod_speed:         .res 2
 famistudio_fds_mod_depth:         .res 1
 famistudio_fds_mod_delay:         .res 1
@@ -1718,6 +1718,8 @@ famistudio_music_play:
 
 .if FAMISTUDIO_EXP_FDS
     lda #0
+    sta famistudio_fds_mod_envelope+0
+    sta famistudio_fds_mod_envelope+1
     sta famistudio_fds_mod_speed+0
     sta famistudio_fds_mod_speed+1
     sta famistudio_fds_mod_depth
