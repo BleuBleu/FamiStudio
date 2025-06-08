@@ -5452,16 +5452,16 @@ famistudio_set_fds_instrument:
     lda [*.ptr],y
     sta famistudio_env_addr_hi,x
 
+    ; FDS Modulation
     .famistudio_set_fds_instrument_write_fds_mod:
-        ; FDS Modulation
         iny
         lda [*.ptr],y ; Read depth / master volume, shift twice for depth and store for later
         lsr
         lsr
         sta *.tmp_mod_depth
 
-        ; Mod envelope
-        iny ; Skip to envelope
+        ; Skip to mod envelope
+        iny
         iny
         iny
 
@@ -5477,7 +5477,7 @@ famistudio_set_fds_instrument:
         lda [*.ptr],y
 
         .famistudio_set_fds_instrument_write_mod_table:
-            ; Store new pointer
+            ; Store new envelope pointer
             sta *.wave_ptr+0
             sta famistudio_fds_mod_envelope+0
             iny
@@ -5485,24 +5485,20 @@ famistudio_set_fds_instrument:
             sta *.wave_ptr+1
             sta famistudio_fds_mod_envelope+1
 
-            ; Setup for modulation
+            ; Reset and write modulation
+            tya ; Store y in x and restore after loop
+            tax
             lda #0x80
             sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
             sta FAMISTUDIO_FDS_SWEEP_ENV
-            lda #0
-            sta FAMISTUDIO_FDS_SWEEP_BIAS
-            
-            tya ; Store y and restore after loop
-            tax
-
             ldy #0
+            sty FAMISTUDIO_FDS_SWEEP_BIAS
             .famistudio_set_fds_instrument_mod_loop:
                 lda [*.wave_ptr],y
                 sta FAMISTUDIO_FDS_MOD_TABLE
                 iny
                 cpy #32
                 bne .famistudio_set_fds_instrument_mod_loop
-
             txa
             tay
 
