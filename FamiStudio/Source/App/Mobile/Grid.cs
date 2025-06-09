@@ -313,7 +313,7 @@ namespace FamiStudio
                 var name  = GetControlLabel(sender) ?? string.Empty;
                 var val   = Math.Round(slider.Value * scale, 2);
 
-                Platform.EditTextAsync(name, val.ToString("0.#"), (s) =>
+                Platform.EditTextAsync(name, val.ToString("0.#", CultureInfo.InvariantCulture), (s) =>
                 {
                     slider.Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
                     UpdateControlValue(this, (int)slider.Value);
