@@ -237,6 +237,9 @@ namespace FamiStudio
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_current_folder", CallingConvention = CallingConvention.Cdecl)]
         private static extern bool GtkFileChooserSetCurrentFolder(IntPtr chooser, string folder);
 
+        [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_get_filename", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr GtkFileChooserGetFilename(IntPtr dialog);
+
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_get_filenames", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr GtkFileChooserGetFilenames(IntPtr dialog);
 
@@ -553,14 +556,6 @@ namespace FamiStudio
             if (dialogMulti)
                 GtkFileChooserSetSelectMultiple(dialog, true);
 
-            if (dialogMode != DialogMode.Open)
-            {
-                GtkFileChooserSetCreateFolders(dialog, true);
-
-                if (dialogMode == DialogMode.Save)
-                    GtkFileChooserSetDoOverwriteConfirmation(dialog, true);
-            }
-
             GtkFileChooserSetCurrentFolder(dialog, dialogPath);
 
             // Extension filters
@@ -584,8 +579,19 @@ namespace FamiStudio
             }
 
             var extension = extPairs[1].Trim().Substring(1);
-            var response = ShowGtkDialog(dialog, extension);
 
+            if (dialogMode != DialogMode.Open)
+            {
+                GtkFileChooserSetCreateFolders(dialog, true);
+
+                if (dialogMode == DialogMode.Save)
+                {
+                    GtkFileChooserSetDoOverwriteConfirmation(dialog, true);
+                    GtkFileChooserSetCurrentName(dialog, extension);
+                }
+            }
+
+            var response = ShowGtkDialog(dialog, extension);
             return response.paths;
         }
 
@@ -611,21 +617,21 @@ namespace FamiStudio
             }
 
             switch (dialogMode)
-                {
-                    case DialogMode.Open:
-                        args += dialogMulti
-                            ? $"--getopenfilename \"{dialogPath}\" \"{filters}\" --multiple --separate-output"
-                            : $"--getopenfilename \"{dialogPath}\" \"{filters}\"";
-                        break;
+            {
+                case DialogMode.Open:
+                    args += dialogMulti
+                        ? $"--getopenfilename \"{dialogPath}\" \"{filters}\" --multiple --separate-output"
+                        : $"--getopenfilename \"{dialogPath}\" \"{filters}\"";
+                    break;
 
-                    case DialogMode.Save:
-                        args += $"--getsavefilename \"{dialogPath}\" \"{filters}\"";
-                        break;
+                case DialogMode.Save:
+                    args += $"--getsavefilename \"{dialogPath}\" \"{filters}\"";
+                    break;
 
-                    case DialogMode.Folder:
-                        args += $"--getexistingdirectory \"{dialogPath}\"";
-                        break;
-                }
+                case DialogMode.Folder:
+                    args += $"--getexistingdirectory \"{dialogPath}\"";
+                    break;
+            }
 
             var result = ShowDialog("kdialog", args);
 
@@ -834,21 +840,22 @@ namespace FamiStudio
             {
                 if (responseId == GTK_RESPONSE_ACCEPT && dialogMode == DialogMode.Save)
                 {
-                    IntPtr list = GtkFileChooserGetFilenames(dlg);
-                    if (list != IntPtr.Zero)
+                    IntPtr filenamePtr = GtkFileChooserGetFilename(dlg);
+                    if (filenamePtr != IntPtr.Zero)
                     {
-                        IntPtr firstPtr = Marshal.ReadIntPtr(list);
-                        var path = Marshal.PtrToStringUTF8(firstPtr);
+                        var path = Marshal.PtrToStringUTF8(filenamePtr);
 
                         if (!string.IsNullOrEmpty(ext) && !path.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
                         {
                             var newName = Path.GetFileName(path).TrimEnd('.') + ext;
                             GtkFileChooserSetCurrentName(dlg, newName);
+                            GFree(filenamePtr);
+                            return;
                         }
 
-                        paths = new string[] { path };
+                        paths = new[] { path };
                         dialogPath = Path.GetDirectoryName(path);
-                        GSlistFreeFull(list, GFree);
+                        GFree(filenamePtr);
                     }
                 }
 
