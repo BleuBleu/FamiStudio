@@ -5231,6 +5231,7 @@ famistudio_update_fds_wave:
 
     @ptr        = famistudio_ptr1
     @wave_ptr   = famistudio_ptr0
+    @tmp_enable = famistudio_r3
 
     ; See if the wave index has changed.
     lda famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF
@@ -5249,6 +5250,8 @@ famistudio_update_fds_wave:
     lda (@ptr),y
     and #3 ; Bits 0 and 1 are master volume
     tax    ; Store master volume to x
+    ora #$80
+    sta @tmp_enable ; Store maaster volume with write enable
     iny
     
     ; Load the wave table pointer.
@@ -5271,8 +5274,7 @@ famistudio_update_fds_wave:
     ; FDS Waveform
     ldy #63
     @wave_loop:
-        txa ; Get master volume
-        ora #$80
+        lda @tmp_enable
         sta FAMISTUDIO_FDS_VOL ; Enable RAM write.
         lda (@ptr),y 
         sta FAMISTUDIO_FDS_WAV_START,y ; Write 2 samples between each write toggle (saves ~500 CPU cycles, sounds identical)
