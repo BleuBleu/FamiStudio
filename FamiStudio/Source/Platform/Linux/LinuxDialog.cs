@@ -243,6 +243,9 @@ namespace FamiStudio
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_select_multiple", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkFileChooserSetSelectMultiple(IntPtr dialog, bool select_multiple);
 
+        [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_do_overwrite_confirmation", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void GtkFileChooserSetDoOverwriteConfirmation(IntPtr chooser, bool setting);
+
         [DllImport(GtkDllName, EntryPoint = "gtk_file_filter_new", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr GtkFileFilterNew();
 
@@ -254,6 +257,12 @@ namespace FamiStudio
 
         [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_add_filter", CallingConvention = CallingConvention.Cdecl)]
         private static extern void GtkFileChooserAddFilter(IntPtr chooser, IntPtr filter);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_filename", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void GtkFileChooserSetFileName(IntPtr dialog, string name);
+
+        [DllImport(GtkDllName, EntryPoint = "gtk_file_chooser_set_current_name", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void GtkFileChooserSetCurrentName(IntPtr dialog, string name);
 
         [DllImport(GtkDllName, EntryPoint = "gtk_button_new_with_label", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr GtkButtonNewWithLabel(string label);
@@ -545,7 +554,12 @@ namespace FamiStudio
                 GtkFileChooserSetSelectMultiple(dialog, true);
 
             if (dialogMode != DialogMode.Open)
+            {
                 GtkFileChooserSetCreateFolders(dialog, true);
+
+                if (dialogMode == DialogMode.Save)
+                    GtkFileChooserSetDoOverwriteConfirmation(dialog, true);
+            }
 
             GtkFileChooserSetCurrentFolder(dialog, dialogPath);
 
@@ -568,17 +582,9 @@ namespace FamiStudio
                     GtkFileChooserAddFilter(dialog, filter);
                 }
             }
-            
-            var response = ShowGtkDialog(dialog);
 
-            // Conditionally append the file extension if saving (save file doesn't use multi).
-            if (dialogMode == DialogMode.Save && response.paths?.Length > 0 && extPairs.Length >= 2)
-            {
-                var ext = extPairs[1].Trim().Substring(1);
-
-                if (!response.paths[0].EndsWith(ext))
-                    response.paths[0] = string.Concat(response.paths[0].TrimEnd('.'), ext);
-            }
+            var extension = extPairs[1].Trim().Substring(1);
+            var response = ShowGtkDialog(dialog, extension);
 
             return response.paths;
         }
@@ -801,7 +807,7 @@ namespace FamiStudio
             return DialogResult.None;
         }
 
-        private (string[] paths, int exitCode) ShowGtkDialog(IntPtr dialog)
+        private (string[] paths, int exitCode) ShowGtkDialog(IntPtr dialog, string ext = "")
         {
             var icon = CreateGtkWindowIcon();
 
@@ -826,6 +832,26 @@ namespace FamiStudio
             // Use a callback and custom loop to keep the window responsive.
             GtkResponseCallback callback = (dlg, responseId, userData) =>
             {
+                if (responseId == GTK_RESPONSE_ACCEPT && dialogMode == DialogMode.Save)
+                {
+                    IntPtr list = GtkFileChooserGetFilenames(dlg);
+                    if (list != IntPtr.Zero)
+                    {
+                        IntPtr firstPtr = Marshal.ReadIntPtr(list);
+                        var path = Marshal.PtrToStringUTF8(firstPtr);
+
+                        if (!string.IsNullOrEmpty(ext) && !path.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                        {
+                            var newName = Path.GetFileName(path).TrimEnd('.') + ext;
+                            GtkFileChooserSetCurrentName(dlg, newName);
+                        }
+
+                        paths = new string[] { path };
+                        dialogPath = Path.GetDirectoryName(path);
+                        GSlistFreeFull(list, GFree);
+                    }
+                }
+
                 response = responseId;
                 done = true;
             };
