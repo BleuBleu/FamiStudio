@@ -64,17 +64,30 @@ namespace FamiStudio
                 var wav = envelopes[EnvelopeType.FdsWaveform]?.GetChunk(newWaveIndex);
                 if (wav != null)
                 {
+                    // We toggle write periodically to achieve smooth waveform transitioning. 
+                    // Multiple writes save CPU cycles in ASM. Higher values will introduce 
+                    // choppiness, while lower ones will use more CPU. 
+                    var writesPerToggle = 4; // This value be kept consistent with the sound engine.
+
+                    SkipCycles(2); // LDY.
+                    var i = 0x3F;
+
                     // We read the table from end to start to mimic the ASM code (saves cycles).
-                    for (int i = 0x3F; i >= 0; i -= 2)
+                    while (i >= 0)
                     {
-                        // Toggle write every 2 iterations. ASM does this for smooth cycling between
-                        // waveforms. We write twice between write toggling and iterate half the times 
-                        // to save CPU cycles. 41 skipped cycles to mimic ASM loop (40 if BPL is skipped).
-                        SkipCycles(4); // 4 cycles to mimic TXA and ORA before enabling write
+                        // Toggle write periodically. ASM does this for smooth cycling 
+                        // between waveforms. Multiple writes save CPU cycles in ASM.
+                        SkipCycles(3); // Read volume.
                         WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 4);
-                        WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, 13);         // +7 for LDA and DEY
-                        WriteRegister(NesApu.FDS_WAV_START + i - 1, wav[i - 1] & 0xff, 11); // +5 for LDA
-                        WriteRegister(NesApu.FDS_VOL, masterVolume, i > 1 ? 9 : 8);         // +5 for DEY and BPL (4 on BPL exit)
+
+                        var writes = Math.Min(writesPerToggle, i + 1);
+                        for (int j = 0; j < writes; j++)
+                        {
+                            WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, j + 1 == writes ? 10 : 12); // +7 for LDA and DEY (+5 on last iteration)
+                            i--;
+                        }
+
+                        WriteRegister(NesApu.FDS_VOL, masterVolume, i > 0 ? 9 : 8); // +5 for DEY and BPL (4 on BPL exit)
                     }
 
                     waveIndex = newWaveIndex;
