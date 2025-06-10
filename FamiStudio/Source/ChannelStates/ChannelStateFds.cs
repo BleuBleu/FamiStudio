@@ -67,7 +67,7 @@ namespace FamiStudio
                     // We toggle write periodically to achieve smooth waveform transitioning. 
                     // Multiple writes save CPU cycles in ASM. Higher values will introduce 
                     // choppiness, while lower ones will use more CPU. 
-                    var writesPerToggle = 4; // This value should be consistent with the sound engine.
+                    var writesPerToggle = 4; // This value be kept consistent with the sound engine.
 
                     SkipCycles(2); // LDY.
                     var i = 0x3F;
@@ -75,6 +75,8 @@ namespace FamiStudio
                     // We read the table from end to start to mimic the ASM code (saves cycles).
                     while (i >= 0)
                     {
+                        // Toggle write periodically. ASM does this for smooth cycling 
+                        // between waveforms. Multiple writes save CPU cycles in ASM.
                         SkipCycles(3); // Read volume.
                         WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 4);
 
