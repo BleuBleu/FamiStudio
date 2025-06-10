@@ -85,7 +85,7 @@ namespace FamiStudio
                             i--;
                         }
 
-                        WriteRegister(NesApu.FDS_VOL, masterVolume, i > 0 ? 9 : 8); // +5 for DEY and BPL (4 on BPL exit)
+                        WriteRegister(NesApu.FDS_VOL, masterVolume, i >= 0 ? 9 : 8); // +5 for DEY and BPL (4 on BPL exit)
                     }
 
                     waveIndex = newWaveIndex;
