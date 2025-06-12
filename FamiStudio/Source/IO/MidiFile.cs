@@ -1090,6 +1090,11 @@ namespace FamiStudio
                         }
                     }
 
+                    // On the off chance there is a very short gap between two notes, and all 3 events 
+                    // occur in a single frame. The above hack might miss a note. Workaround.
+                    if (quantizedNoteIndex < prevIndex || patternIdx < prevPattern)
+                        quantizedNoteIndex = (quantizedNoteIndex + 1) % patternLength;
+
                     if (patternIdx == patternInfos.Count - 1 && quantizedNoteIndex >= patternLength)
                         break;
 
