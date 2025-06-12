@@ -853,6 +853,9 @@ namespace FamiStudio
             {
                 var prevRatio = expandRatio;
 
+                if (window.IsAsyncDialogInProgress)
+                    closing = true;
+
                 ticking = true;
                 if (expanding)
                 {
