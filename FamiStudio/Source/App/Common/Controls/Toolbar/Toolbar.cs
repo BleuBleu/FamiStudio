@@ -853,9 +853,6 @@ namespace FamiStudio
             {
                 var prevRatio = expandRatio;
 
-                if (window.IsAsyncDialogInProgress)
-                    closing = true;
-
                 ticking = true;
                 if (expanding)
                 {
@@ -868,7 +865,7 @@ namespace FamiStudio
                     MarkDirty();
                     ParentTopContainer.UpdateLayout();
                 }
-                else if (closing)
+                else if (closing || window.IsAsyncDialogInProgress)
                 {
                     delta *= 10.0f;
                     expandRatio = Math.Max(0.0f, expandRatio - delta);
