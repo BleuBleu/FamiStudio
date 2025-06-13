@@ -80,7 +80,7 @@ namespace FamiStudio
 
             if (changing)
             {
-                Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+                Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
                 e.MarkHandled();
             }
         }
@@ -89,7 +89,7 @@ namespace FamiStudio
         {
             if (enabled)
             {
-                Value = (int)Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
+                Value = Utils.Lerp(min, max, Utils.Saturate(e.X / (float)(width)));
                 e.MarkHandled();
             }
         }
