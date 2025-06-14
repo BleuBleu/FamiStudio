@@ -607,7 +607,9 @@ namespace FamiStudio
         public void Serialize(ref Arpeggio arpeggio)
         {
             int arpeggioId = arpeggio == null ? -1 : arpeggio.Id;
-            Serialize(ref arpeggioId, true);
+
+            // We pass false here for a similar reason to the instrument serialization above, but for arpeggios.
+            Serialize(ref arpeggioId, false);
         }
 
         public void Serialize(ref Pattern pattern, Channel channel)

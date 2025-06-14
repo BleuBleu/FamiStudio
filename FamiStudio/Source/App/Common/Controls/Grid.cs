@@ -923,10 +923,9 @@ namespace FamiStudio
                             {
                                 if (cellEnabled)
                                 {
-                                    var f = float.Parse(val.ToString(), CultureInfo.InvariantCulture);
                                     GetCellSliderData(k, j, out var sliderMin, out var sliderMax, out var fmt);
-                                    c.FillRectangle(0, 0, (int)Math.Round((f - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
-                                    c.DrawText(fmt(f), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
+                                    c.FillRectangle(0, 0, (int)Math.Round(((int)val - sliderMin) / (double)(sliderMax - sliderMin) * colWidth), rowHeight, Theme.DarkGreyColor6);
+                                    c.DrawText(fmt((int)val), font, 0, 0, localForeColor, TextFlags.MiddleCenter, colWidth, rowHeight);
                                 }
                                 else
                                 {
