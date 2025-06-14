@@ -484,6 +484,9 @@ namespace FamiStudio
         static public void LowPassFilter(ref short[] wave, float cutoff, float transition, int maxFilterSize = int.MaxValue)
         {
             var n = Math.Min(maxFilterSize, (int)Math.Ceiling(4.6f / transition));
+            if (n <= 1)
+                return;
+
             if ((n & 1) == 0) n++;
             var filter = new float[n];
             var sum = 0.0f;
