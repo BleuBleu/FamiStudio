@@ -278,7 +278,7 @@ namespace FamiStudio
             }
 
             // HACK: If you expand the toolbar, you can actually click on the quick access bar.
-            if (toolbar.Visible && toolbar.IsExpanded && c != toolbar)
+            if (toolbar.Visible && toolbar.IsExpanded && !TopDialogIsContextMenu() && c != toolbar)
             {
                 return false;
             }

@@ -865,7 +865,7 @@ namespace FamiStudio
                     MarkDirty();
                     ParentTopContainer.UpdateLayout();
                 }
-                else if (closing || window.IsAsyncDialogInProgress)
+                else if (closing)
                 {
                     delta *= 10.0f;
                     expandRatio = Math.Max(0.0f, expandRatio - delta);
