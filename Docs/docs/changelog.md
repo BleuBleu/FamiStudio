@@ -4,6 +4,21 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.4.1
+
+Changes/Fixes:
+
+* Fixed crash when using blank FDS instrument
+* Fixed N163 <-> FDS instrument conversion
+* Fixed an FDS issue that affected certain older imports (Gyruss had sine waves on some instruments)
+* Fixes and improved FDS modulation (sound engine and FS emulation)
+* Fixed toolbar issue on mobile involving context menus being unresponsive
+* Fixed issue with merging identical patterns where an incorrect arpeggio would be used
+* Fixed issue with very low "Resample Period" on FDS or N163 using blank waveforms
+* Multiple Linux and GTK dialog issues
+* Multiple small widgets implements/fixes
+* Localization updates
+
 ## Version 4.4.0
 
 Changes/Fixes:
