@@ -1,16 +1,3 @@
-4.4.1
-=====
-4.4.1
-- Bump sound engine + ROM + demo version
-- Recompile NSF, ROM + demo rom.
-- Re-run sound engine unit tests to be safe.
-
-Review:
-- `Instrument.cs` : This should be fine I think.
-- `Toolbar.cs` : Id prefer we explicitely call `StartClosing` than relying on `window.IsAsyncDialogInProgress`
-- `MidiFile.cs` : We added a workaround, on top of a hack. That smells bad.
-
-
 4.5.0
 =====
 - Multi-expansion conflict.
