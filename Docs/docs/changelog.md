@@ -16,7 +16,7 @@ Changes/Fixes:
 * Fixed issue with merging identical patterns where an incorrect arpeggio would be used
 * Fixed issue with very low "Resample Period" on FDS or N163 using blank waveforms
 * Multiple Linux and GTK dialog issues
-* Multiple small widgets implements/fixes
+* Multiple small widgets improvements/fixes
 * Localization updates
 
 ## Version 4.4.0
