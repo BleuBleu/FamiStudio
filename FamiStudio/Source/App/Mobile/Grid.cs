@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 
 namespace FamiStudio
@@ -311,9 +312,9 @@ namespace FamiStudio
                 // Scale value based on the format, then rescale and store as int.
                 var scale = Utils.ParseFloatWithTrailingGarbage(slider.Format(1));
                 var name  = GetControlLabel(sender) ?? string.Empty;
-                var val   = Math.Round(slider.Value * scale, 2);
+                var val   = Math.Round((int)slider.Value * scale, 2);
 
-                Platform.EditTextAsync(name, val.ToString("0.#"), (s) =>
+                Platform.EditTextAsync(name, val.ToString("0.#", CultureInfo.InvariantCulture), (s) =>
                 {
                     slider.Value = Math.Round(Utils.ParseFloatWithTrailingGarbage(s) / scale);
                     UpdateControlValue(this, (int)slider.Value);
@@ -354,7 +355,7 @@ namespace FamiStudio
                 }
                 case ColumnType.NumericUpDown:
                 {
-                    (ctrl as NumericUpDown).Value = (int)d;
+                    (ctrl as NumericUpDown).Value = (int)(float)d;
                     break;
                 }
                 case ColumnType.DropDown:

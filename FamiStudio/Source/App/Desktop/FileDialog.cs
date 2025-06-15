@@ -86,8 +86,6 @@ namespace FamiStudio
         // Buttons
         LocalizedString NameLabel;
         LocalizedString DateLabel;
-        LocalizedString YesLabel;
-        LocalizedString NoLabel;
         LocalizedString AcceptLabel;
         LocalizedString CancelLabel;
         LocalizedString AscendLabel;
@@ -172,13 +170,13 @@ namespace FamiStudio
             dropDownType.Enabled = mode != Mode.Folder;
             y += textFile.Height + margin;
 
-            buttonYes = new Button(YesLabel, null);
+            buttonYes = new Button("Yes", null);
             buttonYes.Click += ButtonYes_Click;
             buttonYes.Resize(buttonSize, buttonSize);
             buttonYes.Move(Width - buttonSize * 2 - margin * 2, y);
             buttonYes.ToolTip = AcceptLabel;
 
-            buttonNo = new Button(NoLabel, null); 
+            buttonNo = new Button("No", null); 
             buttonNo.Click += ButtonNo_Click;
             buttonNo.Resize(buttonSize, buttonSize);
             buttonNo.Move(Width - buttonSize - margin, y);

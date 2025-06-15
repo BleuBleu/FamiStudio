@@ -413,8 +413,8 @@ namespace FamiStudio
 
         public void UpdateFdsWaveEnvelope()
         {
-            var wavEnv = envelopes[EnvelopeType.FdsWaveform];
-            var repEnv = envelopes[EnvelopeType.WaveformRepeat];
+            var wavEnv = FdsWaveformEnvelope;
+            var repEnv = WaveformRepeatEnvelope;
 
             wavEnv.MaxLength = 1024;
             wavEnv.ChunkLength = 64;
@@ -528,9 +528,9 @@ namespace FamiStudio
                     UpdateN163WaveEnvelope(); // Safety
                     break;
                 case ExpansionType.Fds:
-                     envelopes[EnvelopeType.FdsWaveform].SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
-                     UpdateFdsWaveEnvelope(); // Safety
-                     break;
+                    FdsWaveformEnvelope.SetChunkMaxLengthUnsafe(64, FdsMaxWaveCount * 64);
+                    UpdateFdsWaveEnvelope(); // Safety
+                    break;
             }
         }
 
@@ -940,7 +940,7 @@ namespace FamiStudio
                             buffer.Serialize(ref fdsWavPreset);
                             buffer.Serialize(ref fdsModPreset);
                             buffer.Serialize(ref fdsModSpeed);
-                            buffer.Serialize(ref fdsModDepth); 
+                            buffer.Serialize(ref fdsModDepth);
                             buffer.Serialize(ref fdsModDelay);
                             // At version 18 (FamiStudio 4.4.0), we added FDS multi-wave.
                             if (buffer.Version >= 18)
@@ -1147,19 +1147,19 @@ namespace FamiStudio
 
             if (buffer.IsReading)
             {
-                PerformPostLoadActions();
-            }
+                if (!buffer.IsForUndoRedo)
+                {
+                    // Revert back presets to "customs" if they no longer match what the code generates.
+                    // This is in case we change the code that generates the preset.
+                    if (IsN163 && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
+                        n163WavPreset = WavePresetType.Custom;
+                    if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
+                        fdsWavPreset = WavePresetType.Custom;
+                    if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsModulation, fdsModPreset))
+                        fdsModPreset = WavePresetType.Custom;
+                }
 
-            // Revert back presets to "customs" if they no longer match what the code generates.
-            // This is in case we change the code that generates the preset.
-            if (buffer.IsReading && !buffer.IsForUndoRedo)
-            { 
-                if (IsN163 && n163WavPreset != WavePresetType.Custom && !N163WaveformEnvelope.ValidatePreset(EnvelopeType.N163Waveform, n163WavPreset))
-                    n163WavPreset = WavePresetType.Custom;
-                if (IsFds && fdsWavPreset != WavePresetType.Custom && !FdsWaveformEnvelope.ValidatePreset(EnvelopeType.FdsWaveform, fdsWavPreset))
-                    fdsWavPreset = WavePresetType.Custom;
-                if (IsFds && fdsModPreset != WavePresetType.Custom && !FdsModulationEnvelope.ValidatePreset(EnvelopeType.FdsModulation, fdsModPreset))
-                    fdsModPreset = WavePresetType.Custom;
+                PerformPostLoadActions();
             }
         }
     }
@@ -1341,7 +1341,8 @@ namespace FamiStudio
 
         private static void ConvertFdsToN163(Instrument src, Instrument dst)
         {
-            dst.N163WaveSize = (byte)Envelope.GetEnvelopeMaxLength(EnvelopeType.FdsWaveform);
+            dst.N163WaveCount = src.FdsWaveCount;
+            dst.N163WaveSize = 64; // FDS Wave Size.
             dst.N163WavePreset = WavePresetType.Custom;
 
             ConvertGeneric(src, dst);
@@ -1358,7 +1359,9 @@ namespace FamiStudio
 
         private static void ConvertN163ToFds(Instrument src, Instrument dst)
         {
+            dst.FdsWaveCount = (byte)Math.Min((int)src.N163WaveCount, 16);
             dst.FdsWavePreset = WavePresetType.Custom;
+
             ConvertGeneric(src, dst);
             ConvertEnvelopeValues(
                 src,
@@ -1367,8 +1370,10 @@ namespace FamiStudio
                 EnvelopeType.FdsWaveform,
                 src.N163WaveformEnvelope,
                 dst.FdsWaveformEnvelope,
-                src.N163WaveformEnvelope.ChunkLength, // Only first wave.
+                src.N163WaveformEnvelope.ChunkLength * dst.FdsWaveCount,
                 dst.FdsWaveformEnvelope.Length);
+
+            dst.WaveformRepeatEnvelope.Length = dst.FdsWaveCount;
         }
 
         private static void ConvertS5BToEPSM(Instrument src, Instrument dst)

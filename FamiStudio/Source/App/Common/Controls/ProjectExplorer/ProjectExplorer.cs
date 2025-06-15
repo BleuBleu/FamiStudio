@@ -3509,10 +3509,10 @@ namespace FamiStudio
 
                     var transFlags = TransactionFlags.None;
 
-                    if (changedAuthoringMachine || changedNumChannels || changedExpMixer || changedTuning)
-                        transFlags = TransactionFlags.RecreatePlayers;
-                    else if (changedExpansion)
+                    if (changedExpansion)
                         transFlags = TransactionFlags.RecreatePlayers | TransactionFlags.RecreateStreams; // Toggling EPSM will change mono/stereo and requires new audiostreams.
+                    else if (changedAuthoringMachine || changedNumChannels || changedExpMixer || changedTuning)
+                        transFlags = TransactionFlags.RecreatePlayers;
                     else if (changedTempoMode)
                         transFlags = TransactionFlags.StopAudio;
 

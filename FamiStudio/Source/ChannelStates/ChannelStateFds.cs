@@ -5,12 +5,13 @@ namespace FamiStudio
 {
     class ChannelStateFds : ChannelState
     {
-        private byte   modDelayCounter;
-        private ushort modDepth;
-        private ushort modSpeed;
-        private int    prevPeriodHi;
-        private int    waveIndex = -1;
-        private int    masterVolume;
+        private byte    modDelayCounter;
+        private ushort  modDepth;
+        private ushort  modSpeed;
+        private int     prevPeriodHi;
+        private int     waveIndex = -1;
+        private int     masterVolume;
+        private sbyte[] prevModTable = new sbyte[32];
 
         public ChannelStateFds(IPlayerInterface player, int apuIdx, int channelIdx, int tuning, bool pal) : base(player, apuIdx, channelIdx, tuning, pal)
         {
@@ -32,12 +33,24 @@ namespace FamiStudio
                     waveIndex = -1; // Force reload on instrument change.
                     masterVolume = instrument.FdsMasterVolume;
                     ConditionalLoadWave();
-                    
-                    WriteRegister(NesApu.FDS_MOD_HI, 0x80);
-                    WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
 
-                    for (int i = 0; i < 0x20; ++i)
-                        WriteRegister(NesApu.FDS_MOD_TABLE, mod[i] & 0xff, 16); // 16 cycles to mimic ASM loop.
+                    // Only write the modulation table if the mod envelope has actually changed. 
+                    // ASM does this using a pointer, since identical envelopes are merged.
+                    for (var i = 0; i < mod.Length; i++)
+                    {
+                        if (mod[i] != prevModTable[i])
+                        {
+                            WriteRegister(NesApu.FDS_MOD_HI, 0x80);
+                            WriteRegister(NesApu.FDS_SWEEP_BIAS, 0x00);
+
+                            for (int j = 0; j < 0x20; ++j)
+                                WriteRegister(NesApu.FDS_MOD_TABLE, mod[j] & 0xff, 16); // 16 cycles to mimic ASM loop.
+
+                            break;
+                        }
+                    }
+
+                    prevModTable = mod;
                 }
             }
         }
@@ -48,22 +61,25 @@ namespace FamiStudio
 
             if (newWaveIndex != waveIndex)
             {
-                var wav = envelopes[EnvelopeType.FdsWaveform].GetChunk(newWaveIndex);
-
-                // We read the table from end to start to mimic the ASM code (saves cycles).
-                for (int i = 0x3F; i >= 0; i -= 2)
+                var wav = envelopes[EnvelopeType.FdsWaveform]?.GetChunk(newWaveIndex);
+                if (wav != null)
                 {
-                    // Toggle write every 2 iterations. ASM does this for smooth cycling between
-                    // waveforms. We write twice between write toggling and iterate half the times 
-                    // to save CPU cycles. 41 skipped cycles to mimic ASM loop (40 if BPL is skipped).
-                    SkipCycles(4); // 4 cycles to mimic TXA and ORA before enabling write
-                    WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 4);
-                    WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, 13);         // +7 for LDA and DEY
-                    WriteRegister(NesApu.FDS_WAV_START + i - 1, wav[i - 1] & 0xff, 11); // +5 for LDA
-                    WriteRegister(NesApu.FDS_VOL, masterVolume, i > 1 ? 9 : 8);         // +5 for DEY and BPL (4 on BPL exit)
+                    // We read the table from end to start to mimic the ASM code (saves cycles).
+                    SkipCycles(2); // LDY
+                    for (int i = 0x3F; i >= 0; i -= 2)
+                    {
+                        // Toggle write every 2 iterations. ASM does this for smooth cycling between
+                        // waveforms. We write twice between write toggling and iterate half the times 
+                        // to save CPU cycles. 38 skipped cycles to mimic ASM loop (37 if BPL exits loop).
+                        SkipCycles(3); // Read volume.
+                        WriteRegister(NesApu.FDS_VOL, 0x80 | masterVolume, 4);
+                        WriteRegister(NesApu.FDS_WAV_START + i, wav[i] & 0xff, 12);         // +7 for LDA and DEY
+                        WriteRegister(NesApu.FDS_WAV_START + i - 1, wav[i - 1] & 0xff, 10); // +5 for LDA
+                        WriteRegister(NesApu.FDS_VOL, masterVolume, i > 1 ? 9 : 8);         // +5 for DEY and BPL (4 on BPL exit)
+                    }
+
+                    waveIndex = newWaveIndex;
                 }
- 
-                waveIndex = newWaveIndex;
             }
         }
 

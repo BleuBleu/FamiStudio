@@ -973,6 +973,7 @@ famistudio_mmc5_pulse2_prev:      .ds 1
 .endif
 
 .if FAMISTUDIO_EXP_FDS
+famistudio_fds_mod_envelope:      .ds 2
 famistudio_fds_mod_speed:         .ds 2
 famistudio_fds_mod_depth:         .ds 1
 famistudio_fds_mod_delay:         .ds 1
@@ -1714,6 +1715,8 @@ famistudio_music_play::
 
 .if FAMISTUDIO_EXP_FDS
     lda #0
+    sta famistudio_fds_mod_envelope+0
+    sta famistudio_fds_mod_envelope+1
     sta famistudio_fds_mod_speed+0
     sta famistudio_fds_mod_speed+1
     sta famistudio_fds_mod_depth
@@ -2398,13 +2401,13 @@ famistudio_update_fds_channel_sound:
 .famistudio_set_fds_instrument_check_mod_delay:
     lda famistudio_fds_mod_delay_counter
     beq .zero_delay
-    dec famistudio_fds_mod_delay_counter
     lda #0
     sta FAMISTUDIO_FDS_MOD_LO
     sta FAMISTUDIO_FDS_SWEEP_BIAS
     lda #0x80
     sta FAMISTUDIO_FDS_MOD_HI
     sta FAMISTUDIO_FDS_SWEEP_ENV
+    dec famistudio_fds_mod_delay_counter
     bne .compute_volume
 
 .zero_delay:
@@ -5362,8 +5365,10 @@ famistudio_set_epsm_instrument:
 famistudio_update_fds_wave:
     .local .ptr
     .local .wave_ptr
+    .local .tmp_enable
     .ptr        = famistudio_ptr1
     .wave_ptr   = famistudio_ptr0
+    .tmp_enable = famistudio_r3
 
     ; See if the wave index has changed.
     lda famistudio_env_value+FAMISTUDIO_FDS_CH0_ENVS+FAMISTUDIO_ENV_FDS_WAVE_IDX_OFF
@@ -5382,6 +5387,8 @@ famistudio_update_fds_wave:
     lda [*.ptr],y
     and #3 ; Bits 0 and 1 are master volume
     tax    ; Store master volume to x
+    ora #0x80 
+    sta *.tmp_enable ; Store maaster volume with write enable
     iny
     
     ; Load the wave table pointer.
@@ -5404,8 +5411,7 @@ famistudio_update_fds_wave:
     ; FDS Waveform (toggle write each iteration for smooth transitions)
     ldy #63
     .wave_loop:
-        txa ; Get master volume
-        ora #0x80
+        lda *.tmp_enable
         sta FAMISTUDIO_FDS_VOL ; Enable RAM write.
         lda [*.ptr],y
         sta FAMISTUDIO_FDS_WAV_START,y  ; Write 2 samples between each write toggle (saves ~500 CPU cycles, sounds identical)
@@ -5451,47 +5457,58 @@ famistudio_set_fds_instrument:
     lda [*.ptr],y
     sta famistudio_env_addr_hi,x
 
-    .famistudio_set_fds_instrument_write_fds_wave:
-        ; Setup for modulation
-        lda #0x80
-        sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
-        sta FAMISTUDIO_FDS_SWEEP_ENV
-        lda #0
-        sta FAMISTUDIO_FDS_SWEEP_BIAS
-
-        ; FDS Modulation
+    ; FDS Modulation
+    .famistudio_set_fds_instrument_write_fds_mod:
         iny
         lda [*.ptr],y ; Read depth / master volume, shift twice for depth and store for later
         lsr
         lsr
         sta *.tmp_mod_depth
 
-        ; Mod envelope
-        iny ; Skip to envelope
+        ; Skip to mod envelope
         iny
         iny
-        lda [*.ptr],y
-        sta *.wave_ptr+0
         iny
-        lda [*.ptr],y
-        sta *.wave_ptr+1
-        iny
-        tya ; Store y and restore after loop
-        tax
 
-        ldy #0
-        .famistudio_set_fds_instrument_mod_loop:
-            lda [*.wave_ptr],y
-            sta FAMISTUDIO_FDS_MOD_TABLE
+        ; Compare mod envelope pointer, only write the mod table if it has changed
+        lda [*.ptr],y
+        cmp famistudio_fds_mod_envelope+0
+        bne .famistudio_set_fds_instrument_write_mod_table
+        iny
+        lda [*.ptr],y
+        cmp famistudio_fds_mod_envelope+1
+        beq .famistudio_set_fds_instrument_load_mod_param ; Skip writing the mod table
+        dey
+        lda [*.ptr],y
+
+        .famistudio_set_fds_instrument_write_mod_table:
+            ; Store new envelope pointer
+            sta *.wave_ptr+0
+            sta famistudio_fds_mod_envelope+0
             iny
-            cpy #32
-            bne .famistudio_set_fds_instrument_mod_loop
+            lda [*.ptr],y
+            sta *.wave_ptr+1
+            sta famistudio_fds_mod_envelope+1
 
-        txa
-        tay
+            ; Reset and write modulation
+            tya ; Store y in x and restore after loop
+            tax
+            lda #0x80
+            sta FAMISTUDIO_FDS_MOD_HI ; Need to disable modulation before writing.
+            sta FAMISTUDIO_FDS_SWEEP_ENV
+            ldy #0
+            sty FAMISTUDIO_FDS_SWEEP_BIAS
+            .famistudio_set_fds_instrument_mod_loop:
+                lda [*.wave_ptr],y
+                sta FAMISTUDIO_FDS_MOD_TABLE
+                iny
+                cpy #32
+                bne .famistudio_set_fds_instrument_mod_loop
+            txa
+            tay
 
     .famistudio_set_fds_instrument_load_mod_param:
-
+        iny
         .if FAMISTUDIO_USE_FDS_AUTOMOD
             lda [*.ptr],y
             bpl .famistudio_set_fds_instrument_check_mod_speed ; Skip auto mod if bit 7 is clear
