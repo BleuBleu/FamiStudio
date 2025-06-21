@@ -45,4 +45,4 @@ You can find me:
 - On Twitter [@NesBleuBleu](http://www.twitter.com/nesbleubleu)
 - On [YouTube](https://www.youtube.com/channel/UC-dGLo2XZqXNA_aOYjaucgA?view_as=subscriber)
 - On [Itch.io](https://bleubleu.itch.io/famistudio)
-- On the [FamiStudio Discord](https://discord.gg/88UPmxh)
+- On the [FamiStudio Discord](https://discord.gg/QRCMe595Pv)
