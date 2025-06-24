@@ -1,3 +1,10 @@
+4.4.2
+=====
+- DPCM broken again:
+	https://discord.com/channels/747649221879922840/1385037620823986196
+- Back button span freeze on IOS?
+	https://discord.com/channels/747649221879922840/798008185977176074/1386765113360515104
+	
 4.5.0
 =====
 - Multi-expansion conflict.
