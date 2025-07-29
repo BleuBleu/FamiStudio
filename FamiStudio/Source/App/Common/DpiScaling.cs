@@ -10,6 +10,7 @@ namespace FamiStudio
 
         private static float windowScaling = 1;
         private static float fontScaling   = 1;
+        private static float systemScaling = 1;
 
         // HACK : This is thread-local since the video export (which uses this feature) runs on a
         // different thread on mobile and could interfere with the scaling of the main UI.
@@ -19,6 +20,7 @@ namespace FamiStudio
 
         public static float Window { get { Debug.Assert(initialized); return forceUnitScale.Value ? 1.0f : windowScaling; } }
         public static float Font   { get { Debug.Assert(initialized); return forceUnitScale.Value ? 1.0f : fontScaling; } }
+        public static float System { get { Debug.Assert(initialized); return forceUnitScale.Value ? 1.0f : systemScaling; } }
         
         public static bool ForceUnitScaling { get => forceUnitScale.Value; set => forceUnitScale.Value = value; }
 
@@ -62,7 +64,7 @@ namespace FamiStudio
         {
             if (Platform.IsDesktop)
             {
-                return new[] { 100, 125, 150, 175, 200, 225, 250 };
+                return new[] { 100, 125, 150, 175, 200, 225, 250, 275, 300 };
             }
             else if (Platform.IsMobile)
             {
@@ -144,10 +146,12 @@ namespace FamiStudio
             }
             else
             {
+                systemScaling = RoundScaling(scaling);
+
                 if (Settings.DpiScaling != 0)
                     windowScaling = RoundScaling(Settings.DpiScaling / 100.0f);
                 else
-                    windowScaling = RoundScaling(scaling);
+                    windowScaling = systemScaling;
 
                 fontScaling = windowScaling;
             }
