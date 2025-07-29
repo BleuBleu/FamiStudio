@@ -60,13 +60,9 @@ namespace FamiStudio
 
         public static int[] GetAvailableScalings()
         {
-            if (Platform.IsWindows || Platform.IsLinux)
+            if (Platform.IsDesktop)
             {
                 return new[] { 100, 125, 150, 175, 200, 225, 250 };
-            }
-            else if (Platform.IsMacOS)
-            {
-                return new int[0]; // Intentional, we dont allow to manually set the scaling on MacOS.
             }
             else if (Platform.IsMobile)
             {

@@ -156,6 +156,9 @@ namespace FamiStudio
             GL.StaticInitialize(glfwGetProcAddress, false);
             Cursors.Initialize(scaling);
             DpiScaling.Initialize(scaling);
+
+            if (Platform.IsMacOS || (Platform.IsLinux && isWayland))
+                scaleModifier = scaling / DpiScaling.Window;
         }
 
         private void CreateGraphics()
@@ -418,7 +421,7 @@ namespace FamiStudio
         {
             Debug.WriteLine($"*** RESCALED: {scaling}");
 
-            if (isWayland)
+            if (Platform.IsMacOS || (Platform.IsLinux && isWayland))
             {
                 scaleModifier = scaling / DpiScaling.Window;
             }
