@@ -4,8 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
+using System.Security.Authentication.ExtendedProtection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 namespace FamiStudio
 {
@@ -2117,7 +2119,7 @@ namespace FamiStudio
             }
         }
 
-        private void SetupProject(Project originalProject, int[] songIds)
+        private void SetupProject(Project originalProject, int[] songIds, int dpcmExportMode)
         {
             // Work on a temporary copy.
             project = originalProject.DeepClone();
@@ -2129,14 +2131,74 @@ namespace FamiStudio
                 project.ConvertToFamiTrackerTempo(false);
             }
 
-            // When exporting with separate files, we want to make sure all songs can use the same .DMC file(s) and have consistent offsets.
-            // 1. Before deleting all but the song we want, we first run a cleanup to remove any samples not used by any song.
-            // 2. We then delete all the unwanted songs.
-            // 3. Afterwards are careful to not delete any unreferenced samples.
-            project.Cleanup();
-            project.DeleteAllSongsBut(songIds, false);
-            project.Cleanup(false);
+            if (dpcmExportMode == DpcmExportMode.Minimum)
+            {
+                // Full cleanup.
+                project.DeleteAllSongsBut(songIds, true);
+            }
+            else if (dpcmExportMode == DpcmExportMode.All)
+            {
+                // Leave any samples alones.
+                project.DeleteAllSongsBut(songIds, false);
+                project.Cleanup(false); 
+            }
+            else 
+            {
+                project.DeleteAllSongsBut(songIds, false);
+
+                var usedInstrument = new HashSet<Instrument>();
+
+                // Gather list of used instruments.
+                if (dpcmExportMode == DpcmExportMode.MappedToAnyInstrument)
+                {
+                    usedInstrument.UnionWith(project.Instruments);
+                }
+                else
+                {
+                    foreach (var song in project.Songs)
+                    {
+                        var channel = song.Channels[ChannelType.Dpcm];
+
+                        for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                        {
+                            usedInstrument.Add(it.Note.Instrument);
+                        }
+                    }
+                }
+
+                usedInstrument.Remove(null); // Safety.
+
+                // Then get the used samples from those.
+                var usedSamples = new HashSet<DPCMSample>();
+
+                foreach (var inst in usedInstrument)
+                {
+                    if (inst.SamplesMapping != null)
+                    {
+                        foreach (var mapping in inst.SamplesMapping)
+                        {
+                            usedSamples.Add(mapping.Value.Sample);
+                        }
+                    }
+                }
+
+                // Deleted every sample that isnt used.
+                for (var i = project.Samples.Count - 1; i >= 0; i--)
+                {
+                    var sample = project.Samples[i];
+
+                    if (!usedSamples.Contains(sample))
+                    {
+                        project.DeleteSample(sample);
+                    }
+                }
+
+                // Then perform cleanup, but leaving samples alone.
+                project.Cleanup(false);
+            }
+
             RemoveUnsupportedFeatures();
+
             project.MergeIdenticalInstruments();
             project.RemoveDpcmNotesWithoutMapping();
             project.PermanentlyApplyGrooves();
@@ -2253,11 +2315,11 @@ namespace FamiStudio
             return flags;
         }
 
-        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, string includeFilename, int machine)
+        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, int dmcExportMode, string includeFilename, int machine)
         {
             this.machine = machine;
 
-            SetupProject(originalProject, songIds);
+            SetupProject(originalProject, songIds, dmcExportMode);
             SetupFormat(format, separateSongs);
             CleanupEnvelopes();
             GatherDPCMMappings();
@@ -2478,13 +2540,13 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmBankSize, int dpcmOffset, int machine)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmBankSize, int dpcmExportMode, int dpcmOffset, int machine)
         {
             var tempFolder = Utils.GetTemporaryDirectory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, null, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, dpcmExportMode,null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }
@@ -2597,5 +2659,20 @@ namespace FamiStudio
             return Array.IndexOf(Names, str);
         }
     };
+    
+    public static class DpcmExportMode
+    {
+        public const int All                    = 0; // Keeps all samples.
+        public const int MappedToAnyInstrument  = 1; // Samples mapped to at least 1 instrument in the project (even if not referenced by exported song(s))
+        public const int MappedToUsedInstrument = 2; // Samples mapped to at least 1 instrument (only if instrument is referenced by exported song(s))
+        public const int Minimum                = 3; // Minimum set needed to play the song, only actualy notes that are needed are kept.
+        public const int Count                  = 4;
 
-}
+        public static LocalizedString[] LocalizedNames = new LocalizedString[Count];
+
+        static DpcmExportMode()
+        {
+            Localization.LocalizeStatic(typeof(DpcmExportMode));
+        }
+    };
+    }

@@ -37,14 +37,14 @@ public:
 	///////////////////////////////////
 	// Length Counter
 	BYTE		nTriLengthCount;
-	BYTE		bTriLengthEnabled;
+	BYTE		bTriLengthHalt;
 	BYTE		bTriChannelEnabled;
 
 	///////////////////////////////////
 	// Linear Counter
 	BYTE		nTriLinearCount;
 	BYTE		nTriLinearLoad;
-	BYTE		bTriLinearHalt;
+	BYTE		bTriLinearReloadFlag;
 	BYTE		bTriLinearControl;
 
 	///////////////////////////////////
@@ -163,13 +163,13 @@ public:
 		}
 
 		//triangle's linear
-		if(bTriLinearHalt)
+		if(bTriLinearReloadFlag)
 			nTriLinearCount = nTriLinearLoad;
 		else if(nTriLinearCount)
 			nTriLinearCount--;
 
 		if(!bTriLinearControl)
-			bTriLinearHalt = 0;
+			bTriLinearReloadFlag = 0;
 	}
 
 	FORCEINLINE void ClockMinor()		//length
@@ -177,7 +177,7 @@ public:
 		if(bNoiseLengthEnabled && nNoiseLengthCount)
 			nNoiseLengthCount--;
 		
-		if(bTriLengthEnabled && nTriLengthCount)
+		if(!bTriLengthHalt && nTriLengthCount)
 			nTriLengthCount--;
 	}
 
