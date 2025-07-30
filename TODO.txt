@@ -1,13 +1,13 @@
 4.4.2
 =====
+- Update IOS SDK too while we are at it.
+- Empty NSF without error Omega #bugreport.
 - DPCM broken again:
 	https://discord.com/channels/747649221879922840/1385037620823986196
-- Back button span freeze on IOS?
+- Back button span freeze on IOS? Mash play button with "Num buffered frames" at 1 or 2.
 	https://discord.com/channels/747649221879922840/798008185977176074/1386765113360515104
+- Discord bug pass.
 
-- copy paste grey square
-https://discord.com/channels/747649221879922840/747649222354010173/1394655616558960775
-	
 4.5.0
 =====
 - Multi-expansion conflict.
