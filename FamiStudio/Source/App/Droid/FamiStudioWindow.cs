@@ -18,12 +18,21 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Xamarin.Essentials;
+using static Android.Views.View;
 using static Android.Views.ViewGroup;
 
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.UiMode | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
-    public class FamiStudioWindow : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, GestureDetector.IOnDoubleTapListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback, AndroidX.Core.View.IOnApplyWindowInsetsListener
+    public class FamiStudioWindow : 
+        AppCompatActivity, 
+        GLSurfaceView.IRenderer, 
+        GestureDetector.IOnGestureListener,
+        GestureDetector.IOnDoubleTapListener, 
+        ScaleGestureDetector.IOnScaleGestureListener, 
+        Choreographer.IFrameCallback,
+        AndroidX.Core.View.IOnApplyWindowInsetsListener,
+        IOnSystemUiVisibilityChangeListener
     {
         private LinearLayout linearLayout;
         private GLSurfaceView glSurfaceView;
@@ -53,6 +62,17 @@ namespace FamiStudio
         private Control doubleTapControl;
         private bool doubleTapReceived;
         private bool doubleTapCanSendLongpress;
+
+        // Android 15 edge-to-edge hack-fest.
+        private bool navigationBarVisible;
+        private int cutoutInsetLeft;
+        private int cutoutInsetRight;
+        private int cutoutInsetBottom;
+        private int cutoutInsetTop;
+        private int navInsetLeft;
+        private int navInsetRight;
+        private int navInsetBottom;
+        private int navInsetTop;
 
         private string delayedMessage = null;
         private string delayedMessageTitle = null;
@@ -117,7 +137,6 @@ namespace FamiStudio
         {
             // Fullscreen mode.
             Window.AddFlags(WindowManagerFlags.Fullscreen);
-            Window.Attributes.LayoutInDisplayCutoutMode = LayoutInDisplayCutoutMode.Never;
 
             int uiOptions = (int)Window.DecorView.SystemUiVisibility;
 
@@ -171,6 +190,7 @@ namespace FamiStudio
                 if (androidVersion >= 15)
                 {
                     ViewCompat.SetOnApplyWindowInsetsListener(linearLayout, this);
+                    Window.DecorView.SetOnSystemUiVisibilityChangeListener(this);
                 }
 
                 SetContentView(linearLayout);
@@ -606,11 +626,6 @@ namespace FamiStudio
 
         private void CacheViewRect()
         {
-            var l = glSurfaceView.PaddingLeft;
-            var t = glSurfaceView.PaddingTop;
-            var b = glSurfaceView.PaddingBottom;
-            var r = glSurfaceView.PaddingRight;
-
             var rect = new Android.Graphics.Rect();
             glSurfaceView.GetDrawingRect(rect);
             cachedViewRect = new Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
@@ -1095,12 +1110,53 @@ namespace FamiStudio
 
         public WindowInsetsCompat OnApplyWindowInsets(View v, WindowInsetsCompat windowInsets)
         {
-            var insets = windowInsets.GetInsetsIgnoringVisibility(WindowInsetsCompat.Type.DisplayCutout());
+            var cutoutInsets = windowInsets.GetInsetsIgnoringVisibility(WindowInsetsCompat.Type.DisplayCutout());
+            var navInsets    = windowInsets.GetInsetsIgnoringVisibility(WindowInsetsCompat.Type.DisplayCutout() | WindowInsetsCompat.Type.NavigationBars());
 
-            v.SetPadding(insets.Left, insets.Top, insets.Right, insets.Bottom);
+            // We just want to apply the navigation insets when the navigation bar is visible. This
+            // only happens when dialogs (such as EditText) pop up. "OnSystemUiVisibilityChange" is sometimes
+            // called before/after "OnApplyWindowInsets" so we cant rely on that. We store both insets and
+            // decide which one to pick in ApplyInsets.
+            cutoutInsetLeft   = cutoutInsets.Left;
+            cutoutInsetTop    = cutoutInsets.Top;
+            cutoutInsetRight  = cutoutInsets.Right;
+            cutoutInsetBottom = cutoutInsets.Bottom;
+
+            navInsetLeft   = navInsets.Left;
+            navInsetTop    = navInsets.Top;
+            navInsetRight  = navInsets.Right;
+            navInsetBottom = navInsets.Bottom;
+
+            //v.SetPadding(insets.Left, insets.Top, insets.Right, insets.Bottom);
             //v.SetPadding(123, 456, 221, 50); // For debugging, set weird padding.
 
+            ApplyInsets();
+
             return WindowInsetsCompat.Consumed;
+        }
+
+        public void OnSystemUiVisibilityChange([GeneratedEnum] StatusBarVisibility visibility)
+        {
+            var flags = (SystemUiFlags)visibility;
+            navigationBarVisible = !flags.HasFlag(SystemUiFlags.HideNavigation);
+            ApplyInsets();
+        }
+
+        private void ApplyInsets()
+        {
+            // See comment in OnApplyWindowInsets.
+            var insetLeft   = navigationBarVisible ? navInsetLeft   : cutoutInsetLeft;
+            var insetRight  = navigationBarVisible ? navInsetRight  : cutoutInsetRight;
+            var insetBottom = navigationBarVisible ? navInsetBottom : cutoutInsetBottom;
+            var insetTop    = navigationBarVisible ? navInsetTop    : cutoutInsetTop;
+
+            if (insetLeft   != linearLayout.PaddingLeft ||
+                insetRight  != linearLayout.PaddingRight ||
+                insetBottom != linearLayout.PaddingBottom ||
+                insetTop    != linearLayout.PaddingTop)
+            {
+                linearLayout.SetPadding(insetLeft, insetTop, insetRight, insetBottom);
+            }
         }
 
         private class ContextMenuTag : Java.Lang.Object
