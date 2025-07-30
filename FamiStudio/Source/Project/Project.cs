@@ -1419,21 +1419,14 @@ namespace FamiStudio
             return numBanks;
         }
 
-        public List<DPCMSample> GetUsedSamplesInBank(int bank)
+        public List<DPCMSample> GetSamplesInBank(int bank)
         {
             var samplesInBank = new List<DPCMSample>(samples.Count);
 
-            foreach (var inst in instruments)
+            foreach (var s in samples)
             {
-                if (inst.HasAnyMappedSamples)
-                {
-                    foreach (var kv in inst.SamplesMapping)
-                    {
-                        var s = kv.Value.Sample;
-                        if (s != null && s.Bank == bank && !samplesInBank.Contains(s))
-                            samplesInBank.Add(s);
-                    }
-                }
+                if (s.Bank == bank)
+                    samplesInBank.Add(s);
             }
 
             // Keep things a bit more deterministic.
@@ -1444,7 +1437,7 @@ namespace FamiStudio
 
         public int GetSampleBankOffset(DPCMSample sample)
         {
-            var samplesInSameBank = GetUsedSamplesInBank(sample.Bank);
+            var samplesInSameBank = GetSamplesInBank(sample.Bank);
             var offset = 0;
             
             for (int i = 0; i < samplesInSameBank.Count; i++)
@@ -1460,7 +1453,7 @@ namespace FamiStudio
 
         public int GetBankSize(int bank)
         {
-            var samplesInBank = GetUsedSamplesInBank(bank);
+            var samplesInBank = GetSamplesInBank(bank);
             var size = 0;
 
             for (int i = 0; i < samplesInBank.Count; i++)
@@ -1473,7 +1466,7 @@ namespace FamiStudio
 
         public byte[] GetPackedSampleData(int bank = 0, int maxBankSize = -1)
         {
-            var samplesInBank = GetUsedSamplesInBank(bank);
+            var samplesInBank = GetSamplesInBank(bank);
             var sampleData = new List<byte>();
 
             foreach (var sample in samplesInBank)

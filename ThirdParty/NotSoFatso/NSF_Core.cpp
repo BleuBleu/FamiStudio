@@ -232,6 +232,7 @@ void FASTCALL CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
 	case 0x4008:
 		mWave_TND.nTriLinearLoad = v & 0x7F;
 		mWave_TND.bTriLinearControl = v & 0x80;
+		mWave_TND.bTriLengthHalt = mWave_TND.bTriLinearControl;
 		break;
 
 	case 0x400A:
@@ -240,8 +241,8 @@ void FASTCALL CNSFCore::WriteMemory_pAPU(WORD a,BYTE v)
 
 	case 0x400B:
 		mWave_TND.nTriFreqTimer.B.h = v & 0x07;
-		mWave_TND.bTriLinearHalt = 1;
-		
+		mWave_TND.bTriLinearReloadFlag = 1;
+
 		if(mWave_TND.bTriChannelEnabled)
 			mWave_TND.nTriLengthCount = LENGTH_COUNTER_TABLE[v >> 3];
 		break;

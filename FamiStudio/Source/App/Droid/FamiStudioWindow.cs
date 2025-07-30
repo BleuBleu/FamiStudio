@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Opengl;
 using Android.OS;
+using Android.Renderscripts;
 using Android.Runtime;
 using Android.Views;
 using Android.Views.InputMethods;
@@ -16,12 +13,26 @@ using AndroidX.Core.Content;
 using AndroidX.Core.Graphics;
 using AndroidX.Core.View;
 using Javax.Microedition.Khronos.Opengles;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 using Xamarin.Essentials;
+using static Android.Views.View;
+using static Android.Views.ViewGroup;
 
 namespace FamiStudio
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme.NoActionBar", MainLauncher = true, ResizeableActivity = false, ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.UiMode | ConfigChanges.Keyboard | ConfigChanges.KeyboardHidden)]
-    public class FamiStudioWindow : AppCompatActivity, GLSurfaceView.IRenderer, GestureDetector.IOnGestureListener, GestureDetector.IOnDoubleTapListener, ScaleGestureDetector.IOnScaleGestureListener, Choreographer.IFrameCallback
+    public class FamiStudioWindow : 
+        AppCompatActivity, 
+        GLSurfaceView.IRenderer, 
+        GestureDetector.IOnGestureListener,
+        GestureDetector.IOnDoubleTapListener, 
+        ScaleGestureDetector.IOnScaleGestureListener, 
+        Choreographer.IFrameCallback,
+        AndroidX.Core.View.IOnApplyWindowInsetsListener,
+        IOnSystemUiVisibilityChangeListener
     {
         private LinearLayout linearLayout;
         private GLSurfaceView glSurfaceView;
@@ -44,12 +55,24 @@ namespace FamiStudio
         private Control captureControl;
         private ModifierKeys modifiers = new ModifierKeys();
         private Rectangle cachedViewRect;
+        private Point glViewPosition;
 
         private long doubleTapStartTime;
         private Point doubleTapLocation;
         private Control doubleTapControl;
         private bool doubleTapReceived;
         private bool doubleTapCanSendLongpress;
+
+        // Android 15 edge-to-edge hack-fest.
+        private bool navigationBarVisible;
+        private int cutoutInsetLeft;
+        private int cutoutInsetRight;
+        private int cutoutInsetBottom;
+        private int cutoutInsetTop;
+        private int navInsetLeft;
+        private int navInsetRight;
+        private int navInsetBottom;
+        private int navInsetTop;
 
         private string delayedMessage = null;
         private string delayedMessageTitle = null;
@@ -159,6 +182,16 @@ namespace FamiStudio
                 linearLayout = new LinearLayout(this);
                 linearLayout.LayoutParameters = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
                 linearLayout.AddView(glSurfaceView);
+                linearLayout.SetBackgroundColor(Android.Graphics.Color.Black);
+
+                // Starting at android 15, edge-to-edge is forced ON by default and we must
+                // set padding manually to get the old behavior.
+                var androidVersion = DeviceInfo.Version.Major;
+                if (androidVersion >= 15)
+                {
+                    ViewCompat.SetOnApplyWindowInsetsListener(linearLayout, this);
+                    Window.DecorView.SetOnSystemUiVisibilityChangeListener(this);
+                }
 
                 SetContentView(linearLayout);
                 Instance = this;
@@ -456,7 +489,7 @@ namespace FamiStudio
                 {
                     captureControl?.SendPointerUp(new PointerEventArgs(0, 0)); // We dont store the last position, should be good enough.
                     ReleasePointer();
-                    container.Resize(width, height);
+                    container.Resize(cachedViewRect.Width, cachedViewRect.Height);
                 }
             }
         }
@@ -596,6 +629,10 @@ namespace FamiStudio
             var rect = new Android.Graphics.Rect();
             glSurfaceView.GetDrawingRect(rect);
             cachedViewRect = new Rectangle(rect.Left, rect.Top, rect.Width(), rect.Height());
+
+            int[] location = new int[2];
+            glSurfaceView.GetLocationInWindow(location);
+            glViewPosition = new Point(location[0], location[1]);
         }
 
         public void MarkDirty()
@@ -798,13 +835,16 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnTouchEvent {e.Action.ToString()} ({e.GetX()}, {e.GetY()})");
+                var px = (int)e.GetX() - glViewPosition.X;
+                var py = (int)e.GetY() - glViewPosition.Y;
+
+                //Debug.WriteLine($"OnTouchEvent {e.Action.ToString()} ({px}, {py})");
 
                 if (e.Action == MotionEventActions.Up || e.Action == MotionEventActions.Cancel)
                 {
                     lock (renderLock)
                     {
-                        var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                        var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
                         if (ctrl != null)
                         {
                             if (captureControl == ctrl)
@@ -819,11 +859,11 @@ namespace FamiStudio
                 {
                     lock (renderLock)
                     {
-                        var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                        var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
                         ctrl?.SendPointerMove(new PointerEventArgs(x, y));
                     }
 
-                    if (doubleTapReceived && ((int.Abs(doubleTapLocation.X - (int)e.GetX()) > 32 || int.Abs(doubleTapLocation.Y - (int)e.GetY()) > 32)))
+                    if (doubleTapReceived && ((int.Abs(doubleTapLocation.X - px) > 32 || int.Abs(doubleTapLocation.Y - py) > 32)))
                     {
                         doubleTapCanSendLongpress = false;
                     }
@@ -844,10 +884,14 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnDown {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                var px = (int)e.GetX() - glViewPosition.X;
+                var py = (int)e.GetY() - glViewPosition.Y;
+                
+                Debug.WriteLine($"OnDown {e.PointerCount} ({px}, {py})");
+
                 lock (renderLock)
                 {
-                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                    var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
                     ctrl?.SendPointerDown(new PointerEventArgs(x, y));
                 }
             }
@@ -858,10 +902,14 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                //Debug.WriteLine($"OnFling {e1.PointerCount} ({e1.GetX()}, {e1.GetY()}) ({velocityX}, {velocityY})");
+                var px = (int)e1.GetX() - glViewPosition.X;
+                var py = (int)e1.GetY() - glViewPosition.Y;
+
+                //Debug.WriteLine($"OnFling {e1.PointerCount} ({px}, {py}) ({velocityX}, {velocityY})");
+
                 lock (renderLock)
                 {
-                    var ctrl = GetCapturedControlAtCoord((int)e1.GetX(), (int)e1.GetY(), out var x, out var y);
+                    var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
                     ctrl?.SendTouchFling(new PointerEventArgs(x, y, velocityX, velocityY));
                 }
             }
@@ -872,12 +920,13 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                Debug.WriteLine($"OnLongPress {e.PointerCount} ({e.GetX()}, {e.GetY()})");
+                var px = (int)e.GetX() - glViewPosition.X;
+                var py = (int)e.GetY() - glViewPosition.Y;
+
+                Debug.WriteLine($"OnLongPress {e.PointerCount} ({px}, {py})");
+
                 lock (renderLock)
                 {
-                    var px = (int)e.GetX();
-                    var py = (int)e.GetY();
-
                     if (!doubleTapReceived || doubleTapCanSendLongpress)
                     {
                         var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
@@ -907,10 +956,14 @@ namespace FamiStudio
                 //DialogTest();
                 //StartSaveFileActivity("audio/mpeg", "Toto.mp3");
 
-                Debug.WriteLine($"OnSingleTapUp ({e.GetX()}, {e.GetY()})");
+                var px = (int)e.GetX() - glViewPosition.X;
+                var py = (int)e.GetY() - glViewPosition.Y;
+
+                Debug.WriteLine($"OnSingleTapUp ({px}, {py})");
+
                 lock (renderLock)
                 {
-                    var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                    var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
                     ctrl?.SendTouchClick(new PointerEventArgs(x, y));
                 }
             }
@@ -921,10 +974,14 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                Debug.WriteLine($"OnScale ({detector.FocusX}, {detector.FocusY}) {detector.ScaleFactor}");
+                var px = (int)detector.FocusX - glViewPosition.X;
+                var py = (int)detector.FocusY - glViewPosition.Y;
+
+                Debug.WriteLine($"OnScale ({px}, {py}) {detector.ScaleFactor}");
+
                 lock (renderLock)
                 {
-                    var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
+                    var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
                     ctrl?.SendTouchScale(new PointerEventArgs(x, y, detector.ScaleFactor));
                 }
                 return true;
@@ -939,10 +996,14 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                Debug.WriteLine($"OnScaleBegin ({detector.FocusX}, {detector.FocusY})");
+                var px = (int)detector.FocusX - glViewPosition.X;
+                var py = (int)detector.FocusY - glViewPosition.Y;
+
+                Debug.WriteLine($"OnScaleBegin ({px}, {py})");
+
                 lock (renderLock)
                 {
-                    var ctrl = GetCapturedControlAtCoord((int)detector.FocusX, (int)detector.FocusY, out var x, out var y);
+                    var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
                     ctrl?.SendTouchScaleBegin(new PointerEventArgs(x, y));
                 }
                 return true;
@@ -970,11 +1031,15 @@ namespace FamiStudio
         {
             if (!IsAsyncFileActivityInProgress)
             {
-                Debug.WriteLine($"OnDoubleTap ({e.GetX()}, {e.GetY()})");
+                var px = (int)e.GetX() - glViewPosition.X;
+                var py = (int)e.GetY() - glViewPosition.Y;
+
+                Debug.WriteLine($"OnDoubleTap ({px}, {py})");
+
                 lock (renderLock)
                 {
                     doubleTapStartTime = e.EventTime;
-                    doubleTapLocation = new Point((int)e.GetX(), (int)e.GetY());
+                    doubleTapLocation = new Point(px, py);
                     doubleTapControl = GetCapturedControlAtCoord(doubleTapLocation.X, doubleTapLocation.Y, out var x, out var y);
                     doubleTapReceived = true;
                     doubleTapCanSendLongpress = true;
@@ -992,8 +1057,12 @@ namespace FamiStudio
             if (!IsAsyncFileActivityInProgress)
             {
                 lock (renderLock)
-                { 
-                    Debug.WriteLine($"OnDoubleTapEvent ({e.GetX()}, {e.GetY()}) (Action={e.Action})");
+                {
+                    var px = (int)e.GetX() - glViewPosition.X;
+                    var py = (int)e.GetY() - glViewPosition.Y;
+
+                    Debug.WriteLine($"OnDoubleTapEvent ({px}, {py}) (Action={e.Action})");
+
                     if (e.Action == MotionEventActions.Up && (e.EventTime - doubleTapStartTime) < 350)
                     {
                         // "OnDoubleTap" returns the coordinate of the first tap, so it you tap
@@ -1005,7 +1074,7 @@ namespace FamiStudio
                         //
                         // Also, we enforce that we double tap on the same control as the first tap.
                         // Tapping fast between to buttons triggers double taps which feels super weird.
-                        var ctrl = GetCapturedControlAtCoord((int)e.GetX(), (int)e.GetY(), out var x, out var y);
+                        var ctrl = GetCapturedControlAtCoord(px, py, out var x, out var y);
 
                         if (ctrl != null)
                         {
@@ -1031,8 +1100,63 @@ namespace FamiStudio
 
         public bool OnSingleTapConfirmed(MotionEvent e)
         {
-            Debug.WriteLine($"OnSingleTapConfirmed ({e.GetX()}, {e.GetY()})");
+            var px = (int)e.GetX() - glViewPosition.X;
+            var py = (int)e.GetY() - glViewPosition.Y;
+
+            Debug.WriteLine($"OnSingleTapConfirmed ({px}, {py})");
+
             return false;
+        }
+
+        public WindowInsetsCompat OnApplyWindowInsets(View v, WindowInsetsCompat windowInsets)
+        {
+            var cutoutInsets = windowInsets.GetInsetsIgnoringVisibility(WindowInsetsCompat.Type.DisplayCutout());
+            var navInsets    = windowInsets.GetInsetsIgnoringVisibility(WindowInsetsCompat.Type.DisplayCutout() | WindowInsetsCompat.Type.NavigationBars());
+
+            // We just want to apply the navigation insets when the navigation bar is visible. This
+            // only happens when dialogs (such as EditText) pop up. "OnSystemUiVisibilityChange" is sometimes
+            // called before/after "OnApplyWindowInsets" so we cant rely on that. We store both insets and
+            // decide which one to pick in ApplyInsets.
+            cutoutInsetLeft   = cutoutInsets.Left;
+            cutoutInsetTop    = cutoutInsets.Top;
+            cutoutInsetRight  = cutoutInsets.Right;
+            cutoutInsetBottom = cutoutInsets.Bottom;
+
+            navInsetLeft   = navInsets.Left;
+            navInsetTop    = navInsets.Top;
+            navInsetRight  = navInsets.Right;
+            navInsetBottom = navInsets.Bottom;
+
+            //v.SetPadding(insets.Left, insets.Top, insets.Right, insets.Bottom);
+            //v.SetPadding(123, 456, 221, 50); // For debugging, set weird padding.
+
+            ApplyInsets();
+
+            return WindowInsetsCompat.Consumed;
+        }
+
+        public void OnSystemUiVisibilityChange([GeneratedEnum] StatusBarVisibility visibility)
+        {
+            var flags = (SystemUiFlags)visibility;
+            navigationBarVisible = !flags.HasFlag(SystemUiFlags.HideNavigation);
+            ApplyInsets();
+        }
+
+        private void ApplyInsets()
+        {
+            // See comment in OnApplyWindowInsets.
+            var insetLeft   = navigationBarVisible ? navInsetLeft   : cutoutInsetLeft;
+            var insetRight  = navigationBarVisible ? navInsetRight  : cutoutInsetRight;
+            var insetBottom = navigationBarVisible ? navInsetBottom : cutoutInsetBottom;
+            var insetTop    = navigationBarVisible ? navInsetTop    : cutoutInsetTop;
+
+            if (insetLeft   != linearLayout.PaddingLeft ||
+                insetRight  != linearLayout.PaddingRight ||
+                insetBottom != linearLayout.PaddingBottom ||
+                insetTop    != linearLayout.PaddingTop)
+            {
+                linearLayout.SetPadding(insetLeft, insetTop, insetRight, insetBottom);
+            }
         }
 
         private class ContextMenuTag : Java.Lang.Object
