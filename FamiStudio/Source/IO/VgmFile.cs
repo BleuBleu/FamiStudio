@@ -1755,9 +1755,6 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"PCM RAM COPY Size: {copySize:x6}");
 #endif
 
-                    if (vgmFile.Length < (copySize + vgmDataOffset))
-                        break;
-
                     if (vgmFile[vgmDataOffset + 2] == 0x07)
                     {
                         // PERKKA/ALEX TODO : There is ia OOB access here with some files. Either a bug in the way we export
