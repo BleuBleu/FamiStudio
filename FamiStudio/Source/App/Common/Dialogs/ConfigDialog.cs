@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using GLFWDotNet;
 
 namespace FamiStudio
 {
@@ -220,7 +219,11 @@ namespace FamiStudio
             var scalings = DpiScaling.GetAvailableScalings();
             var list = new string[scalings.Length + 1];
 
-            list[0] = $"{SystemOption} ({(int)Math.Round(DpiScaling.System * 100)}%)";
+            list[0] = SystemOption;
+
+            if (Platform.IsDesktop)
+                list[0] += $" ({(int)Math.Round(DpiScaling.System * 100)}%)";
+
             for (int i = 0; i < scalings.Length; i++)
                 list[i + 1] = $"{scalings[i]}%";
 
