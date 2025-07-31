@@ -1,7 +1,7 @@
 4.4.2
 =====
 / DPCM broken again:
-	=> Hopefully Alex will test.
+	- Latest feedback from Alex : https://discord.com/channels/747649221879922840/798008185977176074/1400130525426876476
 - Recompile NotSoFatso on all platforms.
 	x Windows
 	- Linux
