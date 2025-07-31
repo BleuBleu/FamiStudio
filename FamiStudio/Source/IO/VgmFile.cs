@@ -1287,12 +1287,16 @@ namespace FamiStudio
                     if (!trigger)
                         attack = false;
 
-                    newState = sustain ? ChannelState.Triggered : (stopped ? ChannelState.Stopped : ChannelState.Released);
+                    if (!state.fmTrigger && trigger)
+                        newState = ChannelState.Triggered;
+                    else
+                        newState = sustain ? ChannelState.Triggered : (stopped ? ChannelState.Stopped : ChannelState.Released);
 
                     if (newState != state.state || trigger)
                     {
                         stop = newState == ChannelState.Stopped;
-                        release = newState == ChannelState.Released;
+                        if (!trigger)
+                            release = newState == ChannelState.Released;
                         state.state = newState;
                         force |= true;
                     }
@@ -1750,9 +1754,6 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"PCM RAM Copy: {vgmFile[vgmDataOffset + 2]:x2}");
                     Log.LogMessage(LogSeverity.Info, $"PCM RAM COPY Size: {copySize:x6}");
 #endif
-
-                    if (vgmFile.Length < (copySize + vgmDataOffset))
-                        break;
 
                     if (vgmFile[vgmDataOffset + 2] == 0x07)
                     {
