@@ -220,6 +220,10 @@ namespace FamiStudio
             var list = new string[scalings.Length + 1];
 
             list[0] = SystemOption;
+
+            if (Platform.IsDesktop)
+                list[0] += $" ({(int)Math.Round(DpiScaling.System * 100)}%)";
+
             for (int i = 0; i < scalings.Length; i++)
                 list[i + 1] = $"{scalings[i]}%";
 
@@ -292,7 +296,6 @@ namespace FamiStudio
                     page.AddCheckBox(ShowRegisterViewerLabel.Colon, Settings.ShowRegisterViewer, ShowRegisterViewerTooltip); // 10
                     page.AddCheckBox(UseOSDialogsLabel.Colon, Settings.UseOSDialogs, UseOSDialogsTooltip); // 11
                         
-                    page.SetPropertyVisible(0, !Platform.IsMacOS); // No manual DPI selection on MacOS. 
                     page.SetPropertyVisible(3, Platform.IsDesktop);
                     page.SetPropertyVisible(5, Platform.IsDesktop);
                     page.SetPropertyVisible(6, Platform.IsDesktop);

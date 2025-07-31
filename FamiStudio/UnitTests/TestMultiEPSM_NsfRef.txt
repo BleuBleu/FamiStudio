@@ -5880,7 +5880,7 @@ Project TempoMode="FamiStudio" Name="Untitled" Author="Unknown" Expansions="VRC6
 				Note Time="68" Value="B5" Duration="4" Instrument="FDS 6" FinePitch="-22"
 				Note Time="69" FinePitch="-4"
 				Note Time="70" FinePitch="14"
-				Note Time="71" FinePitch="32"
+				Note Time="71" FinePitch="32" FdsModSpeed="8" FdsModDepth="8"
 				Note Time="72" Value="C6" Duration="4" Instrument="FDS 6" FinePitch="-19" FdsModSpeed="8" FdsModDepth="8"
 				Note Time="73" FinePitch="-1"
 				Note Time="74" FinePitch="17"
