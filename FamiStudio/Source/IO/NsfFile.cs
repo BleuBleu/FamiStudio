@@ -297,7 +297,7 @@ namespace FamiStudio
 
                     var bank = nsfBytes.Count / NsfBankSize;
                     var addr = NsfMemoryStart + (nsfBytes.Count & (NsfBankSize - 1));
-                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, DpcmExportMode.All, dpcmBaseAddr, machine);
+                    var songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, DpcmExportMode.All, false, dpcmBaseAddr, machine);
                     var maxSongAddr = project.UsesSamples ? dpcmBaseAddr : codeBaseAddr;
 
                     if (addr + songBytes.Length > maxSongAddr)
@@ -310,7 +310,7 @@ namespace FamiStudio
                     if (songBytes.Length <= driverBankLeft)
                     {
                         addr = codeBaseAddr + driverBankOffset;
-                        songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, DpcmExportMode.All, dpcmBaseAddr, machine);
+                        songBytes = new FamitoneMusicFile(kernel, false).GetBytes(project, new int[] { song.Id }, addr, dpcmBankSize, DpcmExportMode.All, false, dpcmBaseAddr, machine);
                         for (var j = 0; j < songBytes.Length; j++)
                             nsfBytes[driverBankOffset + j] = songBytes[j];
                         driverBankOffset += songBytes.Length;

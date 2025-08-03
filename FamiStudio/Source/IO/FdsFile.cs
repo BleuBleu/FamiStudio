@@ -165,7 +165,7 @@ namespace FamiStudio
                 for (int i = 0; i < project.Songs.Count; i++)
                 {
                     var song = project.Songs[i];
-                    var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, FdsSongDataAddr, -1, DpcmExportMode.All, FdsDpcmStart, MachineType.NTSC);
+                    var songBytes = new FamitoneMusicFile(FamiToneKernel.FamiStudio, false).GetBytes(project, new int[] { song.Id }, FdsSongDataAddr, -1, DpcmExportMode.All, false, FdsDpcmStart, MachineType.NTSC);
 
                     songTable[i].bank  = (byte)fileIndex;
                     songTable[i].flags = (byte)(song.UsesDpcm ? dpcmFileIndex : 0xff);

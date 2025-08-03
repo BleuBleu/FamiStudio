@@ -206,6 +206,7 @@ namespace FamiStudio
         LocalizedString FT2SepFilesFmtTooltip;
         LocalizedString FT2DmcFmtTooltip;
         LocalizedString FT2DmcExportModeTooltip;
+        LocalizedString FT2ExportUnusedMappingsLabel;
         LocalizedString FT2SongListTooltip;
         LocalizedString FT2SfxSongListTooltip;
 
@@ -216,6 +217,7 @@ namespace FamiStudio
         LocalizedString SongNamePatternLabel;
         LocalizedString DmcNamePatternLabel;
         LocalizedString DmcExportModeLabel;
+        LocalizedString ExportUnusedMappingsLabel;
         LocalizedString GenerateSongListIncludeLabel;
 
         // Share tooltips
@@ -522,10 +524,12 @@ namespace FamiStudio
                         page.AddTextBox(SongNamePatternLabel.Colon, "{project}_{song}", 0, false, FT2SepFilesFmtTooltip); // 2
                         page.AddTextBox(DmcNamePatternLabel.Colon, "{project}", 0, false, FT2DmcFmtTooltip); // 3
                         page.AddDropDownList(DmcExportModeLabel.Colon, Localization.ToStringArray(DpcmExportMode.LocalizedNames), DpcmExportMode.LocalizedNames[DpcmExportMode.Minimum], FT2DmcExportModeTooltip); // 4
-                        page.AddCheckBox(GenerateSongListIncludeLabel.Colon, false, FT2SongListTooltip); // 5
-                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 6
+                        page.AddCheckBox(ExportUnusedMappingsLabel.Colon, false, FT2ExportUnusedMappingsLabel); // 5
+                        page.AddCheckBox(GenerateSongListIncludeLabel.Colon, false, FT2SongListTooltip); // 6
+                        page.AddCheckBoxList(null, songNames, null, SongListTooltip, 12); // 7
                         page.SetPropertyEnabled(2, false);
                         page.SetPropertyEnabled(3, false);
+                        page.SetPropertyEnabled(5, false);
                         page.PropertyChanged += SoundEngine_PropertyChanged;
                     }
                     break;
@@ -1078,6 +1082,15 @@ namespace FamiStudio
                 props.SetPropertyEnabled(2, (bool)value);
                 props.SetPropertyEnabled(3, (bool)value);
             }
+            else if (propIdx == 4)
+            {
+                var dmcExportMode = props.GetSelectedIndex(4);
+                props.SetPropertyEnabled(5, dmcExportMode != DpcmExportMode.Minimum);
+                if (dmcExportMode == DpcmExportMode.Minimum)
+                {
+                    props.SetPropertyValue(5, false);
+                }
+            }
         }
 
         private void Midi_PropertyChanged(PropertyPage props, int propIdx, int rowIdx, int colIdx, object value)
@@ -1262,14 +1275,15 @@ namespace FamiStudio
             var props = dialog.GetPropertyPage(famiStudio ? (int)ExportFormat.FamiStudioMusic : (int)ExportFormat.FamiTone2Music);
 
             var separate = props.GetPropertyValue<bool>(1);
-            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(6));
+            var songIds = GetSongIds(props.GetPropertyValue<bool[]>(7));
             var kernel = famiStudio ? FamiToneKernel.FamiStudio : FamiToneKernel.FamiTone2;
             var exportFormat = AssemblyFormat.GetValueForName(props.GetPropertyValue<string>(0));
             var ext = (exportFormat == AssemblyFormat.CA65 || exportFormat == AssemblyFormat.SDAS) ? "s" : "asm";
             var songNamePattern = props.GetPropertyValue<string>(2);
             var dpcmNamePattern = props.GetPropertyValue<string>(3);
             var dpcmExportMode = props.GetSelectedIndex(4);
-            var generateInclude = props.GetPropertyValue<bool>(5);
+            var dpcmExportUnusedMappings = props.GetPropertyValue<bool>(5);
+            var generateInclude = props.GetPropertyValue<bool>(6);
 
             if (separate)
             {
@@ -1297,7 +1311,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as a separate assembly file.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        success = success && f.Save(project, new int[] { songId }, exportFormat, -1, true, songFilename, dpcmFilename, dpcmExportMode, includeFilename, MachineType.Dual);
+                        success = success && f.Save(project, new int[] { songId }, exportFormat, -1, true, songFilename, dpcmFilename, dpcmExportMode, dpcmExportUnusedMappings, includeFilename, MachineType.Dual);
                     }
 
                     lastExportFilename = folder;
@@ -1316,7 +1330,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    var success = f.Save(project, songIds, exportFormat, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), dpcmExportMode, includeFilename, MachineType.Dual);
+                    var success = f.Save(project, songIds, exportFormat, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), dpcmExportMode, dpcmExportUnusedMappings, includeFilename, MachineType.Dual);
 
                     lastExportFilename = filename;
                     ShowExportResultToast(FormatAssemblyMessage, success);

@@ -190,6 +190,7 @@ namespace FamiStudio
             Console.WriteLine($"  -famistudio-asm-generate-list : Generate song list include file along with music data (default:disabled).");
             Console.WriteLine($"  -famistudio-asm-force-dpcm-bankswitch : Forces exporter to assume DPCM bankswitching is used. (default:disabled).");
             Console.WriteLine($"  -famistudio-asm-dpcm-export-mode : Which samples to export : all, anymapped, usedmapped, minimum. (default:minimum).");
+            Console.WriteLine($"  -famistudio-asm-dpcm-preserve-mappings : Export all DPCM mappings referencing an exported sample, even if not used in the export song(s). Incompatible with 'minimum' mode. (default:false).");
             Console.WriteLine($"  -famistudio-asm-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"  -famistudio-asm-sfx-generate-list : Generate sfx list include file along with SFX data (default:disabled).");
             Console.WriteLine($"");
@@ -199,6 +200,8 @@ namespace FamiStudio
             Console.WriteLine($"  -famitone2-asm-seperate-song-pattern:<pattern> : Name pattern to use when exporting songs to seperate files (default:{{project}}_{{song}}).");
             Console.WriteLine($"  -famitone2-asm-seperate-dmc-pattern:<pattern> : DMC filename pattern to use when exporting songs to seperate files (default:{{project}}).");
             Console.WriteLine($"  -famitone2-asm-generate-list : Generate song list include file along with music data (default:disabled).");
+            Console.WriteLine($"  -famitone2-asm-dpcm-export-mode : Which samples to export : all, anymapped, usedmapped, minimum. (default:minimum).");
+            Console.WriteLine($"  -famitone2-asm-dpcm-preserve-mappings : Export all DPCM mappings referencing an exported sample, even if not used in the export song(s). Incompatible with 'minimum' mode. (default:false).");
             Console.WriteLine($"  -famitone2-asm-sfx-mode:<mode> : Target machine for SFX : ntsc, pal or dual (default:project mode).");
             Console.WriteLine($"  -famitone2-asm-sfx-generate-list : Generate sfx list include file along with SFX data (default:disabled).");
             Console.WriteLine($"");
@@ -499,6 +502,7 @@ namespace FamiStudio
             if (!seperate && !ValidateExtension(filename, extension))
                 return;
 
+
             var dpcmExportModeString = ParseOption($"{engineName}-asm-dpcm-export-mode", "minimum");
             var dpcmExportMode = DpcmExportMode.Minimum;
 
@@ -508,6 +512,8 @@ namespace FamiStudio
                 case "anymapped":  dpcmExportMode = DpcmExportMode.MappedToAnyInstrument;  break;
                 case "usedmapped": dpcmExportMode = DpcmExportMode.MappedToUsedInstrument; break;
             }
+
+            var dpcmExportUnusedMappings = HasOption($"{engineName}-dpcm-preserve-mappings") && dpcmExportMode != DpcmExportMode.Minimum;
 
             var exportSongIds = GetExportSongIds();
             if (exportSongIds != null)
@@ -534,7 +540,7 @@ namespace FamiStudio
                         Log.LogMessage(LogSeverity.Info, $"Exporting song '{song.Name}' as a separate assembly file.");
 
                         FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                        f.Save(project, new int[] { songId }, format, -1, true, songFilename, dpcmFilename, dpcmExportMode, includeFilename, MachineType.Dual); 
+                        f.Save(project, new int[] { songId }, format, -1, true, songFilename, dpcmFilename, dpcmExportMode, dpcmExportUnusedMappings, includeFilename, MachineType.Dual); 
                     }
                 }
                 else
@@ -544,7 +550,7 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, $"Exporting all songs to a single assembly file.");
 
                     FamitoneMusicFile f = new FamitoneMusicFile(kernel, true);
-                    f.Save(project, exportSongIds, format, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), dpcmExportMode, includeFilename, MachineType.Dual);
+                    f.Save(project, exportSongIds, format, -1, false, filename, Path.ChangeExtension(filename, ".dmc"), dpcmExportMode, dpcmExportUnusedMappings, includeFilename, MachineType.Dual);
                 }
             }
         }

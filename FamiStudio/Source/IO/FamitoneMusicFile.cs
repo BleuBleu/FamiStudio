@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.IO;
 using System.Linq;
 using System.Reflection.Emit;
@@ -150,31 +151,53 @@ namespace FamiStudio
             }
         }
 
-        private void GatherDPCMMappings()
+        private void GatherDPCMMappings(int dmcExportMode, bool exportUnusedMappings)
         {
             if (project.UsesSamples)
             {
                 var maxMappings = kernel == FamiToneKernel.FamiStudio && project.SoundEngineUsesExtendedDpcm ? MaxDPMCSampleMappingsExt : MaxDPMCSampleMappingsBase;
 
-                // Gather all unique mappings. Since we don't clean up the mappings to keep stable offsets
-                // between song export, we scan here to find only the ones that are actually used by the song.
-                // TODO : Sort them by number of uses and favor the most commonly used ones for single-byte notes.
-                foreach (var song in project.Songs)
+                if (dmcExportMode == DpcmExportMode.Minimum || !exportUnusedMappings)
                 {
-                    var channel = song.Channels[ChannelType.Dpcm];
-
-                    for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                    // Gather all unique mappings. Since we don't clean up the mappings to keep stable offsets
+                    // between song export, we scan here to find only the ones that are actually used by the song.
+                    // TODO : Sort them by number of uses and favor the most commonly used ones for single-byte notes.
+                    foreach (var song in project.Songs)
                     {
-                        var instrument = it.Note.Instrument;
-                        var mapping = instrument.GetDPCMMapping(it.Note.Value);
-                        if (mapping != null && !sampleMappingIndices.ContainsKey(mapping))
-                        {
-                            sampleMappingIndices.Add(mapping, 0);
+                        var channel = song.Channels[ChannelType.Dpcm];
 
-                            if (sampleMappingIndices.Count >= maxMappings)
+                        for (var it = channel.GetSparseNoteIterator(song.StartLocation, song.EndLocation, NoteFilter.Musical); !it.Done; it.Next())
+                        {
+                            var instrument = it.Note.Instrument;
+                            var mapping = instrument.GetDPCMMapping(it.Note.Value);
+                            if (mapping != null && !sampleMappingIndices.ContainsKey(mapping))
                             {
-                                Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
-                                break;
+                                sampleMappingIndices.Add(mapping, 0);
+
+                                if (sampleMappingIndices.Count >= maxMappings)
+                                {
+                                    Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var inst in project.Instruments)
+                    {
+                        if (inst.SamplesMapping != null)
+                        {
+                            foreach (var mapping in inst.SamplesMapping.Values)
+                            {
+                                sampleMappingIndices.Add(mapping, 0);
+
+                                if (sampleMappingIndices.Count >= maxMappings)
+                                {
+                                    Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
+                                    break;
+                                }
                             }
                         }
                     }
@@ -2315,14 +2338,14 @@ namespace FamiStudio
             return flags;
         }
 
-        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, int dmcExportMode, string includeFilename, int machine)
+        public bool Save(Project originalProject, int[] songIds, int format, int maxDpcmBankSize, bool separateSongs, string filename, string dmcFilename, int dmcExportMode, bool exportUnusedMappings, string includeFilename, int machine)
         {
             this.machine = machine;
 
             SetupProject(originalProject, songIds, dmcExportMode);
             SetupFormat(format, separateSongs);
             CleanupEnvelopes();
-            GatherDPCMMappings();
+            GatherDPCMMappings(dmcExportMode, exportUnusedMappings);
 
             var dmcSizes     = OutputDPCMSamples(filename, dmcFilename, maxDpcmBankSize);
             var headerSize   = OutputHeader(separateSongs);
@@ -2540,13 +2563,13 @@ namespace FamiStudio
         }
 
         // HACK: This is pretty stupid. We write the ASM and parse it to get the bytes. Kind of backwards.
-        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmBankSize, int dpcmExportMode, int dpcmOffset, int machine)
+        public byte[] GetBytes(Project project, int[] songIds, int songOffset, int dpcmBankSize, int dpcmExportMode, bool dpcmExportUnusedMappings, int dpcmOffset, int machine)
         {
             var tempFolder = Utils.GetTemporaryDirectory();
             var tempAsmFilename = Path.Combine(tempFolder, "nsf.asm");
             var tempDmcFilename = Path.Combine(tempFolder, "nsf.dmc");
 
-            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, dpcmExportMode,null, machine);
+            Save(project, songIds, AssemblyFormat.ASM6, dpcmBankSize, false, tempAsmFilename, tempDmcFilename, dpcmExportMode, dpcmExportUnusedMappings, null, machine);
 
             return ParseAsmFile(tempAsmFilename, songOffset, dpcmOffset);
         }
