@@ -497,7 +497,6 @@ namespace FamiStudio
             var extension = (format == AssemblyFormat.CA65 || format == AssemblyFormat.SDAS) ? ".s" : ".asm";
             var seperate = HasOption($"{engineName}-asm-seperate-files");
             var generateInclude = HasOption($"{engineName}-asm-generate-list");
-            var forceDpcmBankswitch = famistudio && HasOption($"{engineName}-asm-force-dpcm-bankswitch");
 
             if (!seperate && !ValidateExtension(filename, extension))
                 return;
