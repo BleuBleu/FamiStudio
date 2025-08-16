@@ -213,10 +213,10 @@ You can only enable one audio expansion (`FAMISTUDIO_EXP_XXX`). Enabling more th
     ; Konami VRC7 (6 FM channels)
     FAMISTUDIO_EXP_VRC7          = 1 
 
-    ; Nintendo MMC5 (2 extra squares, extra DPCM not supported)
+    ; Nintendo MMC5 (2 extra squares, extra PCM not supported)
     FAMISTUDIO_EXP_MMC5          = 1 
 
-    ; Sunsoft S5B (2 extra squares, advanced features not supported.)
+    ; Sunsoft S5B (3 extra squares)
     FAMISTUDIO_EXP_S5B           = 1 
 
     ; Famicom Disk System (extra wavetable channel)
