@@ -29,7 +29,8 @@ namespace FamiStudio
         // Version 16 = FamiStudio 4.2.0 (Folders, sound engine options, project mixer settings)
         // Version 17 = FamiStudio 4.3.0 (Tuning)
         // Version 18 = FamiStudio 4.4.0 (FDS multi-wave)
-        public const int Version = 18;
+        // Version 19 = FamiStudio 4.5.0 (Time spent on project)
+        public const int Version = 19;
         public const int MaxMappedSampleSize = 0x40000;
         public const int MaxDPCMBanks = 64; 
         public const int MaxSampleAddress = 255 * 64;
@@ -110,6 +111,8 @@ namespace FamiStudio
         public bool AllowMixerOverride   { get => allowMixerOverride;   set => allowMixerOverride   = value; } // TODO : This has no business being here. More to FamiStudio class.
         public bool OverrideBassCutoffHz { get => overrideBassCutoffHz; set => overrideBassCutoffHz = value; }
         public int  BassCutoffHz         { get => bassCutoffHz;         set => bassCutoffHz         = value; }
+
+        public float TimeSpentSeconds = 0;
 
         public ExpansionMixer[] ExpansionMixerSettings => mixerSettings;
 
@@ -2391,6 +2394,11 @@ namespace FamiStudio
             if (!buffer.IsForUndoRedo)
             {
                 buffer.Serialize(ref nextUniqueId);
+            }
+            
+            if (buffer.Version >= 19)
+            {
+                buffer.Serialize(ref TimeSpentSeconds);
             }
 
             if (buffer.Version >= 15)

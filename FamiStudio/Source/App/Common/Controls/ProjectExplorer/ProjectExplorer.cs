@@ -27,6 +27,8 @@ namespace FamiStudio
         private int dragLineSizeY;
         private int topTabSizeY;
 
+        private Label TimeSpentUILabel;
+
         private enum TabType
         {
             Project,
@@ -39,6 +41,7 @@ namespace FamiStudio
         LocalizedString[] TabNames = new LocalizedString[(int)TabType.Count];
 
         // Buttons
+        LocalizedString TimeSpentLabel;
         LocalizedString SongsHeaderLabel;
         LocalizedString InstrumentHeaderLabel;
         LocalizedString SamplesHeaderLabel;
@@ -651,6 +654,19 @@ namespace FamiStudio
             mixerButton.Click += (s) => mixerButton.Dimmed = !ToggleAllowProjectMixer();
 
             CreateCenteredLabel(panel, projectText, 2 * mixerButton.Left - panel.Width, true);
+        }
+
+        private string GetTimeSpentText() => String.Format(TimeSpentLabel,
+            (int)(App.Project.TimeSpentSeconds / 3600),
+            (int)(App.Project.TimeSpentSeconds / 60) % 60,
+            (int)App.Project.TimeSpentSeconds % 60
+        );
+
+        private void CreateTimeSpentLabel() {
+            var project = App.Project;
+            var timeSpentText = GetTimeSpentText();
+            var panel = CreateGradientPanel(Theme.DarkGreyColor4, project);
+            TimeSpentUILabel = CreateCenteredLabel(panel, timeSpentText, panel.Width, true);
         }
 
         private void ProjectHeader_PointerUp(PointerEventArgs e)
@@ -1520,6 +1536,7 @@ namespace FamiStudio
 
             if (selectedTab == TabType.Project)
             {
+                CreateTimeSpentLabel();
                 CreateProjectHeaderControls();
                 CreateSongsHeaderControls();
                 CreateAllSongsControls();
@@ -3478,6 +3495,7 @@ namespace FamiStudio
             ValidateIntegrity();
             TickFling(delta);
             UpdateCaptureOperation(mouseLastPos, true, delta);
+            if (TimeSpentUILabel != null) TimeSpentUILabel.Text = GetTimeSpentText();
 #if DEBUG
             ValidateIntegrity();
 #endif

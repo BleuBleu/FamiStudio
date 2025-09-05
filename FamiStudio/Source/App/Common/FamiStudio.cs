@@ -2442,6 +2442,8 @@ namespace FamiStudio
             lastTickCurrentFrame = IsPlaying ? songPlayer.PlayPosition : -1;
             averageTickRateMs = Utils.Lerp(averageTickRateMs, deltaTime * 1000.0f, 0.01f);
 
+            if (Project != null) Project.TimeSpentSeconds += deltaTime;
+
             ProcessAudioDeviceChanges();
             ProcessQueuedMidiNotes();
             ConditionalMarkControlsDirty();
