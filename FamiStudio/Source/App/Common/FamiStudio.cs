@@ -261,7 +261,7 @@ namespace FamiStudio
                     ResetSelectedChannel();
                     RefreshLayout();
                     ProjectExplorer.SelectedSongChanged();
-                    PianoRoll.SongChanged(selectedChannelIndex);
+                    PianoRoll.SongChanged(0);
                     Sequencer.Reset();
                     ToolBar.Reset();
 
