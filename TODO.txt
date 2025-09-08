@@ -1,3 +1,10 @@
+4.4.3
+=====
+- Crash reported by email.
+    1. Create a new track and name it using Japanese characters.
+    2. Add a two-byte number (e.g., １,２ ) to the end of the track name.
+    3. Hold Ctrl+Shift and drag the track to duplicate it.
+
 4.5.0
 =====
 - Multi-expansion conflict.
