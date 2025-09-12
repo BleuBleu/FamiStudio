@@ -187,17 +187,15 @@ namespace FamiStudio
                 {
                     foreach (var inst in project.Instruments)
                     {
-                        if (inst.SamplesMapping != null)
+                        if (inst.SamplesMapping == null) continue;
+                        foreach (var mapping in inst.SamplesMapping.Values)
                         {
-                            foreach (var mapping in inst.SamplesMapping.Values)
-                            {
-                                sampleMappingIndices.Add(mapping, 0);
+                            sampleMappingIndices.Add(mapping, 0);
 
-                                if (sampleMappingIndices.Count >= maxMappings)
-                                {
-                                    Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
-                                    break;
-                                }
+                            if (sampleMappingIndices.Count >= maxMappings)
+                            {
+                                Log.LogMessage(LogSeverity.Error, $"The limit of {maxMappings} unique DPCM sample mappings has been reached. Some samples will not be played correctly.");
+                                break;
                             }
                         }
                     }
