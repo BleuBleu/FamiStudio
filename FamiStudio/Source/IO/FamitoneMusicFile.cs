@@ -190,7 +190,10 @@ namespace FamiStudio
                         if (inst.SamplesMapping == null) continue;
                         foreach (var mapping in inst.SamplesMapping.Values)
                         {
-                            sampleMappingIndices.Add(mapping, 0);
+                            if (!sampleMappingIndices.TryAdd(mapping, 0))
+                            {
+                                Log.LogMessage(LogSeverity.Debug, $"Found a duplicate mapping.");
+                            }
 
                             if (sampleMappingIndices.Count >= maxMappings)
                             {
