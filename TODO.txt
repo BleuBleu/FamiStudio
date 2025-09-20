@@ -5,6 +5,9 @@
     2. Add a two-byte number (e.g., １,２ ) to the end of the track name.
     3. Hold Ctrl+Shift and drag the track to duplicate it.
 
+- weird space between octaves in video piano roll export.
+https://discord.com/channels/@me/819772561940152321/1419016795754463336
+
 4.5.0
 =====
 - Multi-expansion conflict.
