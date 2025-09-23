@@ -998,8 +998,8 @@ namespace FamiStudio
             {
                 var menu = new List<ContextMenuOption>();
 
-                menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(sample); }));
-                menu.Add(new ContextMenuOption("MenuWave",   ImportSampleContext, () => { UpdateDPCMSampleSourceData(sample); }, ContextMenuSeparator.After));
+                menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(sample); }, ContextMenuSeparator.After));
+                menu.Add(new ContextMenuOption("MenuWave",   ImportSampleContext, () => { UpdateDPCMSampleSourceData(sample); }));
 
                 if (Platform.IsDesktop)
                 {
