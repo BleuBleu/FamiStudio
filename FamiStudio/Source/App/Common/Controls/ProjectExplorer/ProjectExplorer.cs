@@ -999,10 +999,10 @@ namespace FamiStudio
                 var menu = new List<ContextMenuOption>();
 
                 menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(sample); }, ContextMenuSeparator.After));
-                menu.Add(new ContextMenuOption("MenuWave",   ImportSampleContext, () => { UpdateDPCMSampleSourceData(sample); }));
-
+                
                 if (Platform.IsDesktop)
                 {
+                    menu.Add(new ContextMenuOption("MenuWave", ImportSampleContext, () => { UpdateDPCMSampleSourceData(sample); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportProcessedDmcDataContext, () => { ExportDPCMSampleProcessedData(sample); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportSourceDataContext, () => { ExportDPCMSampleSourceData(sample); }));
                 }
