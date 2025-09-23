@@ -178,6 +178,7 @@ namespace FamiStudio
         LocalizedString DuplicateConvertContext;
         LocalizedString ExportProcessedDmcDataContext;
         LocalizedString ExportSourceDataContext;
+        LocalizedString ImportSampleContext;
         LocalizedString PasteRegisterValueContext;
         LocalizedString PropertiesArpeggioContext;
         LocalizedString PropertiesInstrumentContext;
@@ -997,7 +998,8 @@ namespace FamiStudio
             {
                 var menu = new List<ContextMenuOption>();
 
-                menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(sample); }, ContextMenuSeparator.After));
+                menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(sample); }));
+                menu.Add(new ContextMenuOption("MenuWave",   ImportSampleContext, () => { UpdateDPCMSampleSourceData(sample); }, ContextMenuSeparator.After));
 
                 if (Platform.IsDesktop)
                 {
@@ -3046,15 +3048,28 @@ namespace FamiStudio
             });
         }
 
-        private void ReloadDPCMSampleSourceData(DPCMSample sample)
+        private void UpdateDPCMSampleSourceData(DPCMSample sample)
         {
-            if (!string.IsNullOrEmpty(sample.SourceFilename))
+            var filename = Platform.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc;*.fms)|*.wav;*.dmc;*.fms|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+
+            if (filename != null)
             {
-                if (File.Exists(sample.SourceFilename))
+                ReloadDPCMSampleSourceData(sample, filename);
+            }
+        }
+
+        private void ReloadDPCMSampleSourceData(DPCMSample sample, string newFilename = null)
+        {
+            var filename    = string.IsNullOrEmpty(newFilename) ? sample.SourceFilename : newFilename;
+            var isSourceWav = sample.SourceDataIsWav || Path.GetExtension(filename).Equals(".wav", StringComparison.CurrentCultureIgnoreCase);
+
+            if (!string.IsNullOrEmpty(filename))
+            {
+                if (File.Exists(filename))
                 {
-                    if (sample.SourceDataIsWav)
+                    if (isSourceWav)
                     {
-                        var wavData = WaveFile.Load(sample.SourceFilename, out var sampleRate);
+                        var wavData = WaveFile.Load(filename, out var sampleRate);
                         if (wavData != null)
                         {
                             var maximumSamples = sampleRate * 2;
@@ -3062,19 +3077,19 @@ namespace FamiStudio
                                 Array.Resize(ref wavData, maximumSamples);
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
-                            sample.SetWavSourceData(wavData, sampleRate, sample.SourceFilename, false);
+                            sample.SetWavSourceData(wavData, sampleRate, filename, false);
                             sample.Process();
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
                     else
                     {
-                        var dmcData = File.ReadAllBytes(sample.SourceFilename);
+                        var dmcData = File.ReadAllBytes(filename);
                         if (dmcData.Length > DPCMSample.MaxSampleSize)
                             Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
-                        sample.SetDmcSourceData(dmcData, sample.SourceFilename, false);
+                        sample.SetDmcSourceData(dmcData, filename, false);
                         sample.Process();
                         App.UndoRedoManager.EndTransaction();
                     }
