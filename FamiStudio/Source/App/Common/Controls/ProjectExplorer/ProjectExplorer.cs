@@ -3058,7 +3058,8 @@ namespace FamiStudio
             {
                 if (File.Exists(filename))
                 {
-                    if ((!newFile && sample.SourceDataIsWav) || Path.GetExtension(filename).Equals(".wav", StringComparison.CurrentCultureIgnoreCase))
+                    var ext = Path.GetExtension(filename);
+                    if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                     {
                         var wavData = WaveFile.Load(filename, out var sampleRate);
                         if (wavData != null)
@@ -3073,7 +3074,7 @@ namespace FamiStudio
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
-                    else
+                    else if (ext.Equals(".dmc", StringComparison.OrdinalIgnoreCase))
                     {
                         var dmcData = File.ReadAllBytes(filename);
                         if (dmcData.Length > DPCMSample.MaxSampleSize)
