@@ -3063,11 +3063,12 @@ namespace FamiStudio
 
         private void ReloadDPCMSampleSourceData(DPCMSample sample, string newFilename = null)
         {
-            var filename = string.IsNullOrEmpty(newFilename) ? sample.SourceFilename : newFilename;
+            var newFile  = !string.IsNullOrEmpty(newFilename);
+            var filename = newFile ? newFilename : sample.SourceFilename;
 
             if (File.Exists(filename))
             {
-                if (sample.SourceDataIsWav || Path.GetExtension(filename).Equals(".wav", StringComparison.CurrentCultureIgnoreCase))
+                if ((!newFile && sample.SourceDataIsWav) || Path.GetExtension(filename).Equals(".wav", StringComparison.CurrentCultureIgnoreCase))
                 {
                     var wavData = WaveFile.Load(filename, out var sampleRate);
                     if (wavData != null)
