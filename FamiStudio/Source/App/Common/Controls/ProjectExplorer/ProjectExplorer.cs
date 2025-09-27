@@ -1002,7 +1002,7 @@ namespace FamiStudio
                 
                 if (Platform.IsDesktop)
                 {
-                    menu.Add(new ContextMenuOption("MenuWave", ImportSampleContext, () => { UpdateDPCMSampleSourceData(sample); }));
+                    menu.Add(new ContextMenuOption("MenuWave", ImportSampleContext, () => { ReloadDPCMSampleSourceData(sample, true); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportProcessedDmcDataContext, () => { ExportDPCMSampleProcessedData(sample); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportSourceDataContext, () => { ExportDPCMSampleSourceData(sample); }));
                 }
@@ -3048,58 +3048,49 @@ namespace FamiStudio
             });
         }
 
-        private void UpdateDPCMSampleSourceData(DPCMSample sample)
+        private void ReloadDPCMSampleSourceData(DPCMSample sample, bool newFile = false)
         {
-            var filename  = Platform.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc)|*.wav;*.dmc|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder);
+            var filename = newFile
+                ? Platform.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc)|*.wav;*.dmc|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder)
+                : sample.SourceFilename;
+
             if (filename != null)
             {
-                var ext = Path.GetExtension(filename);
-                if (ext.Equals(".wav", StringComparison.CurrentCultureIgnoreCase) || ext.Equals(".dmc", StringComparison.CurrentCultureIgnoreCase))
+                if (File.Exists(filename))
                 {
-                    ReloadDPCMSampleSourceData(sample, filename);
-                }
-            }
-        }
-
-        private void ReloadDPCMSampleSourceData(DPCMSample sample, string newFilename = null)
-        {
-            var newFile  = !string.IsNullOrEmpty(newFilename);
-            var filename = newFile ? newFilename : sample.SourceFilename;
-
-            if (File.Exists(filename))
-            {
-                if ((!newFile && sample.SourceDataIsWav) || Path.GetExtension(filename).Equals(".wav", StringComparison.CurrentCultureIgnoreCase))
-                {
-                    var wavData = WaveFile.Load(filename, out var sampleRate);
-                    if (wavData != null)
+                    if ((!newFile && sample.SourceDataIsWav) || Path.GetExtension(filename).Equals(".wav", StringComparison.CurrentCultureIgnoreCase))
                     {
-                        var maximumSamples = sampleRate * 2;
-                        if (wavData.Length > maximumSamples)
-                            Array.Resize(ref wavData, maximumSamples);
+                        var wavData = WaveFile.Load(filename, out var sampleRate);
+                        if (wavData != null)
+                        {
+                            var maximumSamples = sampleRate * 2;
+                            if (wavData.Length > maximumSamples)
+                                Array.Resize(ref wavData, maximumSamples);
+
+                            App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
+                            sample.SetWavSourceData(wavData, sampleRate, filename, false);
+                            sample.Process();
+                            App.UndoRedoManager.EndTransaction();
+                        }
+                    }
+                    else
+                    {
+                        var dmcData = File.ReadAllBytes(filename);
+                        if (dmcData.Length > DPCMSample.MaxSampleSize)
+                            Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
-                        sample.SetWavSourceData(wavData, sampleRate, filename, false);
+                        sample.SetDmcSourceData(dmcData, filename, false);
                         sample.Process();
                         App.UndoRedoManager.EndTransaction();
                     }
+
+                    DPCMSampleReloaded?.Invoke(sample);
                 }
                 else
                 {
-                    var dmcData = File.ReadAllBytes(filename);
-                    if (dmcData.Length > DPCMSample.MaxSampleSize)
-                        Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
-
-                    App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
-                    sample.SetDmcSourceData(dmcData, filename, false);
-                    sample.Process();
-                    App.UndoRedoManager.EndTransaction();
+                    App.DisplayNotification(CantFindSourceFileError.Format(filename));
                 }
-
-                DPCMSampleReloaded?.Invoke(sample);
-            }
-            else
-            {
-                App.DisplayNotification(CantFindSourceFileError.Format(filename));
             }
         }
 
