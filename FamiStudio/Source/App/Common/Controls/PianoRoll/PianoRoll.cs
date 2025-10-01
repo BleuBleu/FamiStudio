@@ -1640,8 +1640,10 @@ namespace FamiStudio
             if (!pianoVisible)
                 return;
 
+            var scrollThickness = editMode != EditionMode.VideoRecording ? scrollBarThickness : 0;
+
             r.c.PushTranslation(0, headerAndEffectSizeY);
-            r.c.PushClipRegion(0, 0, pianoSizeX, height - headerAndEffectSizeY - scrollBarThickness + 1);
+            r.c.PushClipRegion(0, 0, pianoSizeX, height - headerAndEffectSizeY - scrollThickness + 1);
             r.c.FillRectangleGradient(0, 0, pianoSizeX, Height, Theme.LightGreyColor1, Theme.LightGreyColor2, false, pianoSizeX);
 
             var drawDpcmColorKeys = (editMode == EditionMode.Channel && Song.Channels[editChannel].Type == ChannelType.Dpcm) || editMode == EditionMode.DPCMMapping;
@@ -1742,7 +1744,7 @@ namespace FamiStudio
             }
 
             r.c.DrawLine(pianoSizeX - 1, 0, pianoSizeX - 1, Height, Theme.BlackColor);
-            r.c.DrawLine(0, height - headerAndEffectSizeY - scrollBarThickness, pianoSizeX, height - headerAndEffectSizeY - scrollBarThickness, Theme.BlackColor);
+            r.c.DrawLine(0, height - headerAndEffectSizeY - scrollThickness, pianoSizeX, height - headerAndEffectSizeY - scrollThickness, Theme.BlackColor);
             r.c.PopClipRegion();
             r.c.PopTransform();
         }
@@ -3341,8 +3343,10 @@ namespace FamiStudio
 
         private void RenderNoteArea(RenderInfo r)
         {
+            var scrollThickness = editMode != EditionMode.VideoRecording ? scrollBarThickness : 0;
+
             r.c.PushTranslation(pianoSizeX, headerAndEffectSizeY);
-            r.c.PushClipRegion(0, 0, width - pianoSizeX - scrollBarThickness, height - headerAndEffectSizeY - scrollBarThickness);
+            r.c.PushClipRegion(0, 0, width - pianoSizeX - scrollThickness, height - headerAndEffectSizeY - scrollThickness);
 
             if (editMode == EditionMode.Channel ||
                 editMode == EditionMode.VideoRecording ||
@@ -3359,9 +3363,9 @@ namespace FamiStudio
 
             if (!string.IsNullOrEmpty(noteTooltip) && editMode != EditionMode.DPCM)
             {
-                var textWidth = Width - tooltipTextPosX - scrollBarThickness;
+                var textWidth = Width - tooltipTextPosX - scrollThickness;
                 if (textWidth > 0)
-                    r.f.DrawText(noteTooltip, r.fonts.FontLarge, 0, Height - tooltipTextPosY - scrollBarThickness, Theme.LightGreyColor1, TextFlags.Right, textWidth);
+                    r.f.DrawText(noteTooltip, r.fonts.FontLarge, 0, Height - tooltipTextPosY - scrollThickness, Theme.LightGreyColor1, TextFlags.Right, textWidth);
             }
 
             r.c.PopClipRegion();
