@@ -2158,6 +2158,10 @@ namespace FamiStudio
                         var srcCustomSettings = song.GetPatternCustomSettings(srcIndex);
                         song.SetPatternCustomSettings(i, srcCustomSettings.patternLength, srcCustomSettings.beatLength, srcCustomSettings.groove, srcCustomSettings.groovePaddingMode);
                     }
+                    else
+                    {
+                        song.ClearPatternCustomSettings(i);
+                    }
                 }
 
                 // Clear everything where we are pasting.
