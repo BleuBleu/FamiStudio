@@ -2158,7 +2158,7 @@ namespace FamiStudio
                         var srcCustomSettings = song.GetPatternCustomSettings(srcIndex);
                         song.SetPatternCustomSettings(i, srcCustomSettings.patternLength, srcCustomSettings.beatLength, srcCustomSettings.groove, srcCustomSettings.groovePaddingMode);
                     }
-                    else
+                    else if (song.PatternHasCustomSettings(i))
                     {
                         song.ClearPatternCustomSettings(i);
                     }
