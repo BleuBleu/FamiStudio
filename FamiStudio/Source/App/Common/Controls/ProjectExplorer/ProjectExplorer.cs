@@ -178,7 +178,7 @@ namespace FamiStudio
         LocalizedString DuplicateConvertContext;
         LocalizedString ExportProcessedDmcDataContext;
         LocalizedString ExportSourceDataContext;
-        LocalizedString ImportSampleContext;
+        LocalizedString ReplaceSampleContext;
         LocalizedString PasteRegisterValueContext;
         LocalizedString PropertiesArpeggioContext;
         LocalizedString PropertiesInstrumentContext;
@@ -1002,7 +1002,7 @@ namespace FamiStudio
                 
                 if (Platform.IsDesktop)
                 {
-                    menu.Add(new ContextMenuOption("MenuWave", ImportSampleContext, () => { ReloadDPCMSampleSourceData(sample, true); }));
+                    menu.Add(new ContextMenuOption("MenuWave", ReplaceSampleContext, () => { ReloadDPCMSampleSourceData(sample, true); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportProcessedDmcDataContext, () => { ExportDPCMSampleProcessedData(sample); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportSourceDataContext, () => { ExportDPCMSampleSourceData(sample); }));
                 }
