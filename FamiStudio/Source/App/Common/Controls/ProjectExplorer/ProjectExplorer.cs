@@ -3048,9 +3048,9 @@ namespace FamiStudio
             });
         }
 
-        private void ReloadDPCMSampleSourceData(DPCMSample sample, bool newFile = false)
+        private void ReloadDPCMSampleSourceData(DPCMSample sample, bool replace = false)
         {
-            var filename = newFile
+            var filename = replace
                 ? Platform.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc)|*.wav;*.dmc|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder)
                 : sample.SourceFilename;
 
