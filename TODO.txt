@@ -1,5 +1,6 @@
 4.4.3
 =====
+- Do a pass on Discord bugs
 x S+Click while creating a note doesnt snap.
 x Recompile Android ARM64 libs with 16KB pages.
 x Recompile NesSndEmu.dll on Windows just to be safe.
