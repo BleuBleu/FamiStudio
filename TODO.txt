@@ -1,7 +1,8 @@
 4.4.3
 =====
 - S+Click while creating a note doesnt snap.
-- 
+- Recompile Android ARM64 libs with 16KB pages.
+- Recompile NesSndEmu.dll on Windows just to be safe.
 
 4.5.0
 =====
