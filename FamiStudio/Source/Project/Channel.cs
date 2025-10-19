@@ -348,7 +348,7 @@ namespace FamiStudio
 
             for (firstDigit = oldName.Length - 1; firstDigit >= 0; firstDigit--)
             {
-                if (!char.IsDigit(oldName[firstDigit]))
+                if (!Utils.IsAsciiDigit(oldName[firstDigit]))
                     break;
             }
 

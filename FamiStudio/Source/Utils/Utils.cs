@@ -170,7 +170,7 @@ namespace FamiStudio
                 {
                     pastDecimal = true;
                 }
-                else if (!char.IsDigit(c))
+                else if (!IsAsciiDigit(c))
                 {
                     break;
                 }
@@ -181,7 +181,7 @@ namespace FamiStudio
 
         public static float ParseFloatWithLeadingAndTrailingGarbage(string s)
         {
-            s = new String(s.SkipWhile((c) => !char.IsDigit(c)).ToArray());
+            s = new String(s.SkipWhile((c) => !IsAsciiDigit(c)).ToArray());
             return ParseFloatWithTrailingGarbage(s);
         }
 
@@ -202,7 +202,7 @@ namespace FamiStudio
 
             for (; idx < Math.Min(s.Length, 7); idx++)
             {
-                if (!char.IsDigit(s[idx]))
+                if (!IsAsciiDigit(s[idx]))
                     break;
             }
 
@@ -211,8 +211,14 @@ namespace FamiStudio
 
         public static int ParseIntWithLeadingAndTrailingGarbage(string s)
         {
-            s = new String(s.SkipWhile((c) => !char.IsDigit(c)).ToArray());
+            s = new String(s.SkipWhile((c) => !IsAsciiDigit(c)).ToArray());
             return ParseIntWithTrailingGarbage(s);
+        }
+
+        // char.IsDigit recognize full-width digits, I dont care about them.
+        public static bool IsAsciiDigit(char c)
+        {
+            return c >= '0' && c <= '9';
         }
 
         public static int RoundDownAndClamp(int x, int factor, int min)
