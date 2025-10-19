@@ -7835,6 +7835,10 @@ namespace FamiStudio
 
                         StartCaptureOperation(x, y, CaptureOperation.CreateSlideNote, true);
 
+                        // Apply snapping.
+                        captureNoteAbsoluteIdx = SnapNote(captureNoteAbsoluteIdx);
+                        captureNoteLocation = Song.AbsoluteNoteIndexToNoteLocation(captureNoteAbsoluteIdx);
+
                         note = pattern.GetOrCreateNoteAt(captureNoteLocation.NoteIndex);
                         note.Value = noteValue;
                         note.Duration = (ushort)Song.BeatLength;

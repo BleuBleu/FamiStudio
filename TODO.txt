@@ -1,14 +1,10 @@
 4.4.3
 =====
-- S+Click while creating a note doesnt snap.
+x S+Click while creating a note doesnt snap.
 x Recompile Android ARM64 libs with 16KB pages.
 x Recompile NesSndEmu.dll on Windows just to be safe.
-- Crash reported by email.
-    1. Create a new track and name it using Japanese characters.
-    2. Add a two-byte number (e.g., １,２ ) to the end of the track name.
-    3. Hold Ctrl+Shift and drag the track to duplicate it.
-- weird space between octaves in video piano roll export (did Steo fix that one?)
-	https://discord.com/channels/@me/819772561940152321/1419016795754463336
+x Crash reported by email.
+- 
 
 4.5.0
 =====
