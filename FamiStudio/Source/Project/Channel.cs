@@ -1353,11 +1353,11 @@ namespace FamiStudio
             var loc0 = new NoteLocation(0, 0);
             var loc1 = new NoteLocation(Song.Length, 0);
 
-            for (var it = GetSparseNoteIterator(loc0, loc1); !it.Done; it.Next())
+            for (var it = GetSparseNoteIterator(loc0, loc1, NoteFilter.Musical | NoteFilter.Stop); !it.Done; it.Next())
             {
                 var note = it.Note;
 
-                Debug.Assert(note.IsMusical || note.IsStop || note.HasCutDelay);
+                Debug.Assert(note.IsMusical || note.IsStop);
 
                 if (it.Note.IsMusical)
                 {
