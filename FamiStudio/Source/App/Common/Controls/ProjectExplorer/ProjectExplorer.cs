@@ -178,6 +178,7 @@ namespace FamiStudio
         LocalizedString DuplicateConvertContext;
         LocalizedString ExportProcessedDmcDataContext;
         LocalizedString ExportSourceDataContext;
+        LocalizedString ReplaceSampleContext;
         LocalizedString PasteRegisterValueContext;
         LocalizedString PropertiesArpeggioContext;
         LocalizedString PropertiesInstrumentContext;
@@ -998,9 +999,10 @@ namespace FamiStudio
                 var menu = new List<ContextMenuOption>();
 
                 menu.Add(new ContextMenuOption("MenuDelete", DeleteSampleContext, () => { AskDeleteDPCMSample(sample); }, ContextMenuSeparator.After));
-
+                
                 if (Platform.IsDesktop)
                 {
+                    menu.Add(new ContextMenuOption("MenuWave", ReplaceSampleContext, () => { ReloadDPCMSampleSourceData(sample, true); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportProcessedDmcDataContext, () => { ExportDPCMSampleProcessedData(sample); }));
                     menu.Add(new ContextMenuOption("MenuSave", ExportSourceDataContext, () => { ExportDPCMSampleSourceData(sample); }));
                 }
@@ -3046,15 +3048,20 @@ namespace FamiStudio
             });
         }
 
-        private void ReloadDPCMSampleSourceData(DPCMSample sample)
+        private void ReloadDPCMSampleSourceData(DPCMSample sample, bool replace = false)
         {
-            if (!string.IsNullOrEmpty(sample.SourceFilename))
+            var filename = replace
+                ? Platform.ShowOpenFileDialog("Open File", "All Sample Files (*.wav;*.dmc)|*.wav;*.dmc|Wav Files (*.wav)|*.wav|DPCM Sample Files (*.dmc)|*.dmc", ref Settings.LastSampleFolder)
+                : sample.SourceFilename;
+
+            if (filename != null)
             {
-                if (File.Exists(sample.SourceFilename))
+                if (File.Exists(filename))
                 {
-                    if (sample.SourceDataIsWav)
+                    var ext = Path.GetExtension(filename);
+                    if (ext.Equals(".wav", StringComparison.OrdinalIgnoreCase))
                     {
-                        var wavData = WaveFile.Load(sample.SourceFilename, out var sampleRate);
+                        var wavData = WaveFile.Load(filename, out var sampleRate);
                         if (wavData != null)
                         {
                             var maximumSamples = sampleRate * 2;
@@ -3062,19 +3069,19 @@ namespace FamiStudio
                                 Array.Resize(ref wavData, maximumSamples);
 
                             App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
-                            sample.SetWavSourceData(wavData, sampleRate, sample.SourceFilename, false);
+                            sample.SetWavSourceData(wavData, sampleRate, filename, false);
                             sample.Process();
                             App.UndoRedoManager.EndTransaction();
                         }
                     }
-                    else
+                    else if (ext.Equals(".dmc", StringComparison.OrdinalIgnoreCase))
                     {
-                        var dmcData = File.ReadAllBytes(sample.SourceFilename);
+                        var dmcData = File.ReadAllBytes(filename);
                         if (dmcData.Length > DPCMSample.MaxSampleSize)
                             Array.Resize(ref dmcData, DPCMSample.MaxSampleSize);
 
                         App.UndoRedoManager.BeginTransaction(TransactionScope.DPCMSample, sample.Id);
-                        sample.SetDmcSourceData(dmcData, sample.SourceFilename, false);
+                        sample.SetDmcSourceData(dmcData, filename, false);
                         sample.Process();
                         App.UndoRedoManager.EndTransaction();
                     }
@@ -3083,7 +3090,7 @@ namespace FamiStudio
                 }
                 else
                 {
-                    App.DisplayNotification(CantFindSourceFileError.Format(sample.SourceFilename));
+                    App.DisplayNotification(CantFindSourceFileError.Format(filename));
                 }
             }
         }

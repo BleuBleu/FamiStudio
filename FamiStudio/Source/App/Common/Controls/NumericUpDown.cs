@@ -64,13 +64,13 @@ namespace FamiStudio
         public float Minimum
         {
             get { return min; }
-            set { min = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
+            set { min = value; val = Utils.Clamp(val, min, max); numberMin = min; SetTextBoxValue(); MarkDirty(); }
         }
 
         public float Maximum
         {
             get { return max; }
-            set { max = value; val = Utils.Clamp(val, min, max); SetTextBoxValue(); MarkDirty(); }
+            set { max = value; val = Utils.Clamp(val, min, max); numberMax = max; SetTextBoxValue(); MarkDirty(); }
         }
 
         protected void UpdateOuterMargins()
