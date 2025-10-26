@@ -991,8 +991,6 @@ namespace FamiStudio
             var prgChangeIndex = 0;
             var prevVolume = (byte)15;
             var activeNote = -1;
-            var prevIndex  = -1;
-            var prevPattern = -1;
 
             for (int i = 0; i < noteEvents.Count; i++)
             {
@@ -1076,34 +1074,13 @@ namespace FamiStudio
 
                     //var quantizedNoteIndex = Utils.Clamp((int)Math.Round(beatLength * noteIndex), 0, song.GetPatternLength(patternIdx) - 1);
                     var quantizedNoteIndex = (int)(beatLength * noteIndex);
-                    var patternLength = song.GetPatternLength(patternIdx);
 
-                    // HACK: Edge case. Extremely short notes can have a stop note occur in the same frame.
-                    if (quantizedNoteIndex == prevIndex && patternIdx == prevPattern && note.IsStop && pattern.Notes[quantizedNoteIndex].IsMusical)
-                    {
-                        // Push the stop note forward to the next frame, if available.
-                        if (++quantizedNoteIndex >= patternLength && patternIdx < patternInfos.Count - 1)
-                        {
-                            quantizedNoteIndex = 0;
-                            pattern = channel.PatternInstances[patternIdx + 1] ?? channel.CreatePattern();
-                            channel.PatternInstances[patternIdx + 1] = pattern;
-                        }
-                    }
-
-                    // On the off chance there is a very short gap between two notes, and all 3 events 
-                    // occur in a single frame. The above hack might miss a note. Workaround.
-                    if (quantizedNoteIndex < prevIndex || patternIdx < prevPattern)
-                        quantizedNoteIndex = (quantizedNoteIndex + 1) % patternLength;
-
-                    if (patternIdx == patternInfos.Count - 1 && quantizedNoteIndex >= patternLength)
+                    if (patternIdx == patternInfos.Count - 1 && quantizedNoteIndex >= song.GetPatternLength(patternIdx))
                         break;
 
-                    Debug.Assert(quantizedNoteIndex <= patternLength);
+                    Debug.Assert(quantizedNoteIndex <= song.GetPatternLength(patternIdx));
 
                     pattern.Notes[quantizedNoteIndex] = note;
-                    
-                    prevIndex   = quantizedNoteIndex;
-                    prevPattern = patternIdx;
                 }
             }
         }
