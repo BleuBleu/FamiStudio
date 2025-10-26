@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FamiStudio
 {
@@ -16,6 +14,7 @@ namespace FamiStudio
         private string dw = ".word";
         private string ll = "@";
         private string hexp = "$";
+        private bool allowDashesInName = true;
 
         private void SetupFormat(int format)
         {
@@ -46,6 +45,8 @@ namespace FamiStudio
                     hexp = "0x";
                     break;
             }
+
+            allowDashesInName = format != AssemblyFormat.ASM6;
         }
 
         private RegisterWrite[] GetRegisterWrites(Song song, bool pal)
@@ -119,7 +120,7 @@ namespace FamiStudio
                 foreach (var songId in songIds)
                 {
                     var song = project.GetSong(songId);
-                    lines.Add($"\t{dw} {llp}sfx_{str}_{Utils.MakeNiceAsmName(song.Name)}");
+                    lines.Add($"\t{dw} {llp}sfx_{str}_{Utils.MakeNiceAsmName(song.Name, allowDashesInName)}");
                 }
                 lines.Add("");
             }
@@ -235,7 +236,7 @@ namespace FamiStudio
 
                     effect.Add(0);
 
-                    lines.Add($"{llp}sfx_{str}_{Utils.MakeNiceAsmName(song.Name)}:");
+                    lines.Add($"{llp}sfx_{str}_{Utils.MakeNiceAsmName(song.Name, allowDashesInName)}:");
 
                     for (int i = 0; i < (effect.Count + 15) / 16; i++)
                         lines.Add($"\t{db} {string.Join(",", effect.Skip(i * 16).Take(Math.Min(16, effect.Count - i * 16)).Select(x => $"{hexp}{x:x2}"))}");
@@ -260,7 +261,7 @@ namespace FamiStudio
                 {
                     var songId = songIds[songIdx];
                     var song = project.GetSong(songId);
-                    includeLines.Add($"sfx_{Utils.MakeNiceAsmName(song.Name)} = {songIdx}");
+                    includeLines.Add($"sfx_{Utils.MakeNiceAsmName(song.Name, allowDashesInName)} = {songIdx}");
                 }
                 includeLines.Add($"sfx_max = {songIds.Length}");
 

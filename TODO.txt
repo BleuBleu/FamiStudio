@@ -1,6 +1,10 @@
 4.4.3
 =====
 - Do a pass on Discord bugs
+	/ Large cursor on MacOS retina
+	x ASM6 SFX dash issue.
+- Run unit tests.
+- Merge PRs.
 x S+Click while creating a note doesnt snap.
 x Recompile Android ARM64 libs with 16KB pages.
 x Recompile NesSndEmu.dll on Windows just to be safe.
@@ -21,7 +25,7 @@ Linux notes
 	- OpenAL Soft 
 		- Install ALSA libs (libasound2-dev) 
 		- Download openal-soft code 
-		- Run cmake-gui in /build folder. 
+		- Run cmake-gui in /build folder. n
 		- Configure 
 		- Choose static C + C++ libs 
 		- Choose Release (no debug info) 
