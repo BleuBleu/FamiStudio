@@ -656,12 +656,13 @@ namespace FamiStudio
                             }
                             else
                             {
-                                var noteLength = int.Parse(parameters["NoteLength"]);
+                                var noteLength    = int.Parse(parameters["NoteLength"]);
+                                var patternLength = int.Parse(parameters["PatternLength"]);
 
                                 var groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
                                 var groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
 
-                                if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength)
+                                if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength || patternLength * noteLength > (Pattern.MaxLength / noteLength))
                                 {
                                     Log.LogMessage(LogSeverity.Error, "Invalid tempo settings.");
                                     return null;
@@ -669,7 +670,7 @@ namespace FamiStudio
 
                                 song.ChangeFamiStudioTempoGroove(groove, false);
                                 song.SetBeatLength(song.BeatLength * noteLength);
-                                song.SetDefaultPatternLength(int.Parse(parameters["PatternLength"]) * noteLength);
+                                song.SetDefaultPatternLength(patternLength * noteLength);
                                 song.SetGroovePaddingMode(groovePaddingMode);
                             }
                             break;
