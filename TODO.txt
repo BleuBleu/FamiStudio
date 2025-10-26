@@ -1,15 +1,18 @@
 4.4.3
 =====
-- Do a pass on Discord bugs
-	/ Large cursor on MacOS retina
-	x ASM6 SFX dash issue.
-- Run unit tests.
-- Merge PRs.
-x S+Click while creating a note doesnt snap.
-x Recompile Android ARM64 libs with 16KB pages.
-x Recompile NesSndEmu.dll on Windows just to be safe.
-x Crash reported by email.
+- MIDI issue due to various workarounds.
+- Small russian translation thing alex.
 - 
+
+4.4.3 Change Log
+================
+- Fixed crash when using full-width digits for names
+- Fixed ASM6 SFX export when names have dashes
+- Fixed sound engine export issue with delayed cuts
+- Fixed overly large move cursor on MacOS retina
+- Fixed DPCM sample preview sounding choppy on Android
+- Fixed crash when exporting songs with duplicated sample mappings (Thanks James Rowe!)
+- Android native libraries are aligned to 16KB pages to make Google happy
 
 4.5.0
 =====
