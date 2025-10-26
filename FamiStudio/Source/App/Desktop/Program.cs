@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using static FamiStudio.Init;
 
 namespace FamiStudio
@@ -8,7 +9,7 @@ namespace FamiStudio
         static void WaitForDebugger()
         {
         #if DEBUG && WAIT_FOR_DEBUGGER
-            for (int i = 10; i >= 0 && !Debugger.IsAttached; i--)
+            for (var i = 20; i >= 0 && !Debugger.IsAttached; i--)
             {
                 Debug.WriteLine("Waiting {i} seconds for debugger to attach ...");
                 System.Threading.Thread.Sleep(1000);

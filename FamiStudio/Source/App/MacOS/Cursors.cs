@@ -31,10 +31,13 @@ namespace FamiStudio
         {
             InitializeDesktop(scaling);
 
-            DragCursor = CreateGLFWCursorMacOS(LoadMacOSCursor("closedHandCursor"));
-            CopyCursor = CreateGLFWCursorMacOS(LoadMacOSCursor("dragCopyCursor"));
+            var closedHandCursor = LoadMacOSCursor("closedHandCursor");
+            var dragCopyCursor   = LoadMacOSCursor("dragCopyCursor");
 
-            var size = MacUtils.GetCursorSize();
+            DragCursor = CreateGLFWCursorMacOS(closedHandCursor);
+            CopyCursor = CreateGLFWCursorMacOS(dragCopyCursor);
+
+            var size = MacUtils.GetCursorSize(closedHandCursor);
             Move = CreateCursorFromResource(size, 15, 15, "CursorMove");
         }
     }

@@ -11,9 +11,9 @@ set -x
 dotnet build -c:Debug -p:ExtraDefineConstants=WAIT_FOR_DEBUGGER ../FamiStudio/FamiStudio.Mac.csproj
 
 # Copy binaries to package.
-cp ../FamiStudio/bin/Debug/net6.0/*.dll ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Debug/net6.0/*.json ./FamiStudio.app/Contents/MacOS/
-cp ../FamiStudio/bin/Debug/net6.0/*.dylib ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Debug/net8.0/*.dll ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Debug/net8.0/*.json ./FamiStudio.app/Contents/MacOS/
+cp ../FamiStudio/bin/Debug/net8.0/*.dylib ./FamiStudio.app/Contents/MacOS/
 
 # Localization
 rm -f ./FamiStudio.app/Contents/MacOS/Localization/*.ini
