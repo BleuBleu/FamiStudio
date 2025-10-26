@@ -239,6 +239,8 @@ namespace FamiStudio
         static IntPtr selSetMainMenu = SelRegisterName("setMainMenu:");
         static IntPtr selDoubleClickInterval = SelRegisterName("doubleClickInterval");
         static IntPtr selBeep = SelRegisterName("beep");
+        static IntPtr selImage = SelRegisterName("image");
+        static IntPtr selSize = SelRegisterName("size");
 
         static IntPtr famiStudioPasteboard;
         static float  doubleClickInterval = 0.25f;
@@ -455,6 +457,12 @@ namespace FamiStudio
             }
 
             return items;
+        }
+
+        public static int GetCursorSize(IntPtr cusor)
+        {
+            var img = SendIntPtr(clsNSCursor, selImage);
+            return SendInt(clsNSCursor, selSize);
         }
 
         public static IntPtr GetCursorByName(string name)

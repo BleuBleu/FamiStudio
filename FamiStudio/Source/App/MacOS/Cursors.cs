@@ -34,7 +34,7 @@ namespace FamiStudio
             DragCursor = CreateGLFWCursorMacOS(LoadMacOSCursor("closedHandCursor"));
             CopyCursor = CreateGLFWCursorMacOS(LoadMacOSCursor("dragCopyCursor"));
 
-            var size = Platform.GetCursorSize(scaling);
+            var size = MacUtils.GetCursorSize();
             Move = CreateCursorFromResource(size, 15, 15, "CursorMove");
         }
     }
