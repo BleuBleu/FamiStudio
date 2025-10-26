@@ -133,8 +133,8 @@ namespace FamiStudio
                 var newSamples = bufferFill(out var done);
                 if (newSamples != null)
                 {
+                    newSamples = MixImmediateData(newSamples); 
                     lastSamples = WaveUtils.ResampleStream(lastSamples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
-                    lastSamples = MixImmediateData(lastSamples, lastSamples == newSamples); // Samples are read-only, need to duplicate if we didn't resample.
                     audioTrack.Write(lastSamples, 0, lastSamples.Length, WriteMode.Blocking);
                 }
                 else
@@ -151,7 +151,7 @@ namespace FamiStudio
             }
         }
 
-        short[] MixImmediateData(short[] samples, bool duplicate)
+        short[] MixImmediateData(short[] samples)
         {
             // Mix in immediate data if any, storing in variable since main thread can change it anytime.
             var immData = immediateData;
@@ -159,13 +159,11 @@ namespace FamiStudio
             {
                 var channelCount = stereo ? 2 : 1;
                 var sampleCount = Math.Min(samples.Length, (immData.samples.Length - immData.samplesOffset) * channelCount);
-                var outputSamples = duplicate ? (short[])samples.Clone() : samples;
 
                 for (int i = 0, j = immData.samplesOffset; i < sampleCount; i++, j += (i % channelCount) == 0 ? 1 : 0)
-                    outputSamples[i] = (short)Math.Clamp(samples[i] + immData.samples[j], short.MinValue, short.MaxValue);
+                    samples[i] = (short)Math.Clamp(samples[i] + immData.samples[j], short.MinValue, short.MaxValue);
 
                 immData.samplesOffset += sampleCount / channelCount;
-                return outputSamples;
             }
 
             return samples;
@@ -202,7 +200,7 @@ namespace FamiStudio
             var data = new ImmediateData();
             data.sampleRate = sampleRate;
             data.samplesOffset = 0;
-            data.samples = WaveUtils.ResampleBuffer(adjustedSamples, sampleRate, outputSampleRate, false);
+            data.samples = WaveUtils.ResampleBuffer(adjustedSamples, sampleRate, inputSampleRate, false);
             immediateData = data;
         }
 
