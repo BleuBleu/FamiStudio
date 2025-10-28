@@ -54,8 +54,8 @@
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
 	<key>CFBundleVersion</key>
-	<string>4.4.2</string>
+	<string>4.4.3</string>
 	<key>CFBundleShortVersionString</key>
-	<string>4.4.2</string>
+	<string>4.4.3</string>
 </dict>
 </plist>

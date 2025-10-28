@@ -4,6 +4,38 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.4.3 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed an issue on song change, where the incorrect channel effects would be displayed (Thanks Steo!)
+* Fixed a text import issue where a file could have an invalid pattern length / incorrect tempo (Thanks Steo!)
+* Fixed issue with NumericUpDown textboxes getting clamped incorrectly despite maximum value changing (Thanks Steo!)
+* Fixed piano roll video rendering issue where scrollbars being enabled caused a gap (Thanks Steo!)
+* Fixed sequencer special paste insert issue where shifted regular pattern would remain custom (Thanks Steo!)
+* Fixed crash when using full-width digits for names (Thanks Steo!)
+* Fixed crash when exporting songs with duplicated sample mappings (Thanks James Rowe!)
+* Fixed ASM6 SFX export when names have dashes
+* Fixed sound engine export issue with delayed cuts
+* Fixed overly large move cursor on MacOS retina
+* Fixed DPCM sample preview sounding choppy on Android
+* Reverted some recent MIDI changes that could delay notes by 1 frames in certain situations
+* Added option to update the source for a DPCM sample
+* Android native libraries are aligned to 16KB pages to make Google happy
+
+## Version 4.4.2 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed deadlock on IOS when pressing Play/Rewind rapidly
+* Fixed importing of NSF using the triangle length counter
+* Fixed DPCM samples getting mixed up when exporting to NSF/ROM
+* Fixed grey square when inputting texture on some Android version (Thanks Steo!)
+* Multiple DPI fixes, including manual scaling on macOS (Thanks Steo!)
+* Multiple VGM import fixes (Thanks Perkka!)
+* Added new DPCM options when exporting to sound engine (Thanks Alex for the feedback/testing!)
+* Upgraded to latest Android SDK
+
 ## Version 4.4.1 (Hotfix)
 
 Changes/Fixes:
