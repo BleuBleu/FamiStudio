@@ -1,6 +1,5 @@
-:: Using 17.13 preview right now to work around a bug.
-set VSVERSION=Preview
-::set VSVERSION=Community
+::set VSVERSION=Preview
+set VSVERSION=Community
 
 if not defined DevEnvDir (
 	@call "C:\Program Files\Microsoft Visual Studio\2022\%VSVERSION%\VC\Auxiliary\Build\vcvars64.bat"
@@ -10,6 +9,9 @@ if not defined DevEnvDir (
 REM msbuild ..\ThirdParty\NotSoFatso\NotSoFatso.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="Win32" /p:SolutionDir="%~dp0../" /verbosity:quiet
 REM msbuild ..\ThirdParty\NesSndEmu\SndEmu.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="Win32" /p:SolutionDir="%~dp0../" /verbosity:quiet
 REM msbuild ..\ThirdParty\ShineMp3\ShineMp3.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform="Win32" /p:SolutionDir="%~dp0../" /verbosity:quiet
+
+:: Extra safety, to avoid packaging a stale build if something fails. 
+rmdir /q /s Release
 
 :: Build main app.
 msbuild ..\FamiStudio\FamiStudio.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /p:SolutionDir="%~dp0../" /verbosity:quiet
@@ -31,6 +33,7 @@ cd "%~dp0"
 set /p Version=<Version.txt
 
 cd Release
+
 tar -a -c -f ..\FamiStudio%Version%-WinInstaller.zip Setup.msi Setup.exe
 cd ..
 
