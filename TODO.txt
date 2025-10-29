@@ -1,25 +1,3 @@
-4.4.3
-=====
-- Small russian translation thing alex.
-- 
-
-4.4.3 Change Log
-================
-- Fixed an issue on song change, where the incorrect channel effects would be displayed (Thanks Steo!)
-- Fixed a text import issue where a file could have an invalid pattern length / incorrect tempo (Thanks Steo!)
-- Fixed issue with NumericUpDown textboxes getting clamped incorrectly despite maximum value changing (Thanks Steo!)
-- Fixed piano roll video rendering issue where scrollbars being enabled caused a gap (Thanks Steo!)
-- Fixed sequencer special paste insert issue where shifted regular pattern would remain custom (Thanks Steo!)
-- Fixed crash when using full-width digits for names (Thanks Steo!)
-- Fixed crash when exporting songs with duplicated sample mappings (Thanks James Rowe!)
-- Fixed ASM6 SFX export when names have dashes
-- Fixed sound engine export issue with delayed cuts
-- Fixed overly large move cursor on MacOS retina
-- Fixed DPCM sample preview sounding choppy on Android
-- Reverted some recent MIDI changes that could delay notes by 1 frames in certain situations
-- Added option to update the source for a DPCM sample
-- Android native libraries are aligned to 16KB pages to make Google happy
-
 4.5.0
 =====
 - Multi-expansion conflict.
