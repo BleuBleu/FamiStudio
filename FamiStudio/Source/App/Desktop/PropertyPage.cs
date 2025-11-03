@@ -331,7 +331,7 @@ namespace FamiStudio
                         Debug.Assert(multilineLabel == prop.label.Multiline);
 
                         prop.label.Move(x, y, actualLayoutWidth, prop.label.Height);
-                        prop.control.Move(x, y + prop.label.Height + (multilineLabel ? margin : 0), actualLayoutWidth, prop.control.Height);
+                        prop.control.Move(x, y + prop.label.Height + (multilineLabel ? margin : 0), actualLayoutWidth - warningWidth, prop.control.Height);
                         rowHeight = prop.control.Bottom - y;
                     }
                     else
