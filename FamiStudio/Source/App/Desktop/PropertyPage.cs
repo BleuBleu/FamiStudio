@@ -313,6 +313,8 @@ namespace FamiStudio
             {
                 var prop = properties[i];
                 var rowHeight = 0;
+                var multilineLabel = false;
+                var putLabelAbove  = false;
 
                 if (!prop.visible)
                     continue;
@@ -323,8 +325,8 @@ namespace FamiStudio
                     container.AddControl(prop.control);
 
                     // These should take the full width, so if there is a label, it will go above.
-                    var multilineLabel = prop.flags.HasFlag(PropertyFlags.MultiLineLabel);
-                    var putLabelAbove  = prop.flags.HasFlag(PropertyFlags.ForceFullWidth) || multilineLabel;
+                    multilineLabel = prop.flags.HasFlag(PropertyFlags.MultiLineLabel);
+                    putLabelAbove  = prop.flags.HasFlag(PropertyFlags.ForceFullWidth) || multilineLabel;
 
                     if (putLabelAbove)
                     {
@@ -354,9 +356,11 @@ namespace FamiStudio
 
                 if (prop.warningIcon != null)
                 {
+                    var labelOffset = putLabelAbove ? prop.label.Height + (multilineLabel ? margin : 0) : 0;
+                    
                     prop.warningIcon.Move(
                         x + actualLayoutWidth - prop.warningIcon.Width,
-                        y + (rowHeight - prop.warningIcon.Height) / 2);
+                        y + (rowHeight - prop.warningIcon.Height + labelOffset) / 2);
                     container.AddControl(prop.warningIcon);
                 }
 
