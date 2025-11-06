@@ -1194,7 +1194,7 @@ namespace FamiStudio
                         }
 
                         // TODO : We probably want to do the same for those too?
-                        arpeggio = null;
+                        //arpeggio = null;
                         lastVolume = -1;
 
                         if (sawVolumeChanged)
