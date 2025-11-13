@@ -503,21 +503,58 @@ namespace FamiStudio
             if (!isDisplayAvailable)
                 return null;
 
+            var isResponseValid = false;
+            string[] response = null;
+
             // If we're using flatpak and are within the sandboxed "/app" path, the
             // external process can't see it. We use the real system path to it instead.
             // NOTE: GTK can see the real "/app" path and doesn't need this.
-            switch (dialogBackend)
+            if (dialogBackend != DialogBackend.None)
             {
-                case DialogBackend.GTK:
-                    return ShowGtkFileDialog();
+                while (!isResponseValid)
+                {
+                    switch (dialogBackend)
+                    {
+                        case DialogBackend.GTK:
+                            response = ShowGtkFileDialog();
+                            break;
 
-                case DialogBackend.Kdialog:
-                    ConditionalSetFlatpakPaths();
-                    return ShowKdialogFileDialog();
+                        case DialogBackend.Kdialog:
+                            ConditionalSetFlatpakPaths();
+                            response = ShowKdialogFileDialog();
+                            break;
 
-                case DialogBackend.Zenity:
-                    ConditionalSetFlatpakPaths();
-                    return ShowZenityFileDialog();
+                        case DialogBackend.Zenity:
+                            ConditionalSetFlatpakPaths();
+                            response = ShowZenityFileDialog();
+                            break;
+                    }
+
+                    // When saving, we need to ensure the path has write access.
+                    // If not, we represent the dialog to ensure the user is aware.
+                    if (dialogMode == DialogMode.Save && response != null)
+                    {
+                        try
+                        {
+                            // HACK: Create dummy file to test write access (prevents a crash).
+                            using (FileStream fs = File.Create(response[0], 0, FileOptions.DeleteOnClose)) {}
+                            isResponseValid = true;
+                        }
+                        catch
+                        {
+                            response = null;
+                        }
+                    }
+                    else
+                    {
+                        isResponseValid = true;
+                    }
+
+                    if (isResponseValid)
+                        return response;
+
+                    Platform.Beep();
+                }
             }
 
             var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
