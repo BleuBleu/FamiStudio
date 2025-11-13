@@ -406,7 +406,8 @@ namespace FamiStudio
         {
             if (path != null)
             {
-                var f = Path.Combine(path, textFile.Text);
+                // Ensure slashes are path separators for the current OS. Windows = "\", Unix = '/'.
+                var f = Regex.Replace(Path.Combine(path, textFile.Text), @"[\\/]", Path.DirectorySeparatorChar.ToString());
 
                 if (mode == Mode.Open)
                 {

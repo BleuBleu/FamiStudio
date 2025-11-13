@@ -328,8 +328,8 @@ namespace FamiStudio
             SelectedPaths = ShowFileDialog();
             
             // Only update the default path if it's valid.
-            if (SelectedPaths != null && SelectedPaths.Length > 0)
-                defaultPath = dialogMode == DialogMode.Folder ? SelectedPaths[0] : Path.GetDirectoryName(SelectedPaths[0]);
+            if (dialogPath != null && Path.Exists(dialogPath))
+                defaultPath = dialogPath;
 
             dlgInstance = null;
         }
@@ -506,7 +506,6 @@ namespace FamiStudio
             if (!isDisplayAvailable)
                 return null;
 
-            var isResponseValid = false;
             string[] response = null;
 
             // If we're using flatpak and are within the sandboxed "/app" path, the
@@ -514,7 +513,10 @@ namespace FamiStudio
             // NOTE: GTK can see the real "/app" path and doesn't need this.
             if (dialogBackend != DialogBackend.None)
             {
-                while (!isResponseValid)
+                // Loop until a valid response is provided. The loop will exit once
+                // the response is a valid path or null. Otherwise, the dialog is
+                // presented again.
+                while (true)
                 {
                     switch (dialogBackend)
                     {
@@ -533,29 +535,51 @@ namespace FamiStudio
                             break;
                     }
 
-                    // When saving, we need to ensure the path has write access.
-                    // If not, we represent the dialog.
-                    if (dialogMode == DialogMode.Save && response != null)
+                    if (response != null)
                     {
-                        try
+                        // Replace backslashes with forward slashes (Linux path separators).
+                        // I can't see why anyone would intentionally put "\" in the filename.
+                        for (int i = 0; i < response.Length; i++)
                         {
-                            // HACK: Create dummy file to test write access (prevents a crash).
-                            using (FileStream fs = File.Create(response[0], 0, FileOptions.DeleteOnClose)) {}
-                            isResponseValid = true;
+                            response[i] = response[i].Replace('\\', Path.DirectorySeparatorChar);
                         }
-                        catch
+
+                        var responseDir = Path.GetDirectoryName(response[0]);
+
+                        // Safety: Ensure the path exists to prevent a possible crash. This
+                        // likely only applies to saving, but it's better to be safe.
+                        if (Path.Exists(responseDir))
                         {
-                            response = null;
+                            // Set the last known valid path. We can only read this after the
+                            // dialog exits, due to it being an external process.
+                            dialogPath = responseDir;
+
+                            // When saving, we need to ensure the path has write access.
+                            if (dialogMode == DialogMode.Save)
+                            {
+                                try
+                                {
+                                    // HACK: Create dummy file at target path to test write access.
+                                    using (FileStream fs = File.Create(response[0], 0, FileOptions.DeleteOnClose)) {}
+
+                                    return response;
+                                }
+                                catch {}
+                            }
+                            else
+                            {
+                                return response;
+                            }
                         }
+
+                        response = null;
                     }
                     else
                     {
-                        isResponseValid = true;
+                        return null;
                     }
 
-                    if (isResponseValid)
-                        return response;
-
+                    // If response is invalid, represent the dialog (loop continues).
                     Platform.Beep();
                 }
             }
