@@ -326,7 +326,10 @@ namespace FamiStudio
             dialogPath  = defaultPath;
 
             SelectedPaths = ShowFileDialog();
-            defaultPath   = dialogPath;
+            
+            // Only update the default path if it's valid.
+            if (SelectedPaths != null && SelectedPaths.Length > 0)
+                defaultPath = dialogMode == DialogMode.Folder ? SelectedPaths[0] : Path.GetDirectoryName(SelectedPaths[0]);
 
             dlgInstance = null;
         }
@@ -531,7 +534,7 @@ namespace FamiStudio
                     }
 
                     // When saving, we need to ensure the path has write access.
-                    // If not, we represent the dialog to ensure the user is aware.
+                    // If not, we represent the dialog.
                     if (dialogMode == DialogMode.Save && response != null)
                     {
                         try
@@ -675,7 +678,7 @@ namespace FamiStudio
             if (result.paths.Length == 0)
                 return null;
 
-            dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
+            //dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
             return result.paths;
         }
 
@@ -714,7 +717,7 @@ namespace FamiStudio
             if (result.paths.Length == 0)
                 return null;
 
-            dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
+            //dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
             return result.paths;
         }
 
@@ -950,8 +953,8 @@ namespace FamiStudio
 
                         paths = pathsList.ToArray();
 
-                        if (paths.Length > 0)
-                            dialogPath = Path.GetDirectoryName(paths[0]);
+                        //if (paths.Length > 0)
+                            //dialogPath = Path.GetDirectoryName(paths[0]);
 
                         GSlistFreeFull(list, GFree);
                     }
