@@ -37,8 +37,8 @@ using Android.App;
 
 // The last digit is the BETA version number. When it is non-zero, the build and will be 
 // interpreted as a development version.
-[assembly: AssemblyVersion("4.4.3.0")]
-[assembly: AssemblyFileVersion("4.4.3.0")]
+[assembly: AssemblyVersion("4.4.4.0")]
+[assembly: AssemblyFileVersion("4.4.4.0")]
 
 #if FAMISTUDIO_ANDROID
 // Add some common permissions, these can be removed if not needed
