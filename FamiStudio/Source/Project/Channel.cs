@@ -1361,7 +1361,7 @@ namespace FamiStudio
 
                 if (it.Note.IsMusical)
                 {
-                    var duration = note.Duration;
+                    var duration = int.Min(note.Duration, it.DistanceToNextNote);
 
                     // Find where the release is
                     if (note.HasRelease && note.Release < duration)
