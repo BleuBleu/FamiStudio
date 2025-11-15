@@ -22,6 +22,7 @@
     <RootNamespace>FamiStudio</RootNamespace>
     <CheckEolWorkloads>false</CheckEolWorkloads>
     <SupportedOSPlatformVersion>26.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifiers>android-arm;android-arm64;android-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DefineConstants>DEBUG;FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>
@@ -34,6 +35,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>CS0162,CS0414,CS0067,CS0649</NoWarn>
     <AndroidKeyStore>False</AndroidKeyStore>
+    <RunAOTCompilation>True</RunAOTCompilation>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DefineConstants>DEBUG;FAMISTUDIO_ANDROID;FAMISTUDIO_MOBILE</DefineConstants>

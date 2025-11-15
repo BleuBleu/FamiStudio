@@ -99,10 +99,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>libShineMp3</TargetName>
+    <IncludePath>$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(Sysroot)\usr\inc\$(AndroidHeaderTriple)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>libShineMp3</TargetName>
+    <IncludePath>$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(Sysroot)\usr\inc\$(AndroidHeaderTriple)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
@@ -115,18 +117,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>libShineMp3</TargetName>
+    <IncludePath>$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(Sysroot)\usr\inc\$(AndroidHeaderTriple)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>libShineMp3</TargetName>
+    <IncludePath>$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(Sysroot)\usr\inc\$(AndroidHeaderTriple)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>libShineMp3</TargetName>
+    <IncludePath>$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(Sysroot)\usr\inc\$(AndroidHeaderTriple)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
     <TargetName>libShineMp3</TargetName>
+    <IncludePath>$(SysRoot)\usr\inc\c++\v1;$(SysRoot)\usr\inc;$(Sysroot)\usr\inc\$(AndroidHeaderTriple)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
