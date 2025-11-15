@@ -4,6 +4,17 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.4.4 (Hotfix)
+
+Changes/Fixes:
+
+* Fixed an issue where warning icons could overlap certain controls (Thanks Steo!)
+* Fixed an issue where an incorrect arpeggio envelope was used at the song loop point when exporting to NSF/Sound Engine (Thanks Steo!)
+* Fixed an issue where releases could be skipped when exporting to NSF/Sound Engine.
+* Fixed an issue with delayed cuts when exporting to NSF/Sound Engine.
+* Fixed crash when entering filenames containing slashes on Linux (Thanks Steo!)
+* Attempting to bring back armv7 (32-bit) support on Android, untested, may crash.
+
 ## Version 4.4.3 (Hotfix)
 
 Changes/Fixes:
