@@ -325,7 +325,7 @@ namespace FamiStudio
                     page.AddDropDownList(AudioApiLabel.Colon, Platform.GetAvailableAudioAPIs(), Settings.AudioAPI, AudioApiTooltip); // 0
                     page.AddNumericUpDown(AudioBufferSizeLabel.Colon, Settings.AudioBufferSize, 1, 500, 1, AudioBufferSizeTooltip); // 1
                     page.AddNumericUpDown(NumBufferFramesLabel.Colon, Settings.NumBufferedFrames, 0, 16, 1, NumBufferedFramesTooltip); // 2
-                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 0, 10, 1, StopInstrumentTooltip); // 3
+                    page.AddNumericUpDown(StopInstrumentAfterLabel.Colon, Settings.InstrumentStopTime, 1, 10, 1, StopInstrumentTooltip); // 3
                     page.AddCheckBox(PreventPoppingLabel.Colon, Settings.SquareSmoothVibrato, PreventPoppingTooltip); // 4
                     page.AddCheckBox(MixN163Label.Colon, Settings.N163Mix, N163MixerTooltip); // 5
                     page.AddCheckBox(ClampPeriodsLabel.Colon, Settings.ClampPeriods, ClampPeriodsTooltip); // 6

@@ -402,11 +402,12 @@ namespace FamiStudio
             };
         }
 
-        private bool ValidateAndClose()
+        private void ValidateAndClose()
         {
             if (path != null)
             {
-                var f = Path.Combine(path, textFile.Text);
+                // Ensure slashes are path separators for the current OS. Windows = "\", Unix = '/'.
+                var f = Regex.Replace(Path.Combine(path, textFile.Text), @"[\\/]", Path.DirectorySeparatorChar.ToString());
 
                 if (mode == Mode.Open)
                 {
@@ -414,25 +415,31 @@ namespace FamiStudio
                     {
                         filename = f;
                         Close(DialogResult.OK);
-                        return true;
+                        return;
                     }
-
-                    Platform.Beep();
                 }
                 else if (mode == Mode.Save)
                 {
-                    if (string.IsNullOrEmpty(textFile.Text))
-                        return false;
-
-                    // Force extension.
-                    if (!MatchesExtensionList(f, extensions))
-                        f += extensions[0].Trim('*');
-
-                    if (!File.Exists(f) || Platform.MessageBox(ParentWindow, OverwriteFileMessage.Format(Path.GetFileName(f)), OverwriteFileTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    // Ensure filename and path are valid (in case name contains directory separators).
+                    if (!string.IsNullOrWhiteSpace(textFile.Text) && Path.Exists(Path.GetDirectoryName(f)))
                     {
-                        filename = f;
-                        Close(DialogResult.OK);
-                        return true;
+                        // Force extension.
+                        if (!MatchesExtensionList(f, extensions))
+                            f += extensions[0].Trim('*');
+
+                        try
+                        {
+                            // HACK: Create dummy file to test write access (prevents a crash).
+                            using (FileStream fs = File.Create(f, 0, FileOptions.DeleteOnClose)) {}
+
+                            if (!File.Exists(f) || Platform.MessageBox(ParentWindow, OverwriteFileMessage.Format(Path.GetFileName(f)), OverwriteFileTitle, MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            {
+                                filename = f;
+                                Close(DialogResult.OK);
+                                return;
+                            }
+                        }
+                        catch {}
                     }
                 }
                 else
@@ -441,12 +448,12 @@ namespace FamiStudio
                     {
                         filename = path;
                         Close(DialogResult.OK);
-                        return true;
+                        return;
                     }
                 }
-            }
 
-            return false;
+                Platform.Beep();
+            }
         }
 
         private void UpdateTextByIndex(int index)

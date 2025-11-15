@@ -326,7 +326,10 @@ namespace FamiStudio
             dialogPath  = defaultPath;
 
             SelectedPaths = ShowFileDialog();
-            defaultPath   = dialogPath;
+            
+            // Only update the default path if it's valid.
+            if (dialogPath != null && Path.Exists(dialogPath))
+                defaultPath = dialogPath;
 
             dlgInstance = null;
         }
@@ -503,21 +506,82 @@ namespace FamiStudio
             if (!isDisplayAvailable)
                 return null;
 
+            string[] response = null;
+
             // If we're using flatpak and are within the sandboxed "/app" path, the
             // external process can't see it. We use the real system path to it instead.
             // NOTE: GTK can see the real "/app" path and doesn't need this.
-            switch (dialogBackend)
+            if (dialogBackend != DialogBackend.None)
             {
-                case DialogBackend.GTK:
-                    return ShowGtkFileDialog();
+                // Loop until a valid response is provided. The loop will exit once
+                // the response is a valid path or null. Otherwise, the dialog is
+                // presented again.
+                while (true)
+                {
+                    switch (dialogBackend)
+                    {
+                        case DialogBackend.GTK:
+                            response = ShowGtkFileDialog();
+                            break;
 
-                case DialogBackend.Kdialog:
-                    ConditionalSetFlatpakPaths();
-                    return ShowKdialogFileDialog();
+                        case DialogBackend.Kdialog:
+                            ConditionalSetFlatpakPaths();
+                            response = ShowKdialogFileDialog();
+                            break;
 
-                case DialogBackend.Zenity:
-                    ConditionalSetFlatpakPaths();
-                    return ShowZenityFileDialog();
+                        case DialogBackend.Zenity:
+                            ConditionalSetFlatpakPaths();
+                            response = ShowZenityFileDialog();
+                            break;
+                    }
+
+                    if (response != null)
+                    {
+                        // Replace backslashes with forward slashes (Linux path separators).
+                        // I can't see why anyone would intentionally put "\" in the filename.
+                        for (int i = 0; i < response.Length; i++)
+                        {
+                            response[i] = response[i].Replace('\\', Path.DirectorySeparatorChar);
+                        }
+
+                        var responseDir = Path.GetDirectoryName(response[0]);
+
+                        // Safety: Ensure the path exists to prevent a possible crash. This
+                        // likely only applies to saving, but it's better to be safe.
+                        if (Path.Exists(responseDir))
+                        {
+                            // Set the last known valid path. We can only read this after the
+                            // dialog exits, due to it being an external process.
+                            dialogPath = responseDir;
+
+                            // When saving, we need to ensure the path has write access.
+                            if (dialogMode == DialogMode.Save)
+                            {
+                                try
+                                {
+                                    // HACK: Create dummy file at target path to test write access.
+                                    using (FileStream fs = File.Create(response[0], 0, FileOptions.DeleteOnClose)) {}
+
+                                    return response;
+                                }
+                                catch {}
+                            }
+                            else
+                            {
+                                return response;
+                            }
+                        }
+
+                        response = null;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+
+                    // If response is invalid, represent the dialog (loop continues).
+                    Platform.Beep();
+                }
             }
 
             var dlg = new MessageDialog(FamiStudioWindow.Instance, DialogErrorMessage, DialogErrorTitle, MessageBoxButtons.OK);
@@ -638,7 +702,7 @@ namespace FamiStudio
             if (result.paths.Length == 0)
                 return null;
 
-            dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
+            //dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
             return result.paths;
         }
 
@@ -677,7 +741,7 @@ namespace FamiStudio
             if (result.paths.Length == 0)
                 return null;
 
-            dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
+            //dialogPath = dialogMode == DialogMode.Folder ? result.paths[0] : Path.GetDirectoryName(result.paths[0]);
             return result.paths;
         }
 
@@ -913,8 +977,8 @@ namespace FamiStudio
 
                         paths = pathsList.ToArray();
 
-                        if (paths.Length > 0)
-                            dialogPath = Path.GetDirectoryName(paths[0]);
+                        //if (paths.Length > 0)
+                            //dialogPath = Path.GetDirectoryName(paths[0]);
 
                         GSlistFreeFull(list, GFree);
                     }

@@ -556,7 +556,7 @@ namespace FamiStudio
             if (Array.IndexOf(global::FamiStudio.DpiScaling.GetAvailableScalings(), DpiScaling) < 0)
                 DpiScaling = 0;
 
-            InstrumentStopTime = Utils.Clamp(InstrumentStopTime, 0, 10);
+            InstrumentStopTime = Utils.Clamp(InstrumentStopTime, 1, 10);
 
             if (MidiDevice == null)
                 MidiDevice = "";
