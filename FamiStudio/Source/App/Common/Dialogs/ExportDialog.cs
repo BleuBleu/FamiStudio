@@ -94,33 +94,6 @@ namespace FamiStudio
         LocalizedString SongLabel;
         LocalizedString SongsLabel;
 
-        // WAV/MP3 tooltips           
-        LocalizedString WavFormatTooltip;
-        LocalizedString SampleRateTooltip;
-        LocalizedString AudioBitRateTooltip;
-        LocalizedString LoopModeTooltip;
-        LocalizedString LoopCountTooltip;
-        LocalizedString DurationTooltip;
-        LocalizedString DelayTooltip;
-        LocalizedString SeperateFilesTooltip;
-        LocalizedString SeperateIntroTooltip;
-        LocalizedString StereoTooltip;
-        LocalizedString ChannelGridTooltip;
-        LocalizedString ChannelGridTooltipVid;
-
-        // WAV/MP3 labels
-        LocalizedString FormatLabel;
-        LocalizedString SampleRateLabel;
-        LocalizedString BitRateLabel;
-        LocalizedString ModeLabel;
-        LocalizedString DurationSecLabel;
-        LocalizedString SeparateChannelFilesLabel;
-        LocalizedString SeparateIntroFileLabel;
-        LocalizedString StereoLabel;
-        LocalizedString ChannelsLabel;
-        LocalizedString LoopNTimesOption;
-        LocalizedString DurationOption;
-
         // Video tooltips
         LocalizedString VideoModeTooltip;
         LocalizedString VideoResTooltip;
