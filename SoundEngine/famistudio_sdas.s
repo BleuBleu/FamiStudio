@@ -964,6 +964,9 @@ famistudio_instrument_hi:         .ds 1
 famistudio_dpcm_list_lo:          .ds 1 ; TODO: Not needed if DPCM support is disabled.
 famistudio_dpcm_list_hi:          .ds 1 ; TODO: Not needed if DPCM support is disabled.
 famistudio_dpcm_effect:           .ds 1 ; TODO: Not needed if DPCM support is disabled.
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+famistudio_dpcm_music_loop:       .ds 1
+.endif
 famistudio_pulse1_prev:           .ds 1
 famistudio_pulse2_prev:           .ds 1
 famistudio_song_speed:            .ds 1
@@ -1416,7 +1419,11 @@ famistudio_music_stop::
     sta famistudio_song_speed
     sta famistudio_dpcm_effect
 
-    ldx #0
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+    sta famistudio_dpcm_music_loop
+.endif
+
+    ldx #(FAMISTUDIO_NUM_CHANNELS - 1)
 
 .famistudio_music_stop_set_channels:
 
@@ -1438,39 +1445,35 @@ famistudio_music_stop::
         sta famistudio_chn_cut_delay,x
         lda #0
     .endif
-    inx
-    cpx #FAMISTUDIO_NUM_CHANNELS
-    bne .famistudio_music_stop_set_channels
+    dex
+    bpl .famistudio_music_stop_set_channels
 
 .if FAMISTUDIO_USE_DUTYCYCLE_EFFECT
-    ldx #0
+    ldx #(FAMISTUDIO_NUM_DUTY_CYCLES - 1)
 .set_duty_cycles:
     sta famistudio_duty_cycle,x
-    inx
-    cpx #FAMISTUDIO_NUM_DUTY_CYCLES
-    bne .set_duty_cycles
+    dex
+    bpl .set_duty_cycles
 .endif
 
 .if FAMISTUDIO_USE_SLIDE_NOTES
-    ldx #0
+    ldx #(FAMISTUDIO_NUM_SLIDES - 1)
 .set_slides:
     sta famistudio_slide_step, x
-    inx
-    cpx #FAMISTUDIO_NUM_SLIDES
-    bne .set_slides
+    dex
+    bpl .set_slides
 .endif
 
 .if FAMISTUDIO_USE_VOLUME_SLIDES
-    ldx #0
+    ldx #(FAMISTUDIO_NUM_VOLUME_SLIDES - 1)
 .set_volume_slides:
     sta famistudio_chn_volume_slide_step, x
     sta famistudio_chn_volume_slide_target, x
-    inx
-    cpx #FAMISTUDIO_NUM_VOLUME_SLIDES
-    bne .set_volume_slides
+    dex
+    bpl .set_volume_slides
 .endif
 
-    ldx #0
+    ldx #(FAMISTUDIO_NUM_ENVELOPES - 1)
 
 .set_envelopes:
 
@@ -1482,11 +1485,10 @@ famistudio_music_stop::
     sta famistudio_env_repeat,x
     sta famistudio_env_value,x
     sta famistudio_env_ptr,x
-    inx
-    cpx #FAMISTUDIO_NUM_ENVELOPES
-    bne .set_envelopes
+    dex
+    bpl .set_envelopes
 
-    ldx #0
+    ldx #(FAMISTUDIO_NUM_PITCH_ENVELOPES - 1)
 .set_pitch_envelopes:
 
     lda #<famistudio_dummy_pitch_envelope
@@ -1502,9 +1504,8 @@ famistudio_music_stop::
     .endif
     lda #1
     sta famistudio_pitch_env_ptr,x
-    inx
-    cpx #FAMISTUDIO_NUM_PITCH_ENVELOPES
-    bne .set_pitch_envelopes
+    dex
+    bpl .set_pitch_envelopes
 
     jmp famistudio_sample_stop
 
@@ -2040,7 +2041,7 @@ famistudio_get_note_pitch_vrc6_saw:
 
     lda famistudio_chn_note+idx
     bne .nocut
-    jmp .set_volume
+    beq .set_volume
 
 .nocut:
     clc
@@ -4118,6 +4119,27 @@ famistudio_update::
 .store_frame_count:
     sta famistudio_tempo_frame_cnt
 
+.endif
+
+;----------------------------------------------------------------------------------------------------------------------
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+.check_dpcm_effect:
+    lda famistudio_dpcm_effect
+    beq .after_check_dpcm_effect
+
+    lda FAMISTUDIO_APU_SND_CHN
+    and #16
+    bne .after_check_dpcm_effect
+
+    lda #0
+    sta famistudio_dpcm_effect
+
+    lda famistudio_dpcm_music_loop
+    beq .after_check_dpcm_effect
+
+    jsr famistudio_music_sample_play
+
+.after_check_dpcm_effect:
 .endif
 
 ;----------------------------------------------------------------------------------------------------------------------
@@ -6697,7 +6719,17 @@ famistudio_advance_channel:
 ;======================================================================================================================
 
 famistudio_sample_stop:
+.if FAMISTUDIO_CFG_DPCM_SUPPORT
+    lda #0
+    sta famistudio_dpcm_music_loop
 
+    lda famistudio_dpcm_effect
+    beq .stop_dpcm$
+
+    rts
+.endif
+
+.stop_dpcm$:
     lda #0b00001111
     sta FAMISTUDIO_APU_SND_CHN
     rts
@@ -6728,9 +6760,10 @@ sample_play:
     .sample_index = famistudio_r3
     .sample_data_ptr = famistudio_ptr1
 
+    sta *.sample_index
+
 .if FAMISTUDIO_USE_DPCM_BANKSWITCHING | FAMISTUDIO_USE_DPCM_EXTENDED_RANGE
     ; famistudio_dpcm_list + sample number * (4 or 5)
-    sta *.sample_index
     ldy #0
     sty *.sample_data_ptr+1
     asl
@@ -6774,6 +6807,14 @@ sample_play:
     lda [*.sample_data_ptr],y ; Pitch and loop
     sta FAMISTUDIO_APU_DMC_FREQ
     iny
+
+.check_for_loop:
+    and #0b01000000
+    beq .after_check_for_loop
+
+    lda *.sample_index
+    sta famistudio_dpcm_music_loop
+.after_check_for_loop:
 
 .if FAMISTUDIO_USE_DELTA_COUNTER
     lda famistudio_dmc_delta_counter
