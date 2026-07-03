@@ -2762,7 +2762,7 @@ int CNSFCore::GetState(int channel, int state, int sub)
 			{
 				case STATE_PERIOD:    return mWave_Squares.nFreqTimer[channel].W;
 				case STATE_DUTYCYCLE: return IndexOf(DUTY_CYCLE_TABLE, 4, mWave_Squares.nDutyCycle[channel]);
-				case STATE_VOLUME:    return mWave_Squares.nLengthCount[channel] && mWave_Squares.bChannelEnabled[channel] ? mWave_Squares.nVolume[channel] : 0;
+				case STATE_VOLUME:    return mWave_Squares.nLengthCount[channel] && mWave_Squares.bChannelEnabled[channel] && !mWave_Squares.bSweepForceSilence[channel] ? mWave_Squares.nVolume[channel] : 0;
 			}
 			break;
 		}
