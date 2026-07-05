@@ -6989,7 +6989,7 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceSpecificInstrumentContext.Format(note.Instrument, App.SelectedInstrument), () => { ReplaceSelectionInstrument(App.SelectedInstrument, new Point(x, y), note.Instrument); }));
                         if (App.SelectedArpeggio != null && Song.Channels[editChannel].SupportsArpeggios && note.Arpeggio != null)
                             menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceAllArpeggioContext.Format(App.SelectedArpeggio.Name), () => { ReplaceSelectionArpeggio(App.SelectedArpeggio, new Point(x, y), null); }));
-                        if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument) && note.Instrument != null)
+                        if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument) && note.Instrument != null && note.Arpeggio != null)
                             menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceSpecificInstrumentContext.Format(note.Arpeggio.Name, App.SelectedArpeggio.Name), () => { ReplaceSelectionArpeggio(App.SelectedArpeggio, new Point(x, y), note.Arpeggio); }));
                         if (note.Instrument != null)
                             menu.Add(new ContextMenuOption("MenuEyedropper", MakeInstrumentCurrentContext, () => { Eyedrop(note); }));
