@@ -291,7 +291,7 @@ namespace FamiStudio
                     }
                     else
                     {
-                        envelopes[EnvelopeType.Arpeggio] = null;
+                        envelopes[EnvelopeType.Arpeggio] = note.Instrument?.ArpeggioEnvelope;
                         arpeggioEnvelopeOverride = false;
                     }
 

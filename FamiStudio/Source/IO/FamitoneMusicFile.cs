@@ -33,6 +33,7 @@ namespace FamiStudio
         private int assemblyFormat = AssemblyFormat.NESASM;
         private Dictionary<byte, string> vibratoEnvelopeNames = new Dictionary<byte, string>();
         private Dictionary<Arpeggio, string> arpeggioEnvelopeNames = new Dictionary<Arpeggio, string>();
+        private Dictionary<Envelope, string> instrumentArpeggioNames = new Dictionary<Envelope, string>();
         private Dictionary<Instrument, int> instrumentIndices = new Dictionary<Instrument, int>();
         private Dictionary<DPCMSampleMapping, int> sampleMappingIndices = new Dictionary<DPCMSampleMapping, int>();
         private string noArpeggioEnvelopeName;
@@ -656,6 +657,7 @@ namespace FamiStudio
 
                     size += 8;
                     instrumentIndices[instrument] = instrumentCount++;
+                    instrumentArpeggioNames.Add(instrument.Envelopes[EnvelopeType.Arpeggio], $"{llp}env{arpeggioEnvIdx}");
                 }
             }
 
@@ -774,6 +776,7 @@ namespace FamiStudio
 
                         size += 16;
                         instrumentIndices[instrument] = instrumentCountExp++;
+                        instrumentArpeggioNames.Add(instrument.Envelopes[EnvelopeType.Arpeggio], $"{llp}env{arpeggioEnvIdx}");
                     }
                 }
 
@@ -1354,8 +1357,8 @@ namespace FamiStudio
 
                                     if (note.Arpeggio == null)
                                     {
-                                        channelData.Add($"{lo}({noArpeggioEnvelopeName})");
-                                        channelData.Add($"{hi}({noArpeggioEnvelopeName})");
+                                        channelData.Add($"{lo}({instrumentArpeggioNames[instrument.ArpeggioEnvelope]})");
+                                        channelData.Add($"{hi}({instrumentArpeggioNames[instrument.ArpeggioEnvelope]})");
                                     }
                                     else
                                     {
