@@ -438,7 +438,7 @@ namespace FamiStudio
 
         public void ReplacePianoRollSelectionArpeggio(Arpeggio arp)
         {
-            PianoRoll.ReplaceSelectionArpeggio(arp, Point.Empty, true);
+            PianoRoll.ReplaceSelectionArpeggio(arp, Point.Empty, null, true);
         }
 
         private void ProjectExplorer_InstrumentsHovered(bool showExpansions)
@@ -634,6 +634,7 @@ namespace FamiStudio
         private void ProjectExplorer_DPCMSampleDeleted(DPCMSample sample)
         {
             PianoRoll.Reset(selectedChannelIndex);
+            Sequencer.InvalidatePatternCache();
         }
 
         private void PianoRoll_NotesPasted()

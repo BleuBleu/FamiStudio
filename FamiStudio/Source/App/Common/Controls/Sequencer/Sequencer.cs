@@ -2302,6 +2302,7 @@ namespace FamiStudio
                         if (pattern != null && (i + startPatternIndex) < song.Length && song.Project.IsChannelActive(pattern.ChannelType))
                         {
                             var channelIdx = Channel.ChannelTypeToIndex(pattern.ChannelType, song.Project.ExpansionAudioMask, song.Project.ExpansionNumN163Channels);
+                            pattern.RemoveUnsupportedChannelFeatures();
                             song.Channels[channelIdx].PatternInstances[i + startPatternIndex] = pattern;
                         }
                     }

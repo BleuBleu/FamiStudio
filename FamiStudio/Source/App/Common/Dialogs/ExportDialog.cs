@@ -450,7 +450,7 @@ namespace FamiStudio
                     }, GetDefaultChannelsGridData(false, false, app.SelectedSong, out _), 7, ChannelGridTooltip); // 11
                     page.AddButton(null, ResetDefaultsLabel.Format(FormatAudioMessage.ToString().ToLowerInvariant())); // 12
                     page.SetPropertyEnabled( 3, audioSettings.Format == "MP3" || audioSettings.Format == "Ogg Vorbis");
-                    page.SetPropertyEnabled( 5, audioSettings.LoopMode == LoopNTimesOption);
+                    page.SetPropertyEnabled( 5, audioSettings.LoopMode != DurationOption);
                     page.SetPropertyEnabled( 6, audioSettings.LoopMode == DurationOption);
                     page.SetPropertyVisible( 8, Platform.IsDesktop); // No separate files on mobile.
                     page.SetPropertyVisible( 9, Platform.IsDesktop); // No separate intro on mobile.
@@ -1676,6 +1676,9 @@ namespace FamiStudio
                     );
 
                     settings.MidiInstruments = midiInstSettings;
+
+                    for (int i = 0; i < instrumentMapping.Length; i++)
+                        instrumentMapping[i] = Array.IndexOf(MidiFileReader.MidiInstrumentNames, props.GetPropertyValue<string>(5, i, 1));
 
                     new MidiFileWriter().Save(project, filename, song.Id, instrumentMode, instrumentMapping, velocity, slideNotes, pitchRange);
 
