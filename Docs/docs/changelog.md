@@ -4,6 +4,20 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.5.2 (Hotfix)
+
+This release was also 100% handled by Steo, I'm just publishing it. Thanks!!
+
+* Fixed export dialog issue where "Loop Count" and "Duration" options could both be disabled
+* Fixed issue where a leading whitespace in the project name would break ROM / NSF export
+* Fixed issue with FamiTracker exports where envelopes weren't truncated to max supported length
+* Fixed issue where sequencer didn't update when deleting a sample in "DPCM Sample" color mode
+* Fixed issue introduced in 4.5.0 regarding MIDI instruments no longer exporting as intended
+* Added option to replace arps in context menu
+* Fixed crash with broken MIDI files (unexpected end of file)
+* Fixed issue where pasting a pattern in the sequencer could lead to it containing an unsupported effect
+* Fixed issue with switching back to instrument arp after using an override
+
 ## Version 4.5.1 (Hotfix)
 
 This release was 100% handled by Steo, I'm just publishing it. Thanks!!
