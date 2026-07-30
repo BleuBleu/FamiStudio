@@ -6984,7 +6984,7 @@ namespace FamiStudio
                             menu.Add(new ContextMenuOption("MenuToggleRelease", selection ? ToggleSelectedReleaseContext : ToggleReleaseContext, () => { ToggleNoteRelease(noteLocation, note); }));
                         if (channel.SupportsStopNotes)
                             menu.Add(new ContextMenuOption("MenuStopNote", MakeStopNoteContext, () => { ConvertToStopNote(noteLocation, note); }));
-                        if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument) && App.SelectedInstrument != note.Instrument)
+                        if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument))
                             menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceAllInstrumentContext.Format(App.SelectedInstrument), () => { ReplaceSelectionInstrument(App.SelectedInstrument, new Point(x, y), null); }));
                         if (App.SelectedInstrument != null && Song.Channels[editChannel].SupportsInstrument(App.SelectedInstrument) && note.Instrument != null && App.SelectedInstrument != note.Instrument)
                             menu.Add(new ContextMenuOption("MenuReplaceSelection", ReplaceSpecificInstrumentContext.Format(note.Instrument, App.SelectedInstrument), () => { ReplaceSelectionInstrument(App.SelectedInstrument, new Point(x, y), note.Instrument); }));
