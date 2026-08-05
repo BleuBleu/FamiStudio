@@ -1722,7 +1722,6 @@ namespace FamiStudio
             if (rate == 50 || nesClock == NesApu.FreqPal)
             {
                 pal = true;
-                project.PalMode = pal;
             }
             else if (rate != 60 && nesClock != NesApu.FreqNtsc && nesClock != NesApu.FreqNtsc - 1)
             {
@@ -1790,12 +1789,14 @@ namespace FamiStudio
                 }
 
                 if (palWaits >= ntscWaits)
-                {
-                    samplesPerFrame = framePacing ? 44100.0 / (NesApu.FreqPal / 33247.5) : 882;
-                    samples = samplesPerFrame * 0.5;
                     pal = true;
-                    project.PalMode = pal;
-                }
+            }
+
+            if (pal)
+            {
+                project.PalMode = pal;
+                samplesPerFrame = framePacing ? 44100.0 / (NesApu.FreqPal / 33247.5) : 882;
+                samples = samplesPerFrame * 0.5;
             }
 
             if (adjustClock)
@@ -2437,10 +2438,10 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, "System Name: " + gd3DataArray[4]);
                     Log.LogMessage(LogSeverity.Info, "Original Author Name: " + gd3DataArray[6]);
                     project.Copyright = gd3DataArray[6];
-                    Log.LogMessage(LogSeverity.Info, "Release Date: " + gd3DataArray[7]);
-                    Log.LogMessage(LogSeverity.Info, "Converted by: " + gd3DataArray[8]);
-                    project.Author = gd3DataArray[8];
-                    Log.LogMessage(LogSeverity.Info, "Notes: " + gd3DataArray[9]);
+                    Log.LogMessage(LogSeverity.Info, "Release Date: " + gd3DataArray[8]);
+                    Log.LogMessage(LogSeverity.Info, "Converted by: " + gd3DataArray[9]);
+                    project.Author = gd3DataArray[9];
+                    Log.LogMessage(LogSeverity.Info, "Notes: " + gd3DataArray[10]);
                 }
             }
 
