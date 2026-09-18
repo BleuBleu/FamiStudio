@@ -2049,6 +2049,12 @@ namespace FamiStudio
                                 {
                                     Log.LogMessage(LogSeverity.Warning, $"Vibrato depths > 13 will not sound correct in the sound engine and will likely be removed in the future. ({channel.NameWithExpansion}, {pattern.Name}).");
                                 }
+
+                                // The sound engine does not clamp notes or periods.
+                                if (note.IsMusical && channel.SupportsEffect(Note.EffectFinePitch))
+                                {
+                                    CheckNoteRange(channel, pattern, note);
+                                }
                             }
                         }
                     }
@@ -2091,6 +2097,42 @@ namespace FamiStudio
                 project.SoundEngineUsesExtendedInstruments = false;
                 project.SoundEngineUsesDpcmBankSwitching = false;
                 project.SoundEngineUsesExtendedDpcm = false;
+            }
+        }
+
+        private void CheckNoteRange(Channel channel, Pattern pattern, Note note)
+        {
+            var project    = channel.Song.Project;
+            var pitchLimit = NesApu.GetPitchLimitForChannelType(channel.Type);
+            var arpEnv     = note.Arpeggio != null ? note.Arpeggio.Envelope : note.Instrument?.ArpeggioEnvelope;
+            var arpValues  = arpEnv != null && arpEnv.Length > 0 ? arpEnv.Values : new sbyte[1];
+            var arpCount   = arpEnv != null && arpEnv.Length > 0 ? arpEnv.Length : 1;
+
+            for (int i = 0; i < 2; i++)
+            {
+                var pal = i == 1;
+
+                if ((pal && machine == MachineType.NTSC) || (!pal && machine == MachineType.PAL))
+                    continue;
+
+                var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, pal, project.ExpansionNumN163Channels, project.Tuning);
+
+                for (int j = 0; j < arpCount; j++)
+                {
+                    var noteVal = note.Value + arpValues[j];
+
+                    if (noteVal < 0 || noteVal >= noteTable.Length)
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Note {note.FriendlyName} with arpeggio is outside of the note table and will overflow in the sound engine. ({channel.NameWithExpansion}, {pattern.Name}).");
+                        return;
+                    }
+
+                    if (noteTable[noteVal] > pitchLimit)
+                    {
+                        Log.LogMessage(LogSeverity.Warning, $"Note {Note.GetFriendlyName(noteVal)} exceeds the hardware period range and will overflow in the sound engine. ({channel.NameWithExpansion}, {pattern.Name}).");
+                        return;
+                    }
+                }
             }
         }
 
