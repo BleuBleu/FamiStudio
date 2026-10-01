@@ -204,7 +204,11 @@ namespace FamiStudio
         public void UpdateLayout(bool activeControlOnly = false)
         {
             var landscape          = IsLandscape;
-            var quickAccessBarSize = quickAccessBar.LayoutSize;
+
+            quickAccessBar.UpdateScaling(width, height);
+            toolbar.UpdateScaling(width, height);
+            
+            var quickAccessBarSize = quickAccessBar.LayoutSize;            
             var toolbarLayoutSize  = toolbar.LayoutSize;
             var pianoLayoutSize    = mobilePiano.Visible ? mobilePiano.LayoutSize : 0;
 
