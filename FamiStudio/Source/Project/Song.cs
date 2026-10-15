@@ -1277,7 +1277,9 @@ namespace FamiStudio
 
                             if (!noteWillStop)
                             {
-                                lastNotes[c] = it.Note.Clone();
+                                // Reference the last note for DPCM rather than cloning it. Notes with
+                                // no attack still retrigger for DPCM, we don't want that in this case.
+                                lastNotes[c] = channel.Type == ChannelType.Dpcm ? it.Note : it.Note.Clone();
                             }
 
                             break;
@@ -1313,11 +1315,20 @@ namespace FamiStudio
                             {
                                 var lastNote = lastNotes[c];
                                 channel.PatternInstances[i] = channel.PatternInstances[i] == null ? channel.CreatePattern() : channel.PatternInstances[i].ShallowClone();
-                                note = channel.PatternInstances[i].GetOrCreateNoteAt(0);
-                                note.Value = lastNote.IsSlideNote ? lastNote.SlideNoteTarget : lastNote.Value;
-                                note.Instrument = lastNote.Instrument;
-                                note.HasAttack = false;
-                                note.Duration = 1000000;
+
+                                // Simply extend the last note for DPCM to prevent a retrigger.
+                                if (channel.Type == ChannelType.Dpcm)
+                                {
+                                    lastNote.Duration = 1000000;
+                                }
+                                else
+                                {
+                                    note = channel.PatternInstances[i].GetOrCreateNoteAt(0);
+                                    note.Value = lastNote.IsSlideNote ? lastNote.SlideNoteTarget : lastNote.Value;
+                                    note.Instrument = lastNote.Instrument;
+                                    note.HasAttack = false;
+                                    note.Duration = 1000000;
+                                }
                             }
                         }
 

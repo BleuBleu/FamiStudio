@@ -601,7 +601,8 @@ namespace FamiStudio
 
         private Instrument GetDutyInstrument(Channel channel, int duty)
         {
-            var expansion = channel.Expansion;
+            // Use no expansion for MMC5 instruments, as they are compatible with 2A03.
+            var expansion = channel.Expansion == ExpansionType.Mmc5 ? ExpansionType.None : channel.Expansion;
             var expPrefix = expansion == ExpansionType.None || expansion == ExpansionType.Mmc5 ? "" : ExpansionType.InternalNames[expansion] + " ";
             var name = $"{expPrefix}Duty {duty}";
 
@@ -1513,10 +1514,10 @@ namespace FamiStudio
                 if ((state.period != period) || (hasOctave && state.octave != octave) || (instrument != state.instrument) || force)
                 {
                     var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, project.PalMode, project.ExpansionNumN163Channels, project.Tuning);
-                    var note = release ? Note.NoteRelease : (stop ? Note.NoteStop : state.note);
+                    var note = stop ? Note.NoteStop : state.note;
                     var finePitch = 0;
 
-                    if (!stop && !release && state.state != ChannelState.Stopped)
+                    if (!stop && state.state != ChannelState.Stopped)
                     {
                         if (channel.Type == ChannelType.Noise)
                             note = (period ^ 0x0f) + 32;
@@ -1556,6 +1557,11 @@ namespace FamiStudio
                             note = Math.Min(note, noteTable.Length - 1);
                             finePitch = period - noteTable[note];
                         }
+
+                        // The logic above needs to be done for fine pitch, otherwise
+                        // it resets to 0 on release, which is incorrect.
+                        if (release)
+                            note = Note.NoteRelease;
                     }
 
                     if (note < Note.MusicalNoteMin || note > Note.MusicalNoteMax)
@@ -1587,7 +1593,7 @@ namespace FamiStudio
 
                         // We scale all pitches changes (slides, fine pitch, pitch envelopes) for
                         // some channels with HUGE pitch values (N163, VRC7).
-                        finePitch >>= pitchShift;
+                        finePitch = Math.Sign(finePitch) * (Math.Abs(finePitch) >> pitchShift);
 
                         var pitch = (sbyte)Utils.Clamp(finePitch, Note.FinePitchMin, Note.FinePitchMax);
 
@@ -2434,13 +2440,13 @@ namespace FamiStudio
                     Log.LogMessage(LogSeverity.Info, "Track Name: " + gd3DataArray[0]);
                     songName = gd3DataArray[0];
                     Log.LogMessage(LogSeverity.Info, "Game Name: " + gd3DataArray[2]);
-                    project.Name = gd3DataArray[2] + gd3DataArray[4];
+                    project.Name = gd3DataArray[2]; // + gd3DataArray[4] was here, no idea why we would want that?
                     Log.LogMessage(LogSeverity.Info, "System Name: " + gd3DataArray[4]);
                     Log.LogMessage(LogSeverity.Info, "Original Author Name: " + gd3DataArray[6]);
-                    project.Copyright = gd3DataArray[6];
+                    project.Author = gd3DataArray[6]; // We want the actual author, not the "converted by" field.
+                    project.Copyright = gd3DataArray[8]; // Others use the year for copyright.
                     Log.LogMessage(LogSeverity.Info, "Release Date: " + gd3DataArray[8]);
                     Log.LogMessage(LogSeverity.Info, "Converted by: " + gd3DataArray[9]);
-                    project.Author = gd3DataArray[9];
                     Log.LogMessage(LogSeverity.Info, "Notes: " + gd3DataArray[10]);
                 }
             }

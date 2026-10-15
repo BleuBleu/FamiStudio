@@ -21,8 +21,7 @@ namespace FamiStudio
             var sx = width;
             var sy = height;
 
-            c.PushClipRegion(1, 1, sx - 1, sy - 1);
-            c.FillRectangle(0, 0, sx, sy, Theme.BlackColor);
+            c.FillAndDrawRectangle(0, 0, sx, sy, Theme.BlackColor, Theme.LightGreyColor2);
 
             var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);
 
@@ -49,9 +48,6 @@ namespace FamiStudio
                 if (betaNumber > 0)
                     c.DrawText($"BETA {betaNumber}", Fonts.FontSmall, 4, 4, Theme.LightRedColor);
             }
-
-            c.PopClipRegion();
-            c.DrawRectangle(0, 0, sx, sy, Theme.LightGreyColor2);
         }
     }
 }

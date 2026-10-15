@@ -133,7 +133,7 @@ namespace FamiStudio
                 var newSamples = bufferFill(out var done);
                 if (newSamples != null)
                 {
-                    newSamples = MixImmediateData(newSamples); 
+                    newSamples = MixImmediateData(newSamples);
                     lastSamples = WaveUtils.ResampleStream(lastSamples, newSamples, inputSampleRate, outputSampleRate, stereo, ref resampleIndex);
                     audioTrack.Write(lastSamples, 0, lastSamples.Length, WriteMode.Blocking);
                 }
@@ -157,13 +157,16 @@ namespace FamiStudio
             var immData = immediateData;
             if (immData != null && immData.samplesOffset < immData.samples.Length)
             {
+                // Clone to avoid mixing immediate data into oscilloscope.
+                var mixedSamples = (short[])samples.Clone();
                 var channelCount = stereo ? 2 : 1;
-                var sampleCount = Math.Min(samples.Length, (immData.samples.Length - immData.samplesOffset) * channelCount);
+                var sampleCount = Math.Min(mixedSamples.Length, (immData.samples.Length - immData.samplesOffset) * channelCount);
 
                 for (int i = 0, j = immData.samplesOffset; i < sampleCount; i++, j += (i % channelCount) == 0 ? 1 : 0)
-                    samples[i] = (short)Math.Clamp(samples[i] + immData.samples[j], short.MinValue, short.MaxValue);
+                    mixedSamples[i] = (short)Math.Clamp(mixedSamples[i] + immData.samples[j], short.MinValue, short.MaxValue);
 
                 immData.samplesOffset += sampleCount / channelCount;
+                return mixedSamples;
             }
 
             return samples;
