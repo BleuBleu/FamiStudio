@@ -96,8 +96,7 @@ namespace FamiStudio
             var sx = width;
             var sy = height;
 
-            c.PushClipRegion(1, 1, sx - 1, sy - 1);
-            c.FillRectangle(0, 0, sx, sy, Theme.BlackColor);
+            c.FillAndDrawRectangle(0, 0, sx, sy, Theme.BlackColor, Theme.LightGreyColor2);
 
             if (Settings.TimeFormat == 0 || ProjectUsesFamitrackerTempo()) // MM:SS:mmm cant be used with FamiTracker tempo.
             {
@@ -140,9 +139,6 @@ namespace FamiStudio
                 for (int i = 0; i < 3; i++, charPosX += zeroSizeX)
                     c.DrawText(millisecondsString[i].ToString(), font, charPosX, 0, textColor, TextFlags.MiddleCenter, zeroSizeX, sy);
             }
-
-            c.PopClipRegion();
-            c.DrawRectangle(0, 0, sx, sy, Theme.LightGreyColor2);
         }
     }
 }
