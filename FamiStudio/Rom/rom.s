@@ -97,9 +97,12 @@ INES_MIRROR = 1 ; 0 = horizontal mirroring, 1 = vertical mirroring
     .byte $02 ; 16k PRG bank count
     .byte $01 ; 8k CHR bank count
     .byte INES_MIRROR | ((INES_MAPPER & $f) << 4)
-.if FAMISTUDIO_EXP_EPSM    
+.if FAMISTUDIO_EXP_EPSM
     .byte (INES_MAPPER & %11110000) | (%00001011) ; ines v2 + extended console type.
     .byte $0, $0, $0, $0, FAMISTUDIO_CFG_PAL_SUPPORT, $4, $0, $0 ; padding & TV system
+.elseif FAMISTUDIO_EXP_VRC7
+    .byte (INES_MAPPER & %11110000) | (%00001000) ; ines v2.
+    .byte $20, $0, $0, $0, FAMISTUDIO_CFG_PAL_SUPPORT, $0, $0, $0 ; submapper 2 (VRC7a), padding & TV system
 .else
     .byte (INES_MAPPER & %11110000)
     .byte $0, FAMISTUDIO_CFG_PAL_SUPPORT, $0, $0, $0, $0, $0, $0 ; padding & TV system
@@ -351,17 +354,17 @@ default_palette:
 .elseif FAMISTUDIO_EXP_VRC7
         
     VRC7_PRG_SELECT_8000 = $8000
-    VRC7_PRG_SELECT_A000 = $8008
+    VRC7_PRG_SELECT_A000 = $8010
     VRC7_PRG_SELECT_C000 = $9000
 
     VRC7_CHR_SELECT_0000 = $A000
-    VRC7_CHR_SELECT_0400 = $A008
+    VRC7_CHR_SELECT_0400 = $A010
     VRC7_CHR_SELECT_0800 = $B000
-    VRC7_CHR_SELECT_0C00 = $B008
+    VRC7_CHR_SELECT_0C00 = $B010
     VRC7_CHR_SELECT_1000 = $C000
-    VRC7_CHR_SELECT_1400 = $C008
+    VRC7_CHR_SELECT_1400 = $C010
     VRC7_CHR_SELECT_1800 = $D000
-    VRC7_CHR_SELECT_1C00 = $D008
+    VRC7_CHR_SELECT_1C00 = $D010
 
 .elseif FAMISTUDIO_EXP_N163
 
