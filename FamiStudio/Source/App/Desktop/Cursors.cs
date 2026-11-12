@@ -14,8 +14,9 @@ namespace FamiStudio
 
         private static unsafe IntPtr CreateCursorFromResource(int size, int hotx, int hoty, string name)
         {
-            var suffix = size >= 64 ? "64" : 
-                         size >= 48 ? "48" : "32";
+            size = size >= 64 ? 64 :
+                   size >= 48 ? 48 : 32;
+            var suffix = size.ToString();
 
             var bmp = TgaFile.LoadFromResource($"FamiStudio.Resources.Cursors.{name}{suffix}.tga");
 
