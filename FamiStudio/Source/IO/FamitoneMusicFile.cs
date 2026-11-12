@@ -2117,6 +2117,7 @@ namespace FamiStudio
 
                 var noteTable = NesApu.GetNoteTableForChannelType(channel.Type, pal, project.ExpansionNumN163Channels, project.Tuning);
 
+                // TODO : This works well, but we should add support for slides as well.
                 for (int j = 0; j < arpCount; j++)
                 {
                     var noteVal = note.Value + arpValues[j];
