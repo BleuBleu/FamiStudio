@@ -21,7 +21,11 @@ namespace FamiStudio
             var sx = width;
             var sy = height;
 
-            c.PushClipRegion(1, 1, sx - 1, sy - 1);
+            // Mobile has thicker lines. We need a smaller clip region on there.
+            var clipStart = Math.Max(1, g.LineWidthBias);
+            var clipEnd   = (clipStart << 1) - 1;
+
+            c.PushClipRegion(clipStart, clipStart, sx - clipEnd, sy - clipEnd);
             c.FillRectangle(0, 0, sx, sy, Theme.BlackColor);
 
             var oscilloscopeGeometry = App.GetOscilloscopeGeometry(out lastOscilloscopeHadNonZeroSample);

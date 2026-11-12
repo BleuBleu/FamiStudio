@@ -17,6 +17,9 @@ namespace FamiStudio
 
         public unsafe static bool Save(short[] wavData, string filename, int sampleRate, int bitRate, int numChannels)
         {
+            if (wavData.Length == 0)
+                return false;
+
             if (sampleRate < 44100)
             {
                 Log.LogMessage(LogSeverity.Warning, $"Sample rate of {sampleRate}Hz is too low for MP3. Forcing 44100Hz.");

@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Content.PM;
 using Android.Opengl;
 using Android.OS;
+using Android.Provider;
 using Android.Renderscripts;
 using Android.Runtime;
 using Android.Views;
@@ -1294,9 +1295,19 @@ namespace FamiStudio
                     File.Delete(lastSaveTempFile);
                 }
             }
-            else if (lastSaveTempFile != null && File.Exists(lastSaveTempFile))
+            else
             {
-                File.Delete(lastSaveTempFile);
+                if (lastSaveTempFile != null && File.Exists(lastSaveTempFile))
+                    File.Delete(lastSaveTempFile);
+
+                if (lastSaveFileUri != null)
+                {
+                    try
+                    {
+                        DocumentsContract.DeleteDocument(FamiStudioWindow.Instance.ContentResolver, lastSaveFileUri);
+                    }
+                    catch {}
+                }
             }
 
             callback();

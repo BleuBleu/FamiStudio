@@ -992,7 +992,7 @@ namespace FamiStudio
             var props = dialog.GetPropertyPage((int)ExportFormat.WavMp3);
             var format = props.GetSelectedIndex(1);
             
-            Action<string> ExportWavMp3Action = (filename) =>
+            Func<string, bool> ExportWavMp3Action = (filename) =>
             {
                 if (filename != null)
                 {
@@ -1050,26 +1050,32 @@ namespace FamiStudio
 
                     RemoveUnusedChannelSettings(audioChannelSettings);
                     exportSettings.Channels = audioChannelSettings;
+                    
+                    var success = true;
 
-                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, delay, Platform.IsMobile || project.UsesEPSMExpansion, false,
-                         (samples, samplesChannels, fn) =>
-                         {
-                             switch (format)
-                             {
-                                 case AudioFormatType.Mp3:
-                                     Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
-                                     break;
-                                 case AudioFormatType.Wav:
-                                     WaveFile.Save(samples, fn, sampleRate, samplesChannels);
-                                     break;
-                                 case AudioFormatType.Vorbis:
-                                     VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
-                                     break;
-                             }
-                         });
+                    AudioExportUtils.Save(song, filename, sampleRate, loopCount, duration, channelMask, separateFiles, separateIntro, stereo, pan, delay, Platform.IsMobile || project.UsesEPSMExpansion, true,
+                        (samples, samplesChannels, fn) =>
+                        {
+                            switch (format)
+                            {
+                                case AudioFormatType.Mp3:
+                                    success &= Mp3File.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                    break;
+                                case AudioFormatType.Wav:
+                                    success &= WaveFile.Save(samples, fn, sampleRate, samplesChannels);
+                                    break;
+                                case AudioFormatType.Vorbis:
+                                    success &= VorbisFile.Save(samples, fn, sampleRate, bitrate, samplesChannels);
+                                    break;
+                            }
+                        });
 
                     lastExportFilename = filename;
+
+                    return success;
                 }
+
+                return false;
             };
 
 
@@ -1082,13 +1088,13 @@ namespace FamiStudio
                     {
                         app.BeginLogTask(true, "Exporting Audio", "Exporting long songs with lots of channels may take a while.");
 
-                        ExportWavMp3Action(f);
+                        var success = ExportWavMp3Action(f);
                         
-                        Platform.FinishMobileSaveFileOperationAsync(true, () =>
+                        Platform.FinishMobileSaveFileOperationAsync(success, () =>
                         {
                             var aborted = Log.ShouldAbortOperation;
                             app.EndLogTask();
-                            ShowExportResultToast(FormatAudioMessage, !aborted);
+                            ShowExportResultToast(FormatAudioMessage, success && !aborted);
                         });
                     }).Start();
                 });
@@ -1111,8 +1117,8 @@ namespace FamiStudio
 
                 if (filename != null)
                 {
-                    ExportWavMp3Action(filename);
-                    ShowExportResultToast(FormatAudioMessage);
+                    var success = ExportWavMp3Action(filename);
+                    ShowExportResultToast(FormatAudioMessage, success);
                 }
             }
         }
@@ -1237,7 +1243,6 @@ namespace FamiStudio
                 {
                     lastExportFilename = filename;
                     return LaunchVideoEncoding(filename, false);
-
                 }
                 else
                 {
@@ -1268,8 +1273,8 @@ namespace FamiStudio
             else
             {
                 var filename = lastExportFilename != null ? lastExportFilename : Platform.ShowSaveFileDialog("Export Video File", "MP4 Video File (*.mp4)|*.mp4", ref Settings.LastExportFolder);
-                ExportVideoAction(filename);
-                ShowExportResultToast(FormatVideoMessage);
+                var success = ExportVideoAction(filename);
+                ShowExportResultToast(FormatVideoMessage, success);
             }
         }
 

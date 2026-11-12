@@ -77,8 +77,11 @@ namespace FamiStudio
             { 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71 };
         const int FormatSubChunkSize = 18;
 
-        public unsafe static void Save(short[] samples, string filename, int sampleRate, int numChannels)
+        public unsafe static bool Save(short[] samples, string filename, int sampleRate, int numChannels)
         {
+            if (samples.Length == 0)
+                return false;
+
             using (var file = new FileStream(filename, FileMode.Create))
             {
                 var header = new PCMWaveHeader();
@@ -130,6 +133,7 @@ namespace FamiStudio
                 Buffer.BlockCopy(samples, 0, sampleBytes, 0, sampleBytes.Length);
                 file.Write(sampleBytes);
 
+                return true;
             }
         }
 

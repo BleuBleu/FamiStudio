@@ -529,6 +529,7 @@ namespace FamiStudio
             {
                 case ExpansionType.N163:
                     N163WaveformEnvelope.SetChunkMaxLengthUnsafe(n163WavSize, N163MaxWaveCount * n163WavSize);
+                    NotifyN163RAMSizeChanged(); // In case instruments are imported and project has more channels.
                     UpdateN163WaveEnvelope(); // Safety
                     break;
                 case ExpansionType.Fds:

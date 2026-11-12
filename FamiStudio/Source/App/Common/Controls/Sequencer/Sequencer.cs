@@ -68,6 +68,7 @@ namespace FamiStudio
         int capturePatternIdx = -1;
         int dragSeekPosition = -1;
         int selectionDragAnchorPatternIdx = -1;
+        int lastChanIdx = -1;
         float zoom = DefaultZoom;
         float bitmapScale = 1.0f;
         float channelBitmapScale = 1.0f;
@@ -1409,6 +1410,8 @@ namespace FamiStudio
             if (e.Left && IsMouseInTrackName(e.X, e.Y))
             { 
                 var chanIdx = GetChannelIndexFromIconPos(e.X, e.Y);
+                lastChanIdx = chanIdx;
+
                 if (chanIdx >= 0)
                 {
                     App.ToggleChannelActive(chanIdx);
@@ -1759,12 +1762,18 @@ namespace FamiStudio
 
         private bool HandleTouchClickChannelName(int x, int y, bool doubleClick = false)
         {
+            // HACK: Since the sequencer doesn't use real buttons, we keep the last tapped channel index.
+            // This prevents an issue on mobile, where tapping two icons that are close together sends
+            // a double tap, toggling solo channel. Note: Usually only doable with small channel Y size.
             if (IsMouseInTrackName(x, y))
             {
                 var chanIdx = GetChannelIndexFromIconPos(x, y);
+                var canToggleSolo = lastChanIdx == chanIdx;
+                lastChanIdx = chanIdx;
+
                 if (chanIdx >= 0)
                 {
-                    if (doubleClick)
+                    if (doubleClick && canToggleSolo)
                     {
                         App.ToggleChannelSolo(chanIdx, true);
                     }
@@ -1778,7 +1787,7 @@ namespace FamiStudio
                 chanIdx = GetChannelIndexFromGhostIconPos(x, y);
                 if (chanIdx >= 0)
                 {
-                    if (doubleClick) 
+                    if (doubleClick && canToggleSolo)
                     { 
                         App.ToggleChannelForceDisplayAll(chanIdx, true);
                     }
