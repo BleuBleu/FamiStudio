@@ -52,6 +52,8 @@ namespace FamiStudio
         private int scrollBarSizeX;
         private float iconScaleFloat = 1.0f;
 
+        private float layoutScale = -1.0f;
+
         public int   LayoutSize  => buttonSize;
         public float ExpandRatio => popupRatio;
         public bool  IsExpanded  => popupRatio > 0.001f;
@@ -87,6 +89,36 @@ namespace FamiStudio
             SetTickEnabled(true);
         }
 
+        public void UpdateScaling(int viewportWidth, int viewportHeight)
+        {
+            var shortEdge = Math.Min(viewportWidth, viewportHeight);
+            var longEdge  = Math.Max(viewportWidth, viewportHeight);
+
+            var scale = Math.Min(shortEdge / 1080.0f,
+                                 longEdge  / 1920.0f);
+
+            if (Math.Abs(scale - layoutScale) < 0.001)
+                return;
+
+            layoutScale = scale;
+
+            var refIcon = ParentWindow.Graphics.GetTextureAtlasRef("MobileSnapOn");
+
+            buttonFont        = scale > 1.2f ? Fonts.FontSmall : Fonts.FontVerySmall;
+            buttonSize        = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
+            buttonSizeNav     = DpiScaling.ScaleCustom(DefaultNavButtonSize, scale);
+            listItemSize      = DpiScaling.ScaleCustom(DefaultListItemSize, scale);
+            listExtraIconSize = DpiScaling.ScaleCustom(DefaultListExtraIconSize, scale);
+            scrollBarSizeX    = DpiScaling.ScaleCustom(DefaultScrollBarSizeX, scale);
+            iconScaleFloat    = DpiScaling.ScaleCustomFloat(DefaultIconSize / (float)refIcon.ElementSize.Width, scale);
+
+            foreach (var button in allButtons)
+            {
+                button.ImageScale = iconScaleFloat;
+                button.Font = buttonFont;
+            }
+        }
+
         private Button CreateBarButton(string image, string userData, string text = " ")
         {
             var button = new Button(image);
@@ -120,18 +152,7 @@ namespace FamiStudio
 
         protected override void OnAddedToContainer()
         {
-            var g = ParentWindow.Graphics;
-            var screenSize = Platform.GetScreenResolution();
-            var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
-            var refIcon = g.GetTextureAtlasRef("MobileSnapOn");
-
-            buttonFont        = scale > 1.2f ? Fonts.FontSmall : Fonts.FontVerySmall;
-            buttonSize        = DpiScaling.ScaleCustom(DefaultButtonSize, scale);
-            buttonSizeNav     = DpiScaling.ScaleCustom(DefaultNavButtonSize, scale);
-            listItemSize      = DpiScaling.ScaleCustom(DefaultListItemSize, scale);
-            listExtraIconSize = DpiScaling.ScaleCustom(DefaultListExtraIconSize, scale);
-            scrollBarSizeX    = DpiScaling.ScaleCustom(DefaultScrollBarSizeX, scale);
-            iconScaleFloat    = DpiScaling.ScaleCustomFloat(DefaultIconSize / (float)refIcon.ElementSize.Width, scale);
+            UpdateScaling(ParentWindowSize.Width, ParentWindowSize.Height);
 
             buttonSequencer = CreateBarButton("Sequencer", "Sequencer");
             buttonSequencer.Click += ButtonSequencer_Click;
