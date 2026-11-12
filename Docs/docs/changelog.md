@@ -4,6 +4,30 @@ Version history / release notes for each release.
 
 To download older versions or view the release dates, please visit the [Github Releases](https://github.com/BleuBleu/FamiStudio/releases) page.
 
+## Version 4.5.4 (Hotfix)
+
+This is a 100% community-contributed release. All changes are by Steo, unless otherwise noted.
+
+Changes/Fixes:
+
+* Fixed incorrect GD3 info being imported to project upon importing a VGM file
+* Fixed mobile issue where tapping two different sequencer icons could register as a double-tap
+* Fixed video export issue where a DPCM note touching the end of the song retriggered on loop
+* Fixed NSF / VGM import issue that resulted in many fine-pitches incorrectly being -1
+* Fixed NSF / VGM import issue that caused fine-pitch to always reset to 0 on release
+* Fixed minor oscilloscope issues on mobile
+* Fixed crash regarding pasting notes without creating missing samples then using cut / copy
+* Fixed text import issue that caused tempos of 75 or lower to incorrectly give a tempo error
+* Fixed NSF / VGM import issue regarding MMC5 instruments not being compatible with 2A03
+* Fixed parsing of MIDI files containing system exclusive messages
+* Fixed crash on mobile when cancelling export then exporting again shortly afterwards
+* Fixed issue when importing N163 instruments into a project with a higher N163 channel count
+* Fixed issue where toggling "fully emulate when seeking" in settings wouldn't recreate players
+* Fixed cursor hotspot on Hi-DPI linux (Thanks eliasdaler!)
+* Fixed VRC7 ROM issues on real hardware (Thanks aeromodes!)
+* Added warning on note/period overflows when exporting (Thanks aeromodes!)
+* Minor localization changes (thanks to all the localizers!)
+
 ## Version 4.5.3 (Hotfix)
 
 This release was also 100% handled by Steo, I'm just publishing it. Thanks!!
