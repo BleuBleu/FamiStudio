@@ -70,7 +70,8 @@ namespace FamiStudio
         {
             foreach (var chk in checkList)
             {
-                chk.Checked = check;
+                if (chk.Checked != check)
+                    chk.Checked = check;
             }
         }
 

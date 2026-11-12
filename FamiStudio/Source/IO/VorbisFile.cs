@@ -17,6 +17,9 @@ namespace FamiStudio
 
         public unsafe static bool Save(short[] wavData, string filename, int sampleRate, int bitRate, int numChannels)
         {
+            if (wavData.Length == 0)
+                return false;
+
             var oggData = new byte[wavData.Length * sizeof(short) * 4];
             var oggSize = 0;
 

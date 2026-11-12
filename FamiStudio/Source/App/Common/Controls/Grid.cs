@@ -757,7 +757,11 @@ namespace FamiStudio
                 {
                     for (var j = 0; j < ItemCount; j++)
                     {
-                        data[j, i] = check;
+                        if ((bool)data[j, i] != check)
+                        {
+                            data[j, i] = check;
+                            ValueChanged?.Invoke(this, j, i, check);
+                        }
                     }
                 }
             }

@@ -589,12 +589,14 @@ namespace FamiStudio
                     var newAudioBufferSize = pageSound.GetPropertyValue<int>(1);
                     var newNumBufferedFrames = pageSound.GetPropertyValue<int>(2);
                     var newN163Mix = pageSound.GetPropertyValue<bool>(5);
+                    var newAccurateSeek = pageSound.GetPropertyValue<bool>(8);
                     var newMetronomeVolume = (int)pageSound.GetPropertyValue<double>(9);
 
                     if (Settings.AudioAPI          != newAudioApi          || 
                         Settings.AudioBufferSize   != newAudioBufferSize   ||
                         Settings.NumBufferedFrames != newNumBufferedFrames ||
                         Settings.N163Mix           != newN163Mix           ||
+                        Settings.AccurateSeek      != newAccurateSeek      ||
                         Settings.MetronomeVolume   != newMetronomeVolume   ||
                         mixerProperties.Changed)
                     {

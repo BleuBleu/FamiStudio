@@ -670,7 +670,7 @@ namespace FamiStudio
                                 var groove = parameters["Groove"].Split('-').Select(Int32.Parse).ToArray();
                                 var groovePaddingMode = GroovePaddingType.GetValueForName(parameters["GroovePaddingMode"]);
 
-                                if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength || patternLength * noteLength > (Pattern.MaxLength / noteLength))
+                                if (!FamiStudioTempoUtils.ValidateGroove(groove) || Utils.Min(groove) != noteLength || patternLength * noteLength >= Pattern.MaxLength)
                                 {
                                     Log.LogMessage(LogSeverity.Error, "Invalid tempo settings.");
                                     return null;
