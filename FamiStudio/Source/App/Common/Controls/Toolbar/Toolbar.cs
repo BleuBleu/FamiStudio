@@ -93,6 +93,8 @@ namespace FamiStudio
         private int buttonSize;
         private float iconScaleFloat = 1.0f;
 
+        private float layoutScale = -1.0f;
+
         // Mobile-only stuff
         private float expandRatio = 0.0f;
         private bool  expanding = false; 
@@ -172,6 +174,31 @@ namespace FamiStudio
             supportsDoubleClick = false;
         }
 
+        public void UpdateScaling(int viewportWidth, int viewportHeight)
+        {
+            if (!Platform.IsMobile)
+                return;
+
+            var shortEdge = Math.Min(viewportWidth, viewportHeight);
+            var longEdge  = Math.Max(viewportWidth, viewportHeight);
+
+            var scale = Math.Min(
+                                 shortEdge / 1080.0f,
+                                 longEdge  / 1920.0f);
+
+            if (Math.Abs(scale - layoutScale) < 0.001f)
+                return;
+
+            layoutScale = scale;
+
+            buttonSize = DpiScaling.ScaleCustom(120, scale);
+            iconScaleFloat = 1.5f * scale;
+
+            foreach (var button in allButtons)
+            {
+                button.ImageScale = iconScaleFloat;
+            }
+        }
         private Button CreateToolbarButton(string image, string userData)
         {
             var button = new Button(image);
@@ -194,11 +221,7 @@ namespace FamiStudio
             if (Platform.IsMobile)
             {
                 // On mobile, everything will scale from 1080p.
-                var screenSize = Platform.GetScreenResolution();
-                var scale = Math.Min(screenSize.Width, screenSize.Height) / 1080.0f;
-
-                buttonSize = DpiScaling.ScaleCustom(120, scale);
-                iconScaleFloat = 1.5f * scale;
+                UpdateScaling(ParentWindowSize.Width, ParentWindowSize.Height);
             }
             else
             {
